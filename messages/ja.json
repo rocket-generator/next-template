@@ -1,0 +1,14 @@
+{
+    "Auth": {
+        "signin": "ログイン",
+        "signup": "新規登録",
+        "signout": "ログアウト",
+        "email": "メールアドレス",
+        "password": "パスワード",
+        "if_you_do_not_have_an_account": "アカウントをお持ちでない方は",
+        "if_forgot_password": "パスワードをお忘れですか？",
+        "invalid_input": "入力内容が不正です",
+        "invalid_credentials": "メールアドレスまたはパスワードが不正です",
+        "system_error": "システムエラー"
+    }
+}

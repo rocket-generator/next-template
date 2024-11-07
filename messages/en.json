@@ -1,0 +1,14 @@
+{
+    "Auth": {
+        "signin": "Sign In",
+        "signup": "Sign Up",
+        "signout": "Sign Out",
+        "email": "Email",
+        "password": "Password",
+        "if_you_do_not_have_an_account": "Don't have an account?",
+        "if_forgot_password": "Forgot your password?",
+        "invalid_input": "Invalid input",
+        "invalid_credentials": "Invalid credentials",
+        "system_error": "System error"
+    }
+}
