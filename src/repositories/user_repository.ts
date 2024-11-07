@@ -15,7 +15,4 @@ export class UserRepository extends BaseRepository<typeof UserSchema> {
     });
     return this.schema.parse(data);
   }
-
-
-  
 }

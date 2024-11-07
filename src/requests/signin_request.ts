@@ -19,7 +19,7 @@ export const passwordSchema = z
   })
   .max(256, {
     message: "Password must be made of at most 256 characters",
-  })
+  });
 
 export const SignInRequestSchema = z.object({
   email: emailSchema,

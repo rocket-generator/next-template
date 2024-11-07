@@ -6,7 +6,7 @@ import Header from "@/components/organisms/Header";
 import Footer from "@/components/organisms/Footer";
 import { UserRepository } from "@/repositories/user_repository";
 import AuthError from "@/exceptions/auth_error";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { User } from "@/models/user";
 
 type Props = {
@@ -15,15 +15,18 @@ type Props = {
 
 export default async function SiteLayout({ children }: Props) {
   const session = await auth();
-  console.log(session);
   let me: User | null = null;
   try {
     const repository = new UserRepository(session?.access_token);
     me = await repository.getMe();
   } catch (error) {
+    console.log(error);
     if (error instanceof AuthError) {
       redirect("/auth/signin");
     }
+  }
+  if (!me || !me.permissions.includes("admin")) {
+    return notFound();
   }
   console.log(me);
 

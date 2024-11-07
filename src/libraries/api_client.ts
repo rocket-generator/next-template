@@ -27,7 +27,7 @@ export async function APIClient<T>({
   if (params) {
     // remove undefined values
     Object.keys(params).forEach(
-      (key) => params[key] === undefined && delete params[key],
+      (key) => params[key] === undefined && delete params[key]
     );
     url += "?" + new URLSearchParams(params).toString();
   }

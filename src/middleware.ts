@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/libraries/auth";
 
-const PUBLIC_PAGES = ["/auth/signin"];
+const PUBLIC_PAGES = [
+  "/",
+  "/auth/signin",
+  "/auth/signup",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+];
 
 export default auth((request: any) => {
   const { nextUrl } = request;

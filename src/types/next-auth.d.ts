@@ -8,6 +8,8 @@ declare module "next-auth" {
     access_token: string | undefined;
     user: {
       id: string | undefined;
+      name: string | undefined;
+      permissions: string[];
     } & DefaultSession["user"];
   }
 
@@ -17,12 +19,16 @@ declare module "next-auth" {
     access_token: string | undefined;
     expire_in: number;
     token_type: string;
+    name: string | undefined;
+    permissions: string[];
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string | undefined;
+    name: string | undefined;
+    permissions: string[];
     access_token: string | undefined;
   }
 }

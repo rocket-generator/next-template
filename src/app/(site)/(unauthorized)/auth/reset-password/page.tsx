@@ -1,3 +1,5 @@
+"use client";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
@@ -34,15 +36,16 @@ export default async function ResetPasswordPage({
 }: {
   params: { token: string };
 }) {
+  const tAuth = useTranslations("Auth");
   const isValidToken = await validateToken(params.token);
 
   if (!isValidToken) {
     return (
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-md text-center">
-        <h1 className="text-2xl font-bold text-red-600">無効なトークン</h1>
-        <p className="mt-2 text-gray-600">
-          このパスワードリセットリンクは無効または期限切れです。
-        </p>
+        <h1 className="text-2xl font-bold text-red-600">
+          {tAuth("invalid_token")}
+        </h1>
+        <p className="mt-2 text-gray-600">{tAuth("token_expired")}</p>
       </div>
     );
   }
@@ -50,9 +53,9 @@ export default async function ResetPasswordPage({
   return (
     <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
       <div className="text-center">
-        <h1 className="text-2xl font-bold">新しいパスワードを設定</h1>
+        <h1 className="text-2xl font-bold">{tAuth("reset_password_title")}</h1>
         <p className="mt-2 text-gray-600">
-          安全な新しいパスワードを入力してください
+          {tAuth("reset_password_description")}
         </p>
       </div>
       <form
@@ -65,7 +68,7 @@ export default async function ResetPasswordPage({
               htmlFor="newPassword"
               className="block text-sm font-medium text-gray-700"
             >
-              新しいパスワード
+              {tAuth("new_password")}
             </Label>
             <Input
               id="newPassword"
@@ -81,7 +84,7 @@ export default async function ResetPasswordPage({
               htmlFor="confirmPassword"
               className="block text-sm font-medium text-gray-700"
             >
-              新しいパスワード（確認）
+              {tAuth("confirm_password")}
             </Label>
             <Input
               id="confirmPassword"
@@ -95,7 +98,7 @@ export default async function ResetPasswordPage({
         </div>
 
         <Button type="submit" className="w-full">
-          パスワードを更新
+          {tAuth("update_password")}
         </Button>
       </form>
     </div>

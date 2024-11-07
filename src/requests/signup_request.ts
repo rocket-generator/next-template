@@ -20,19 +20,15 @@ export const passwordSchema = z
   .max(256, {
     message: "Password must be made of at most 256 characters",
   })
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/,
-    {
-      message:
-        "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
-    }
-  )
+  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/, {
+    message:
+      "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+  });
 
-export const nameSchema = z
-  .string({
-    required_error: "Name is required",
-    invalid_type_error: "Name must be a string",
-  })
+export const nameSchema = z.string({
+  required_error: "Name is required",
+  invalid_type_error: "Name must be a string",
+});
 
 export const SignUpRequestSchema = z.object({
   email: emailSchema,

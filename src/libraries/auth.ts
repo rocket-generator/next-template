@@ -11,8 +11,8 @@ export const authConfig: NextAuthConfig = {
   secret: process.env.NEXT_AUTH_SECRET,
   providers: [
     CredentialsProvider({
-      id: "signup",
-      name: "SignUp",
+      id: "signin",
+      name: "SignIn",
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
@@ -31,8 +31,8 @@ export const authConfig: NextAuthConfig = {
       },
     }),
     CredentialsProvider({
-      id: "signin",
-      name: "SignIn",
+      id: "signup",
+      name: "SignUp",
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
@@ -53,21 +53,27 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   pages: {
-    signIn: "/login",
+    signIn: "/dashboard",
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.access_token = user.access_token || "";
+        token.name = user.name || "";
+        token.permissions = user.permissions || [];
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.permissions = token.permissions;
       }
       session.access_token = token.access_token;
+      session.name = token.name;
+      session.permissions = token.permissions;
       return session;
     },
   },

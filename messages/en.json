@@ -1,14 +1,28 @@
 {
-    "Auth": {
-        "signin": "Sign In",
-        "signup": "Sign Up",
-        "signout": "Sign Out",
-        "email": "Email",
-        "password": "Password",
-        "if_you_do_not_have_an_account": "Don't have an account?",
-        "if_forgot_password": "Forgot your password?",
-        "invalid_input": "Invalid input",
-        "invalid_credentials": "Invalid credentials",
-        "system_error": "System error"
-    }
+  "Auth": {
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "signout": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "if_you_do_not_have_an_account": "Don't have an account?",
+    "if_forgot_password": "Forgot your password?",
+    "invalid_input": "Invalid input",
+    "invalid_credentials": "Invalid credentials",
+    "system_error": "System error",
+    "name": "Name",
+    "confirm_password": "Confirm Password",
+    "create_account": "Create your account",
+    "already_have_account": "Already have an account?",
+    "forgot_password_title": "Forgot your password?",
+    "forgot_password_description": "We'll send you a password reset link via email",
+    "send_reset_link": "Send reset link",
+    "remembered_password": "Remembered your password?",
+    "reset_password_title": "Set New Password",
+    "reset_password_description": "Please enter your new secure password",
+    "new_password": "New Password",
+    "update_password": "Update Password",
+    "invalid_token": "Invalid Token",
+    "token_expired": "This password reset link is invalid or has expired."
+  }
 }

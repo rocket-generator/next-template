@@ -1,14 +1,28 @@
 {
-    "Auth": {
-        "signin": "ログイン",
-        "signup": "新規登録",
-        "signout": "ログアウト",
-        "email": "メールアドレス",
-        "password": "パスワード",
-        "if_you_do_not_have_an_account": "アカウントをお持ちでない方は",
-        "if_forgot_password": "パスワードをお忘れですか？",
-        "invalid_input": "入力内容が不正です",
-        "invalid_credentials": "メールアドレスまたはパスワードが不正です",
-        "system_error": "システムエラー"
-    }
+  "Auth": {
+    "signin": "ログイン",
+    "signup": "新規登録",
+    "signout": "ログアウト",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "if_you_do_not_have_an_account": "アカウントをお持ちでない方は",
+    "if_forgot_password": "パスワードをお忘れですか？",
+    "invalid_input": "入力内容が不正です",
+    "invalid_credentials": "メールアドレスまたはパスワードが不正です",
+    "system_error": "システムエラー",
+    "name": "名前",
+    "confirm_password": "パスワード（確認）",
+    "create_account": "アカウントを作成してください",
+    "already_have_account": "すでにアカウントをお持ちの方は",
+    "forgot_password_title": "パスワードをお忘れですか？",
+    "forgot_password_description": "パスワードリセットのリンクをメールで送信します",
+    "send_reset_link": "パスワードリセットリンクを送信",
+    "remembered_password": "パスワードを思い出した場合は",
+    "reset_password_title": "新しいパスワードを設定",
+    "reset_password_description": "安全な新しいパスワードを入力してください",
+    "new_password": "新しいパスワード",
+    "update_password": "パスワードを更新",
+    "invalid_token": "無効なトークン",
+    "token_expired": "このパスワードリセットリンクは無効または期限切れです。"
+  }
 }

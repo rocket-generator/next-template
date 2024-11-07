@@ -1,56 +1,100 @@
+"use client";
+import * as React from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
+import { SignUpRequest, SignUpRequestSchema } from "@/requests/signup_request";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import { signUpAction } from "./actions";
 
-async function signupAction(formData: FormData) {
-  "use server";
+import { Success, InvalidCredentials, InvalidInput } from "@/constants/auth";
+import { cn } from "@/libraries/css";
 
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
+export default function SignUpPage() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callback_url") ?? "";
+  const [, startTransition] = React.useTransition();
+  const [error, setError] = React.useState<string | null>(null);
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpRequest>({
+    resolver: zodResolver(SignUpRequestSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  // TODO: ここで実際の新規登録処理を実装する
-  console.log("Signup attempt:", name, email, password);
+  const onSubmit = (formData: SignUpRequest) => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const message = await signUpAction(formData);
+        switch (message) {
+          case InvalidInput:
+            setError(tAuth("invalid_input"));
+            break;
+          case InvalidCredentials:
+            setError(tAuth("invalid_credentials"));
+            break;
+          case Success:
+            if (callbackUrl) {
+              router.push(callbackUrl);
+            } else {
+              router.push("/dashboard");
+            }
+            break;
+        }
+      } catch (error) {
+        console.error(error);
+        setError(tAuth("system_error"));
+      }
+    });
+  };
 
-  // パスワードの一致確認
-  if (password !== confirmPassword) {
-    // エラーハンドリング（実際の実装ではより適切な方法を使用してください）
-    console.error("Passwords do not match");
-    return;
-  }
-
-  // 登録が成功したと仮定してリダイレクト
-  redirect("/dashboard");
-}
-
-export default function SignupPage() {
+  const tAuth = useTranslations("Auth");
   return (
     <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
       <div className="text-center">
-        <h1 className="text-2xl font-bold">新規登録</h1>
-        <p className="mt-2 text-gray-600">アカウントを作成してください</p>
+        <h1 className="text-2xl font-bold">{tAuth("signup")}</h1>
+        <p className="mt-2 text-gray-600">{tAuth("create_account")}</p>
       </div>
-      <form action={signupAction} className="mt-8 space-y-6">
+      {error && (
+        <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded">
+          {error}
+        </div>
+      )}
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
         <div className="space-y-4">
           <div>
             <Label
               htmlFor="name"
               className="block text-sm font-medium text-gray-700"
             >
-              名前
+              {tAuth("name")}
             </Label>
             <Input
               id="name"
-              name="name"
+              {...register("name")}
               type="text"
               autoComplete="name"
               required
-              className="mt-1"
+              className={cn(
+                "mt-1",
+                errors.name && "border-red-500 focus:ring-red-500"
+              )}
               placeholder="山田 太郎"
             />
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+            )}
           </div>
           <div>
             <Label
@@ -90,7 +134,7 @@ export default function SignupPage() {
               htmlFor="confirmPassword"
               className="block text-sm font-medium text-gray-700"
             >
-              パスワード（確認）
+              {tAuth("confirm_password")}
             </Label>
             <Input
               id="confirmPassword"
@@ -98,24 +142,27 @@ export default function SignupPage() {
               type="password"
               autoComplete="new-password"
               required
-              className="mt-1"
+              className={cn(
+                "mt-1",
+                errors.confirmPassword && "border-red-500 focus:ring-red-500"
+              )}
             />
           </div>
         </div>
 
         <Button type="submit" className="w-full">
-          登録
+          {tAuth("signup")}
         </Button>
       </form>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
-          すでにアカウントをお持ちの方は{" "}
+          {tAuth("already_have_account")}{" "}
           <Link
             href="/login"
             className="font-medium text-blue-600 hover:underline"
           >
-            ログイン
+            {tAuth("signin")}
           </Link>
         </p>
       </div>

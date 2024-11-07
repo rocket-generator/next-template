@@ -17,7 +17,7 @@ export abstract class BaseRepository<T extends z.ZodType<any, any>> {
     offset: number = 0,
     limit: number = 20,
     order?: string,
-    direction?: string,
+    direction?: string
   ): Promise<{ data: z.infer<T>[]; count: number }> {
     const response = await APIClient<{ data: z.infer<T>[]; count: number }>({
       path: this.endpoint,

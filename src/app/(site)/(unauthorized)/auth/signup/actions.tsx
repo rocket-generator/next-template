@@ -24,7 +24,7 @@ export async function signUpAction(
     return Success;
   } catch (error) {
     if (error instanceof AuthError) {
-      console.error("Sign in error:", error.type);
+      console.error("Sign up error:", error.type);
       // AuthError のケースをより詳細に処理
       switch (error.type) {
         case "CredentialsSignin":

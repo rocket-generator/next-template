@@ -1,7 +1,7 @@
-import {getRequestConfig} from 'next-intl/server';
-import {routing} from './routing';
+import { getRequestConfig } from "next-intl/server";
+import { routing } from "./routing";
 
-export default getRequestConfig(async ({requestLocale}) => {
+export default getRequestConfig(async ({ requestLocale }) => {
   // This typically corresponds to the `[locale]` segment
   let locale = await requestLocale;
 
@@ -14,10 +14,10 @@ export default getRequestConfig(async ({requestLocale}) => {
     locale,
     timeZone: "Asia/Tokyo",
     messages: (
-      await (locale === 'en'
+      await (locale === "en"
         ? // When using Turbopack, this will enable HMR for `en`
-          import('../../messages/en.json')
+          import("../../messages/en.json")
         : import(`../../messages/${locale}.json`))
-    ).default
+    ).default,
   };
 });

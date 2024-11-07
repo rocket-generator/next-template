@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
 import { User, Settings, LogOut } from "lucide-react";
 import { User as UserModel } from "@/models/user";
 import { useState, useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
+import { signOutAction } from "./actions";
 
 type Props = {
   signInUser: UserModel | null;
@@ -26,10 +27,6 @@ const SignInUserMenu = ({ signInUser }: Props) => {
     };
   }, []);
 
-  const handleLogout = async () => {
-    await signOut();
-  };
-
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -44,14 +41,16 @@ const SignInUserMenu = ({ signInUser }: Props) => {
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border">
           <button
             className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-            onClick={() => {/* TODO: 設定画面への遷移処理 */}}
+            onClick={() => {
+              /* TODO: 設定画面への遷移処理 */
+            }}
           >
             <Settings className="w-4 h-4" />
             設定
           </button>
           <button
             className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-            onClick={handleLogout}
+            onClick={signOutAction}
           >
             <LogOut className="w-4 h-4" />
             ログアウト
@@ -62,4 +61,4 @@ const SignInUserMenu = ({ signInUser }: Props) => {
   );
 };
 
-export default SignInUserMenu; 
+export default SignInUserMenu;
