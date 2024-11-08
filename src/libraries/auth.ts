@@ -37,6 +37,7 @@ export const authConfig: NextAuthConfig = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
         name: { label: "Name", type: "text" },
+        confirm_password: { label: "Confirm Password", type: "password" },
       },
       async authorize(credentials) {
         const authToken = await fetch(_basePath + "/auth/signup", {

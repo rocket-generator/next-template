@@ -29,14 +29,18 @@ export default function SignUpPage() {
     defaultValues: {
       email: "",
       password: "",
+      confirm_password: "",
+      name: "",
     },
   });
 
   const onSubmit = (formData: SignUpRequest) => {
+    console.log(formData);
     setError(null);
     startTransition(async () => {
       try {
         const message = await signUpAction(formData);
+        console.log(message);
         switch (message) {
           case InvalidInput:
             setError(tAuth("invalid_input"));
@@ -101,52 +105,73 @@ export default function SignUpPage() {
               htmlFor="email"
               className="block text-sm font-medium text-gray-700"
             >
-              メールアドレス
+              {tAuth("email")}
             </Label>
             <Input
               id="email"
-              name="email"
+              {...register("email")}
               type="email"
               autoComplete="email"
               required
-              className="mt-1"
+              className={cn(
+                "mt-1",
+                errors.email && "border-red-500 focus:ring-red-500"
+              )}
               placeholder="your@email.com"
             />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           <div>
             <Label
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
-              パスワード
+              {tAuth("password")}
             </Label>
             <Input
               id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label
-              htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700"
-            >
-              {tAuth("confirm_password")}
-            </Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
+              {...register("password")}
               type="password"
               autoComplete="new-password"
               required
               className={cn(
                 "mt-1",
-                errors.confirmPassword && "border-red-500 focus:ring-red-500"
+                errors.password && "border-red-500 focus:ring-red-500"
               )}
             />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <Label
+              htmlFor="confirm_password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {tAuth("confirm_password")}
+            </Label>
+            <Input
+              id="confirm_password"
+              {...register("confirm_password")}
+              type="password"
+              autoComplete="new-password"
+              required
+              className={cn(
+                "mt-1",
+                errors.confirm_password && "border-red-500 focus:ring-red-500"
+              )}
+            />
+            {errors.confirm_password && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.confirm_password.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -159,7 +184,7 @@ export default function SignUpPage() {
         <p className="text-sm text-gray-600">
           {tAuth("already_have_account")}{" "}
           <Link
-            href="/login"
+            href="/auth/signin"
             className="font-medium text-blue-600 hover:underline"
           >
             {tAuth("signin")}
