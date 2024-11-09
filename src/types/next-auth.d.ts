@@ -17,7 +17,7 @@ declare module "next-auth" {
     id: string;
     email: string;
     access_token: string | undefined;
-    expire_in: number;
+    expires_in: number;
     token_type: string;
     name: string | undefined;
     permissions: string[];

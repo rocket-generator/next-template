@@ -1,5 +1,4 @@
 import { BaseRepository } from "@/repositories/base_repository";
-import { z } from "zod";
 import { User, UserSchema } from "@/models/user";
 import { APIClient } from "@/libraries/api_client";
 

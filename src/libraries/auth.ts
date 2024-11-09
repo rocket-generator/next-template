@@ -1,5 +1,8 @@
+import { AuthRepository } from "@/repositories/auth_repository";
+import { SignInRequest } from "@/requests/signin_request";
+import { SignUpRequest } from "@/requests/signup_request";
 import type { NextAuthConfig } from "next-auth";
-import NextAuth from "next-auth";
+import NextAuth, { AuthError } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 const _basePath =
@@ -18,15 +21,26 @@ export const authConfig: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const authToken = await fetch(_basePath + "/auth/signin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(credentials),
-        }).then((res) => res.json());
-        if (authToken && authToken.access_token) {
-          return authToken;
-        } else {
-          return null;
+        const repository = new AuthRepository(undefined);
+        const request = {
+          email: credentials.email,
+          password: credentials.password,
+        } as SignInRequest;
+        try {
+          const response = await repository.postSignIn(request);
+          if (response.access_token) {
+            return {
+              id: response.id,
+              access_token: response.access_token,
+              permissions: response.permissions,
+              expires_in: response.expires_in,
+              token_type: response.token_type,
+            };
+          } else {
+            return null;
+          }
+        } catch (error) {
+          throw error;
         }
       },
     }),
@@ -40,15 +54,28 @@ export const authConfig: NextAuthConfig = {
         confirm_password: { label: "Confirm Password", type: "password" },
       },
       async authorize(credentials) {
-        const authToken = await fetch(_basePath + "/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(credentials),
-        }).then((res) => res.json());
-        if (authToken && authToken.access_token) {
-          return authToken;
-        } else {
-          return null;
+        const repository = new AuthRepository(undefined);
+        const request = {
+          email: credentials.email,
+          password: credentials.password,
+          name: credentials.name,
+        } as SignUpRequest;
+        try {
+          const response = await repository.postSignUp(request);
+          console.log(response);
+          if (response.access_token) {
+            return {
+              id: response.id,
+              access_token: response.access_token,
+              permissions: response.permissions,
+              expires_in: response.expires_in,
+              token_type: response.token_type,
+            };
+          } else {
+            return null;
+          }
+        } catch (error) {
+          throw error;
         }
       },
     }),
@@ -66,7 +93,7 @@ export const authConfig: NextAuthConfig = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user && token.id) {
         session.user.id = token.id;
         session.user.name = token.name;

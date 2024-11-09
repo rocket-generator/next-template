@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { signUpAction } from "./actions";
+import { Loader2 } from "lucide-react";
 
 import { Success, InvalidCredentials, InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
@@ -33,10 +34,12 @@ export default function SignUpPage() {
       name: "",
     },
   });
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const onSubmit = (formData: SignUpRequest) => {
     console.log(formData);
     setError(null);
+    setIsLoading(true);
     startTransition(async () => {
       try {
         const message = await signUpAction(formData);
@@ -59,6 +62,8 @@ export default function SignUpPage() {
       } catch (error) {
         console.error(error);
         setError(tAuth("system_error"));
+      } finally {
+        setIsLoading(false);
       }
     });
   };
@@ -94,7 +99,7 @@ export default function SignUpPage() {
                 "mt-1",
                 errors.name && "border-red-500 focus:ring-red-500"
               )}
-              placeholder="山田 太郎"
+              placeholder={tAuth("name_placeholder")}
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
@@ -175,8 +180,15 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full">
-          {tAuth("signup")}
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {tAuth("signing_up")}
+            </>
+          ) : (
+            tAuth("signup")
+          )}
         </Button>
       </form>
 

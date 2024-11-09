@@ -23,6 +23,16 @@
     "new_password": "新しいパスワード",
     "update_password": "パスワードを更新",
     "invalid_token": "無効なトークン",
-    "token_expired": "このパスワードリセットリンクは無効または期限切れです。"
+    "token_expired": "このパスワードリセットリンクは無効または期限切れです。",
+    "email_sent": "メールを送信しました",
+    "check_email_for_reset_link": "パスワードリセットのリンクを記載したメールをお送りしました。メールをご確認ください。",
+    "didnt_receive_email": "メールが届きませんでしたか？",
+    "try_again": "もう一度試す",
+    "sending": "送信中...",
+    "reset_password": "パスワードをリセット",
+    "resetting": "リセット中...",
+    "signing_in": "ログイン中...",
+    "signing_up": "新規登録中...",
+    "name_placeholder": "山田太郎"
   }
 }

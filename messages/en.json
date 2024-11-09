@@ -23,6 +23,16 @@
     "new_password": "New Password",
     "update_password": "Update Password",
     "invalid_token": "Invalid Token",
-    "token_expired": "This password reset link is invalid or has expired."
+    "token_expired": "This password reset link is invalid or has expired.",
+    "email_sent": "Email Sent",
+    "check_email_for_reset_link": "We've sent you an email with a password reset link. Please check your inbox.",
+    "didnt_receive_email": "Didn't receive the email?",
+    "try_again": "Try again",
+    "sending": "Sending...",
+    "reset_password": "Reset Password",
+    "resetting": "Resetting...",
+    "signing_in": "Signing in...",
+    "signing_up": "Signing up...",
+    "name_placeholder": "John Doe"
   }
 }

@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { signInAction } from "./actions";
+import { Loader2 } from "lucide-react";
 
 import { Success, InvalidCredentials, InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
@@ -31,9 +32,11 @@ export default function SignInPage() {
       password: "",
     },
   });
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const onSubmit = (formData: SignInRequest) => {
     setError(null);
+    setIsLoading(true);
     startTransition(async () => {
       try {
         const message = await signInAction(formData);
@@ -48,13 +51,15 @@ export default function SignInPage() {
             if (callbackUrl) {
               router.push(callbackUrl);
             } else {
-              router.push("/");
+              router.push("/dashboard");
             }
             break;
         }
       } catch (error) {
         console.error(error);
         setError(tAuth("system_error"));
+      } finally {
+        setIsLoading(false);
       }
     });
   };
@@ -133,8 +138,15 @@ export default function SignInPage() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full">
-          {tAuth("signin")}
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {tAuth("signing_in")}
+            </>
+          ) : (
+            tAuth("signin")
+          )}
         </Button>
       </form>
 
