@@ -34,5 +34,29 @@
     "signing_in": "ログイン中...",
     "signing_up": "新規登録中...",
     "name_placeholder": "山田太郎"
+  },
+  "Crud": {
+    "create": "新規作成",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "edit": "編集",
+    "delete": "削除",
+    "saving": "保存中...",
+    "delete_confirmation": "削除してよろしいですか？",
+    "previous": "前へ",
+    "next": "次へ",
+    "first": "先頭へ",
+    "last": "最後へ",
+    "no_result_found": "該当するデータがありません"
+  },
+  "AdminMenu": {
+    "home": "ホーム"
+  },
+  "Users": {
+    "title": "ユーザー",
+    "name": "名前",
+    "email": "メールアドレス",
+    "permissions": "権限",
+    "password": "パスワード"
   }
 }

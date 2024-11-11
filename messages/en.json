@@ -34,5 +34,29 @@
     "signing_in": "Signing in...",
     "signing_up": "Signing up...",
     "name_placeholder": "John Doe"
+  },
+  "Crud": {
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "saving": "Saving...",
+    "delete_confirmation": "Are you sure ?",
+    "previous": "Previous",
+    "next": "Next",
+    "first": "First",
+    "last": "Last",
+    "no_result_found": "No results found"
+  },
+  "AdminMenu": {
+    "home": "Home"
+  },
+  "Users": {
+    "title": "Users",
+    "name": "Name",
+    "email": "Email",
+    "permissions": "Permissions",
+    "password": "Password"
   }
 }
