@@ -17,11 +17,12 @@ export abstract class BaseRepository<T extends z.ZodType<any, any>> {
     offset: number = 0,
     limit: number = 20,
     order?: string,
-    direction?: string
+    direction?: string,
+    query?: string
   ): Promise<{ data: z.infer<T>[]; count: number }> {
     const response = await APIClient<{ data: z.infer<T>[]; count: number }>({
       path: this.endpoint,
-      params: { offset, limit, order, direction },
+      params: { offset, limit, order, direction, query },
       accessToken: this.accessToken,
     });
 

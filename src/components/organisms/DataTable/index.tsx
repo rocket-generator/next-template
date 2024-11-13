@@ -1,11 +1,24 @@
 import Pagination from "@/components/molecules/Pagination";
 import { Pencil, Eye, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import { cn } from "@/libraries/css";
-import * as React from "react";
 import Link from "next/link";
 import DataTextItem from "@/components/molecules/DataTextItem";
 import DataLinkItem from "@/components/molecules/DataLinkItem";
 import DataDateTimeItem from "@/components/molecules/DataDateTimeItem";
+import SearchForm from "@/components/molecules/SearchForm";
+
+type DataRecord = {
+  id: string;
+  [key: string]: unknown;
+};
+
+type ColumnStructure = {
+  name: string;
+  key: string;
+  type: string | undefined;
+  options: Record<string, unknown> | undefined;
+  isSortable?: boolean;
+};
 
 type Props = {
   count: number;
@@ -13,14 +26,9 @@ type Props = {
   limit: number;
   order?: string;
   direction?: string;
-  data: { [key: string]: any }[];
-  structure: {
-    name: string;
-    key: string;
-    type: string | undefined;
-    options: { [key: string]: any } | undefined;
-    isSortable?: boolean;
-  }[];
+  query?: string;
+  data: DataRecord[];
+  structure: ColumnStructure[];
   basePath: string;
   showEyeIcon?: boolean;
   showPencilSquareIcon?: boolean;
@@ -31,20 +39,25 @@ export default function CRUDTable({
   showPencilSquareIcon = true,
   order,
   direction,
+  query = "",
   ...props
 }: Props) {
   const getSortLink = (key: string) => {
     const newDirection = order === key && direction === "asc" ? "desc" : "asc";
-    const searchParams = new URLSearchParams({
+    const params = new URLSearchParams({
       order: key,
       direction: newDirection,
     });
-    return `${props.basePath}?${searchParams.toString()}`;
+    if (query) {
+      params.set("query", query);
+    }
+    return `${props.basePath}?${params.toString()}`;
   };
 
   return (
     <>
-      <div className="mt-4">
+      <div className="mt-4 flex items-center justify-between">
+        <SearchForm defaultValue={query} />
         <Pagination
           count={props.count}
           offset={props.offset}

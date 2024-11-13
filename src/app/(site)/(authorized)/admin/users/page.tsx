@@ -15,6 +15,7 @@ type SearchParams = {
   limit?: string;
   order?: string;
   direction?: string;
+  query?: string;
   [key: string]: string | string[] | undefined;
 };
 
@@ -24,13 +25,14 @@ type Props = {
 
 export default async function Page(props: Props) {
   const session = await auth();
-  const searchParams = await props.searchParams;
+  const searchParams = props.searchParams;
   const offset = searchParams.offset ? parseInt(searchParams.offset) : 0;
   const limit = searchParams.limit ? parseInt(searchParams.limit) : 20;
   const order = searchParams.order ? String(searchParams.order) : "name";
   const direction = searchParams.direction
     ? String(searchParams.direction)
     : "asc";
+  const query = searchParams.query ? String(searchParams.query) : "";
 
   const tMenu = await getTranslations("AdminMenu");
   const tUser = await getTranslations("Users");
@@ -39,14 +41,14 @@ export default async function Page(props: Props) {
   let data: { data: User[]; count: number } | null = null;
   try {
     const repository = new UserRepository(session?.access_token);
-    data = await repository.get(offset, limit, order, direction);
+    data = await repository.get(offset, limit, order, direction, query);
     console.log(data);
   } catch (error) {
     if (error instanceof AuthError) {
       const heads = await headers();
-      const host = heads.get("host");
-      const protocol = heads.get("x-forwarded-proto") || "http";
-      const pathname = `/admin/users?offset=${offset}&limit=${limit}&order=${order}&direction=${direction}`;
+      const host = await heads.get("host");
+      const protocol = (await heads.get("x-forwarded-proto")) || "http";
+      const pathname = `/admin/users?offset=${offset}&limit=${limit}&order=${order}&direction=${direction}&query=${query}`;
       const fullUrl = `${protocol}://${host}${pathname}`;
       redirect("/auth/signin?callback_url=" + encodeURIComponent(fullUrl));
     }
@@ -76,6 +78,7 @@ export default async function Page(props: Props) {
               limit={limit}
               order={order}
               direction={direction}
+              query={query}
               data={data?.data || []}
               structure={[
                 {
