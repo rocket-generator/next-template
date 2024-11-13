@@ -50,7 +50,8 @@
     "no_result_found": "No results found"
   },
   "AdminMenu": {
-    "home": "Home"
+    "home": "Home",
+    "users": "Users"
   },
   "Users": {
     "title": "Users",

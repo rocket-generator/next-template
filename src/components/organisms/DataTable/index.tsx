@@ -13,12 +13,12 @@ type Props = {
   limit: number;
   order?: string;
   direction?: string;
-  data: any[];
+  data: { [key: string]: any }[];
   structure: {
     name: string;
     key: string;
     type: string | undefined;
-    options: { [key: string]: any };
+    options: { [key: string]: any } | undefined;
     isSortable?: boolean;
   }[];
   basePath: string;
@@ -129,7 +129,6 @@ export default function CRUDTable({
                                   record={record}
                                   name={column.name}
                                   columnKey={column.key}
-                                  type={column.type}
                                   options={column.options}
                                   key={column.key}
                                 />
@@ -146,7 +145,6 @@ export default function CRUDTable({
                                   record={record}
                                   name={column.name}
                                   columnKey={column.key}
-                                  type={column.type}
                                   options={column.options}
                                   key={column.key}
                                 />
@@ -178,7 +176,6 @@ export default function CRUDTable({
                                   record={record}
                                   name={column.name}
                                   columnKey={column.key}
-                                  type={column.type}
                                   options={column.options}
                                   key={column.key}
                                 />

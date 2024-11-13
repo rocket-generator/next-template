@@ -50,7 +50,8 @@
     "no_result_found": "該当するデータがありません"
   },
   "AdminMenu": {
-    "home": "ホーム"
+    "home": "ホーム",
+    "users": "ユーザー"
   },
   "Users": {
     "title": "ユーザー",

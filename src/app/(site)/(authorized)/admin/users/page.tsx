@@ -2,12 +2,13 @@ import { Suspense } from "react";
 import { User } from "@/models/user";
 import { auth } from "@/libraries/auth";
 import { UserRepository } from "@/repositories/user_repository";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import AuthError from "@/exceptions/auth_error";
 import { headers } from "next/headers";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import CRUDTable from "@/components/organisms/DataTable";
+import { Plus } from "lucide-react";
 
 type SearchParams = {
   offset?: string;
@@ -61,7 +62,11 @@ export default async function Page(props: Props) {
               breadcrumbLinks={[{ href: "/", label: tMenu("home") }]}
               title={tUser("title")}
               buttons={[
-                { href: "/admin/users/create", label: tCrud("create") },
+                {
+                  href: "/admin/users/create",
+                  label: tCrud("create"),
+                  icon: <Plus className="w-5 h-5" />,
+                },
               ]}
             />
             <CRUDTable

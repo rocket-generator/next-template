@@ -1,17 +1,20 @@
 import * as React from "react";
 
 type Props = {
-  className: string;
+  className?: string;
   record: { [key: string]: any };
   name: string;
   columnKey: string;
-  type: string | undefined;
-  options: { [key: string]: any };
+  options: { [key: string]: any } | undefined;
 };
 
 export default function DataDateTimeItem(props: Props) {
   let label = props.record[props.columnKey] || "";
-  if (props.options["labels"] && props.options["labels"][label]) {
+  if (
+    props.options &&
+    props.options["labels"] &&
+    props.options["labels"][label]
+  ) {
     label = props.options["labels"][label];
   }
   // Convert to Tokyo timezone
