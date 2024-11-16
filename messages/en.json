@@ -43,10 +43,6 @@
     "delete": "Delete",
     "saving": "Saving...",
     "delete_confirmation": "Are you sure ?",
-    "previous": "Previous",
-    "next": "Next",
-    "first": "First",
-    "last": "Last",
     "no_result_found": "No results found"
   },
   "AdminMenu": {
@@ -59,5 +55,14 @@
     "email": "Email",
     "permissions": "Permissions",
     "password": "Password"
+  },
+  "Components": {
+    "Pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "first": "First",
+      "last": "Last",
+      "no_result_found": "No results found"
+    }
   }
 }

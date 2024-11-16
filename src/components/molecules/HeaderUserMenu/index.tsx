@@ -3,14 +3,13 @@
 import { User, Settings, LogOut } from "lucide-react";
 import { User as UserModel } from "@/models/user";
 import { useState, useRef, useEffect } from "react";
-import { signOut } from "next-auth/react";
 import { signOutAction } from "./actions";
 
 type Props = {
   signInUser: UserModel | null;
 };
 
-const SignInUserMenu = ({ signInUser }: Props) => {
+export default function HeaderUserMenu({ signInUser }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -59,6 +58,4 @@ const SignInUserMenu = ({ signInUser }: Props) => {
       )}
     </div>
   );
-};
-
-export default SignInUserMenu;
+}

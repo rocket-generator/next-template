@@ -7,8 +7,9 @@ import { getTranslations } from "next-intl/server";
 import AuthError from "@/exceptions/auth_error";
 import { headers } from "next/headers";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
-import CRUDTable from "@/components/organisms/DataTable";
+import DataTable from "@/components/organisms/DataTable";
 import { Plus } from "lucide-react";
+import { Skeleton } from "@/components/atoms/skeleton";
 
 type SearchParams = {
   offset?: string;
@@ -25,7 +26,7 @@ type Props = {
 
 export default async function Page(props: Props) {
   const session = await auth();
-  const searchParams = props.searchParams;
+  const searchParams = await props.searchParams;
   const offset = searchParams.offset ? parseInt(searchParams.offset) : 0;
   const limit = searchParams.limit ? parseInt(searchParams.limit) : 20;
   const order = searchParams.order ? String(searchParams.order) : "name";
@@ -42,7 +43,6 @@ export default async function Page(props: Props) {
   try {
     const repository = new UserRepository(session?.access_token);
     data = await repository.get(offset, limit, order, direction, query);
-    console.log(data);
   } catch (error) {
     if (error instanceof AuthError) {
       const heads = await headers();
@@ -56,7 +56,7 @@ export default async function Page(props: Props) {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<Skeleton className="w-full h-full rounded-full" />}>
       <main>
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 text-stone-800">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -71,7 +71,7 @@ export default async function Page(props: Props) {
                 },
               ]}
             />
-            <CRUDTable
+            <DataTable
               basePath={"/admin/users"}
               count={data?.count || 0}
               offset={offset}

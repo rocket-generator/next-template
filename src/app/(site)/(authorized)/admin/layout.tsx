@@ -28,7 +28,6 @@ export default async function SiteLayout({ children }: Props) {
   if (!me || !me.permissions.includes("admin")) {
     return notFound();
   }
-  console.log(me);
 
   return (
     <div className="min-h-screen flex">

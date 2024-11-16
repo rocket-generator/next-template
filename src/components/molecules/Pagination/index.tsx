@@ -23,7 +23,7 @@ export default async function Pagination({
 }: Props) {
   const currentPage = Math.floor((offset ?? 0) / (limit ?? 20)) + 1;
   const totalPages = Math.max(1, Math.ceil(count / (limit ?? 20)));
-  const tCrud = await getTranslations("Crud");
+  const t = await getTranslations("Components.Pagination");
 
   const generatePageNumbers = () => {
     const pageNumbers = [];
@@ -66,7 +66,7 @@ export default async function Pagination({
           aria-disabled={currentPage === 1}
           tabIndex={currentPage === 1 ? -1 : undefined}
         >
-          {tCrud("previous")}
+          {t("previous")}
         </Link>
         <Link
           href={generateLink(Math.min(totalPages, currentPage + 1))}
@@ -79,7 +79,7 @@ export default async function Pagination({
           aria-disabled={currentPage === totalPages}
           tabIndex={currentPage === totalPages ? -1 : undefined}
         >
-          {tCrud("next")}
+          {t("next")}
         </Link>
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
@@ -92,7 +92,7 @@ export default async function Pagination({
                 <span className="font-medium">{count}</span> results
               </>
             ) : (
-              tCrud("no_result_found")
+              t("no_result_found")
             )}
           </p>
         </div>
@@ -112,7 +112,7 @@ export default async function Pagination({
                 aria-disabled={currentPage === 1}
                 tabIndex={currentPage === 1 ? -1 : undefined}
               >
-                <span className="sr-only">{tCrud("first")}</span>
+                <span className="sr-only">{t("first")}</span>
                 <ChevronFirst className="h-5 w-5" aria-hidden="true" />
               </Link>
               <Link
@@ -125,7 +125,7 @@ export default async function Pagination({
                 aria-disabled={currentPage === 1}
                 tabIndex={currentPage === 1 ? -1 : undefined}
               >
-                <span className="sr-only">{tCrud("previous")}</span>
+                <span className="sr-only">{t("previous")}</span>
                 <ChevronLeft className="h-5 w-5" aria-hidden="true" />
               </Link>
               {pageNumbers.map((page) => (
@@ -153,7 +153,7 @@ export default async function Pagination({
                 aria-disabled={currentPage === totalPages}
                 tabIndex={currentPage === totalPages ? -1 : undefined}
               >
-                <span className="sr-only">{tCrud("next")}</span>
+                <span className="sr-only">{t("next")}</span>
                 <ChevronRight className="h-5 w-5" aria-hidden="true" />
               </Link>
               <Link
@@ -166,7 +166,7 @@ export default async function Pagination({
                 aria-disabled={currentPage === totalPages}
                 tabIndex={currentPage === totalPages ? -1 : undefined}
               >
-                <span className="sr-only">{tCrud("last")}</span>
+                <span className="sr-only">{t("last")}</span>
                 <ChevronLast className="h-5 w-5" aria-hidden="true" />
               </Link>
             </nav>

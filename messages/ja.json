@@ -43,10 +43,6 @@
     "delete": "削除",
     "saving": "保存中...",
     "delete_confirmation": "削除してよろしいですか？",
-    "previous": "前へ",
-    "next": "次へ",
-    "first": "先頭へ",
-    "last": "最後へ",
     "no_result_found": "該当するデータがありません"
   },
   "AdminMenu": {
@@ -59,5 +55,14 @@
     "email": "メールアドレス",
     "permissions": "権限",
     "password": "パスワード"
+  },
+  "Components": {
+    "Pagination": {
+      "previous": "前へ",
+      "next": "次へ",
+      "first": "先頭へ",
+      "last": "最後へ",
+      "no_result_found": "該当するデータがありません"
+    }
   }
 }

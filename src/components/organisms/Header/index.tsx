@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react";
 import { User as UserModel } from "@/models/user";
-import SignInUserMenu from "@/components/molecules/SignInUserMenu";
+import HeaderUserMenu from "@/components/molecules/HeaderUserMenu";
 
 type Props = {
   signInUser: UserModel | null;
@@ -13,7 +13,7 @@ const Header = ({ signInUser }: Props) => {
         <button className="p-2 rounded-full hover:bg-gray-100">
           <Bell className="w-5 h-5" />
         </button>
-        <SignInUserMenu signInUser={signInUser} />
+        <HeaderUserMenu signInUser={signInUser} />
       </div>
     </header>
   );

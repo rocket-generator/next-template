@@ -15,12 +15,12 @@ const menuItems: MenuItem[] = [
   {
     icon: <Users className="w-5 h-5" />,
     label: "ユーザー管理",
-    href: "/users",
+    href: "/admin/users",
   },
   {
     icon: <BarChart2 className="w-5 h-5" />,
     label: "統計",
-    href: "/statistics",
+    href: "/admin/statistics",
   },
   { icon: <Settings className="w-5 h-5" />, label: "設定", href: "/settings" },
 ];
