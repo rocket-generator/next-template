@@ -58,12 +58,6 @@ export default function CRUDTable({
     <>
       <div className="mt-4 flex items-center justify-between">
         <SearchForm defaultValue={query} />
-        <Pagination
-          count={props.count}
-          offset={props.offset}
-          limit={props.limit}
-          basePath={props.basePath}
-        />
       </div>
       <div className="mt-8 flow-root">
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">

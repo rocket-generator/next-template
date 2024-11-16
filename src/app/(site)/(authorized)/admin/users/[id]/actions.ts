@@ -2,7 +2,6 @@
 
 import { UserRepository } from "@/repositories/user_repository";
 import { auth } from "@/libraries/auth";
-import { redirect } from "next/navigation";
 
 export async function deleteUser(userId: string) {
   const session = await auth();
@@ -10,7 +9,7 @@ export async function deleteUser(userId: string) {
 
   try {
     await repository.delete(userId);
-    redirect("/admin/users");
+    return true;
   } catch (error) {
     console.error("Failed to delete user:", error);
     throw new Error("Failed to delete user");

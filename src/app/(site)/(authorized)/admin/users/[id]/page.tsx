@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { User } from "@/models/user";
 import { deleteUser } from "./actions";
 import { Pencil, Trash2 } from "lucide-react";
+import { redirect } from "next/navigation";
 
 type Props = {
   params: {
@@ -28,7 +29,7 @@ export default async function Page({ params }: Props) {
     return notFound();
   }
 
-  const tMenu = await getTranslations("AdminMenu");
+  const tMenu = await getTranslations("Menu.Admin");
   const tUser = await getTranslations("Users");
   const tCrud = await getTranslations("Crud");
   return (
@@ -38,7 +39,7 @@ export default async function Page({ params }: Props) {
           <div className="px-4 sm:px-6 lg:px-8">
             <AdminPageHeader
               breadcrumbLinks={[
-                { href: "/admin", label: tMenu("home") },
+                { href: "/admin/dashboard", label: tMenu("dashboard") },
                 { href: "/admin/users", label: tMenu("users") },
               ]}
               title={data.name}
@@ -52,6 +53,7 @@ export default async function Page({ params }: Props) {
                   action: async () => {
                     "use server";
                     await deleteUser(id);
+                    redirect("/admin/users");
                   },
                   label: tCrud("delete"),
                   variant: "danger",

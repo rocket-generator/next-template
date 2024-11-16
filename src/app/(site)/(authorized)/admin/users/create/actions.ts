@@ -2,7 +2,6 @@
 
 import { UserRepository } from "@/repositories/user_repository";
 import { auth } from "@/libraries/auth";
-import { redirect } from "next/navigation";
 import { UserCreateRequest } from "@/requests/admin/user_create_request";
 
 export async function createUser(

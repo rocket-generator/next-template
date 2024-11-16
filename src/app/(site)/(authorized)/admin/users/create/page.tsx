@@ -5,13 +5,10 @@ import DataForm from "@/components/organisms/DataForm";
 import { User } from "@/models/user";
 import { createUser } from "./actions";
 import { redirect } from "next/navigation";
-import {
-  UserCreateRequestSchema,
-  UserCreateRequest,
-} from "@/requests/admin/user_create_request";
+import { UserCreateRequestSchema } from "@/requests/admin/user_create_request";
 
 export default async function Page() {
-  const tMenu = await getTranslations("AdminMenu");
+  const tMenu = await getTranslations("Menu.Admin");
   const tUser = await getTranslations("Users");
   const data: User = {
     id: "",
@@ -64,7 +61,9 @@ export default async function Page() {
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 text-stone-800">
           <div className="px-4 sm:px-6 lg:px-8">
             <AdminPageHeader
-              breadcrumbLinks={[{ href: "/admin", label: tMenu("home") }]}
+              breadcrumbLinks={[
+                { href: "/admin/dashboard", label: tMenu("dashboard") },
+              ]}
               title="新規ユーザー作成"
               buttons={[]}
             />

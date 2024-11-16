@@ -45,9 +45,14 @@
     "delete_confirmation": "Are you sure ?",
     "no_result_found": "No results found"
   },
-  "AdminMenu": {
-    "home": "Home",
-    "users": "Users"
+  "Menu": {
+    "App": {
+      "dashboard": "Dashboard"
+    },
+    "Admin": {
+      "dashboard": "Dashboard",
+      "users": "Users"
+    }
   },
   "Users": {
     "title": "Users",
@@ -63,6 +68,11 @@
       "first": "First",
       "last": "Last",
       "no_result_found": "No results found"
+    },
+    "DataForm": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
     }
   }
 }

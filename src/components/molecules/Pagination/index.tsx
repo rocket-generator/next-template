@@ -87,9 +87,9 @@ export default async function Pagination({
           <p className="text-sm text-gray-700">
             {count > 0 ? (
               <>
-                Showing <span className="font-medium">{start}</span> to{" "}
-                <span className="font-medium">{end}</span> of{" "}
-                <span className="font-medium">{count}</span> results
+                <span className="font-medium">{start}</span> -{" "}
+                <span className="font-medium">{end}</span> /{" "}
+                <span className="font-medium">{count}</span>
               </>
             ) : (
               t("no_result_found")

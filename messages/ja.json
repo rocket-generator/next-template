@@ -45,9 +45,14 @@
     "delete_confirmation": "削除してよろしいですか？",
     "no_result_found": "該当するデータがありません"
   },
-  "AdminMenu": {
-    "home": "ホーム",
-    "users": "ユーザー"
+  "Menu": {
+    "App": {
+      "dashboard": "Dashboard"
+    },
+    "Admin": {
+      "dashboard": "Home",
+      "users": "Users"
+    }
   },
   "Users": {
     "title": "ユーザー",
@@ -63,6 +68,11 @@
       "first": "先頭へ",
       "last": "最後へ",
       "no_result_found": "該当するデータがありません"
+    },
+    "DataForm": {
+      "save": "保存",
+      "cancel": "キャンセル",
+      "saving": "保存中..."
     }
   }
 }

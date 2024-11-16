@@ -7,10 +7,7 @@ import DataForm from "@/components/organisms/DataForm";
 import { notFound } from "next/navigation";
 import { User } from "@/models/user";
 import { updateUser } from "./actions";
-import {
-  UserUpdateRequestSchema,
-  UserUpdateRequest,
-} from "@/requests/admin/user_update_request";
+import { UserUpdateRequestSchema } from "@/requests/admin/user_update_request";
 import { redirect } from "next/navigation";
 
 type Props = {
@@ -21,7 +18,7 @@ type Props = {
 
 export default async function Page({ params }: Props) {
   const id = params.id;
-  const tMenu = await getTranslations("AdminMenu");
+  const tMenu = await getTranslations("Menu.Admin");
   const tUser = await getTranslations("Users");
 
   const session = await auth();
@@ -79,7 +76,7 @@ export default async function Page({ params }: Props) {
           <div className="px-4 sm:px-6 lg:px-8">
             <AdminPageHeader
               breadcrumbLinks={[
-                { href: "/admin", label: tMenu("home") },
+                { href: "/admin/dashboard", label: tMenu("dashboard") },
                 { href: "/admin/users", label: tMenu("users") },
               ]}
               title={data.name}
@@ -95,14 +92,6 @@ export default async function Page({ params }: Props) {
                 }
                 return false;
               }}
-            />
-            <DataForm
-              submitAction={async (data) => {
-                "use server";
-                await updateUser(id, data);
-                return true;
-              }}
-              structure={structure}
             />
           </div>
         </div>

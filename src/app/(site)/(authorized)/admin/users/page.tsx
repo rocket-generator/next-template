@@ -35,7 +35,7 @@ export default async function Page(props: Props) {
     : "asc";
   const query = searchParams.query ? String(searchParams.query) : "";
 
-  const tMenu = await getTranslations("AdminMenu");
+  const tMenu = await getTranslations("Menu.Admin");
   const tUser = await getTranslations("Users");
   const tCrud = await getTranslations("Crud");
 
@@ -61,7 +61,9 @@ export default async function Page(props: Props) {
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 text-stone-800">
           <div className="px-4 sm:px-6 lg:px-8">
             <AdminPageHeader
-              breadcrumbLinks={[{ href: "/", label: tMenu("home") }]}
+              breadcrumbLinks={[
+                { href: "/admin/dashboard", label: tMenu("dashboard") },
+              ]}
               title={tUser("title")}
               buttons={[
                 {

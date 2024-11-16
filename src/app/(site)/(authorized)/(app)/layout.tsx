@@ -8,6 +8,8 @@ import { UserRepository } from "@/repositories/user_repository";
 import AuthError from "@/exceptions/auth_error";
 import { redirect, notFound } from "next/navigation";
 import { User } from "@/models/user";
+import { CheckCircle, Users, Settings, Home, BarChart2 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 type Props = {
   children: React.ReactNode;
@@ -28,10 +30,22 @@ export default async function SiteLayout({ children }: Props) {
   if (!me || !me.permissions.includes("admin")) {
     return notFound();
   }
+  const t = await getTranslations("Menu.App");
+  const menuItems = [
+    {
+      icon: <Home className="w-5 h-5" />,
+      label: t("dashboard"),
+      href: "/dashboard",
+    },
+  ];
 
   return (
     <div className="min-h-screen flex">
-      <SideMenu />
+      <SideMenu
+        menuItems={menuItems}
+        title="TaskMaster"
+        icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
+      />
       <div className="flex-1 lg:ml-64 flex flex-col">
         <Header signInUser={me} />
         <main className="p-6 flex-grow">{children}</main>
