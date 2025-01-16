@@ -51,7 +51,8 @@
     },
     "Admin": {
       "dashboard": "Dashboard",
-      "users": "Users"
+      "users": "Users",
+      "/* [ADMIN_MENU_ITEMS] */": ""
     }
   },
   "Users": {
@@ -61,6 +62,7 @@
     "permissions": "Permissions",
     "password": "Password"
   },
+  "/* [MODEL_MESSAGES] */": "",
   "Components": {
     "Pagination": {
       "previous": "Previous",

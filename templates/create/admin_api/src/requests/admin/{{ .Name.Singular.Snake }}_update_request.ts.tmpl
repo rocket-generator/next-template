@@ -1,0 +1,9 @@
+import * as z from "zod";
+
+export const {{ .Name.Singular.Title }}UpdateRequestSchema = z.object({
+{{- range .Columns}}
+  {{ .Name.Original }}: z.{{ .ObjectType }}(),
+{{- end }}
+});
+
+export type {{ .Name.Singular.Title }}UpdateRequest = z.infer<typeof {{ .Name.Singular.Title }}UpdateRequestSchema>;

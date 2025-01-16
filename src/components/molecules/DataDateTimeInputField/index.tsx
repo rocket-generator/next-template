@@ -13,6 +13,7 @@ type Props = {
   disabled?: boolean;
   options: { [key: string]: any } | undefined;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
 };
 
 export default function FormInputField(props: Props) {

@@ -47,11 +47,12 @@
   },
   "Menu": {
     "App": {
-      "dashboard": "Dashboard"
+      "dashboard": "ダッシュボード"
     },
     "Admin": {
-      "dashboard": "Home",
-      "users": "Users"
+      "dashboard": "ダッシュボード",
+      "users": "ユーザー",
+      "/* [ADMIN_MENU_ITEMS] */": ""
     }
   },
   "Users": {
@@ -61,6 +62,7 @@
     "permissions": "権限",
     "password": "パスワード"
   },
+  "/* [MODEL_MESSAGES] */": "",
   "Components": {
     "Pagination": {
       "previous": "前へ",

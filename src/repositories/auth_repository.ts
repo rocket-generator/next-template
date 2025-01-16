@@ -1,5 +1,5 @@
 import { BaseRepository } from "@/repositories/base_repository";
-import { UserSchema } from "@/models/user";
+import { UserSchema } from "@/models/admin/user";
 import { APIClient } from "@/libraries/api_client";
 import { SignInRequest } from "@/requests/signin_request";
 import { AccessToken, AccessTokenSchema } from "@/models/access_token";

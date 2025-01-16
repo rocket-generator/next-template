@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { User } from "@/models/user";
+import { User } from "@/models/admin/user";
 import { auth } from "@/libraries/auth";
-import { UserRepository } from "@/repositories/user_repository";
+import { UserRepository } from "@/repositories/admin/user_repository";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import AuthError from "@/exceptions/auth_error";
@@ -10,6 +10,7 @@ import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataTable from "@/components/organisms/DataTable";
 import { Plus } from "lucide-react";
 import { Skeleton } from "@/components/atoms/skeleton";
+import DataTableSkeleton from "@/components/molecules/DataTableSkeleton";
 
 type SearchParams = {
   offset?: string;
@@ -54,9 +55,32 @@ export default async function Page(props: Props) {
     }
     console.log(error);
   }
+  const structure = [
+    {
+      name: tUser("name"),
+      key: "name",
+      type: "text",
+      options: {},
+      isSortable: true,
+    },
+    {
+      name: tUser("email"),
+      key: "email",
+      type: "text",
+      options: {},
+      isSortable: true,
+    },
+    {
+      name: tUser("permissions"),
+      key: "permissions",
+      type: "array",
+      options: {},
+      isSortable: true,
+    },
+  ];
 
   return (
-    <Suspense fallback={<Skeleton className="w-full h-full rounded-full" />}>
+    <Suspense fallback={<DataTableSkeleton columnCount={structure.length} />}>
       <main>
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 text-stone-800">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -82,29 +106,7 @@ export default async function Page(props: Props) {
               direction={direction}
               query={query}
               data={data?.data || []}
-              structure={[
-                {
-                  name: tUser("name"),
-                  key: "name",
-                  type: "text",
-                  options: {},
-                  isSortable: true,
-                },
-                {
-                  name: tUser("email"),
-                  key: "email",
-                  type: "text",
-                  options: {},
-                  isSortable: true,
-                },
-                {
-                  name: tUser("permissions"),
-                  key: "permissions",
-                  type: "array",
-                  options: {},
-                  isSortable: true,
-                },
-              ]}
+              structure={structure}
             />
           </div>
         </div>

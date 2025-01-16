@@ -1,0 +1,9 @@
+import { BaseRepository } from "@/repositories/base_repository";
+import { {{ .Name.Singular.Title }}, {{ .Name.Singular.Title }}Schema } from "@/models/admin/{{ .Name.Singular.Snake }}";
+import { APIClient } from "@/libraries/api_client";
+
+export class {{ .Name.Singular.Title }}Repository extends BaseRepository<typeof {{ .Name.Singular.Title }}Schema> {
+  public constructor(accessToken?: string) {
+    super({{ .Name.Singular.Title }}Schema, "/admin/{{ .Name.Plural.Snake }}", accessToken);
+  }
+}

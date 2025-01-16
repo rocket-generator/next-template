@@ -32,7 +32,7 @@ export abstract class BaseRepository<T extends z.ZodType<any, any>> {
     };
   }
 
-  async getById(id: string): Promise<z.infer<T>> {
+  async findById(id: string): Promise<z.infer<T>> {
     const data = await APIClient<T>({
       path: `${this.endpoint}/${id}`,
       accessToken: this.accessToken,

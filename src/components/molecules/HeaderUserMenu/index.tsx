@@ -1,7 +1,7 @@
 "use client";
 
 import { User, Settings, LogOut } from "lucide-react";
-import { User as UserModel } from "@/models/user";
+import { User as UserModel } from "@/models/admin/user";
 import { useState, useRef, useEffect } from "react";
 import { signOutAction } from "./actions";
 

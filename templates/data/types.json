@@ -1,0 +1,48 @@
+{
+  "database": {
+    "text": "string",
+    "uuid": "string",
+    "date": "string",
+    "boolean": "boolean",
+    "number": "number",
+    "integer": "number",
+    "int": "number",
+    "bigint": "string",
+    "jsonb": "object",
+    "varchar": "string",
+    "bigserial": "string",
+    "serial": "number"
+  },
+  "code": {
+    "text": "string",
+    "uuid": "string",
+    "date": "string",
+    "boolean": "bool",
+    "number": "number",
+    "integer": "number",
+    "int": "number",
+    "bigint": "number",
+    "jsonb": "object",
+    "varchar": "string",
+    "bigserial": "number",
+    "serial": "number",
+    "decimal": "string"
+  },
+  "ui": {
+    "text": "text",
+    "string": "text",
+    "uuid": "text",
+    "date": "date",
+    "boolean": "bool",
+    "number": "number",
+    "integer": "number",
+    "int": "number",
+    "bigint": "number",
+    "varchar": "text",
+    "bigserial": "number",
+    "serial": "number",
+    "decimal": "number",
+    "object": "select_multi",
+    "jsonb": "text"
+  }
+}

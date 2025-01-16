@@ -1,0 +1,82 @@
+import { Suspense } from "react";
+import { auth } from "@/libraries/auth";
+import { {{ .Name.Singular.Title }}Repository } from "@/repositories/admin/{{ .Name.Singular.Snake }}_repository";
+import { getTranslations } from "next-intl/server";
+import AdminPageHeader from "@/components/molecules/AdminPageHeader";
+import DataView from "@/components/organisms/DataView";
+import { notFound } from "next/navigation";
+import { {{ .Name.Singular.Title }} } from "@/models/admin/{{ .Name.Singular.Snake }}";
+import { delete{{ .Name.Singular.Title }} } from "./actions";
+import { Pencil, Trash2 } from "lucide-react";
+import { redirect } from "next/navigation";
+
+type Props = {
+  params: {
+    id: string;
+  };
+};
+
+export default async function Page({ params }: Props) {
+  const id = params.id;
+
+  const session = await auth();
+  let data: {{ .Name.Singular.Title }} | null = null;
+  try {
+    const repository = new {{ .Name.Singular.Title }}Repository(session?.access_token);
+    data = await repository.findById(id);
+  } catch (error) {
+    console.log(error);
+    return notFound();
+  }
+
+  const tMenu = await getTranslations("Menu.Admin");
+  const t = await getTranslations("{{ .Name.Plural.Title }}");
+  const tCrud = await getTranslations("Crud");
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <main>
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 text-stone-800">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <AdminPageHeader
+              breadcrumbLinks={[
+                { href: "/admin/dashboard", label: tMenu("dashboard") },
+                { href: "/admin/{{ .Name.Plural.Snake }}", label: tMenu("{{ .Name.Plural.Snake }}") },
+              ]}
+              title={data.name}
+              buttons={[
+                {
+                  href: `/admin/{{ .Name.Plural.Snake }}/${id}/edit`,
+                  label: tCrud("edit"),
+                  icon: <Pencil className="w-5 h-5" />,
+                },
+                {
+                  action: async () => {
+                    "use server";
+                    await delete{{ .Name.Singular.Title }}(id);
+                    redirect("/admin/{{ .Name.Plural.Snake }}");
+                  },
+                  label: tCrud("delete"),
+                  variant: "danger",
+                  icon: <Trash2 className="w-5 h-5" />,
+                },
+              ]}
+            />
+            <DataView
+              data={data}
+              structure={[
+{{- range .Columns}}
+                {
+                  name: t("{{ .Name.Original }}"),
+                  key: "{{ .Name.Original }}",
+                  type: "{{ .ObjectType }}",
+                  options: {},
+                },
+{{- end }}
+              ]}
+            />
+          </div>
+        </div>
+      </main>
+    </Suspense>
+  );
+}

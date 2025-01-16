@@ -1,5 +1,5 @@
 import { BaseRepository } from "@/repositories/base_repository";
-import { User, UserSchema } from "@/models/user";
+import { User, UserSchema } from "@/models/admin/user";
 import { APIClient } from "@/libraries/api_client";
 
 export class UserRepository extends BaseRepository<typeof UserSchema> {

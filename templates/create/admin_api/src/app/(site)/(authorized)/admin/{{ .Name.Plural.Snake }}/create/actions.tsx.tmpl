@@ -1,0 +1,22 @@
+"use server";
+
+import { {{ .Name.Singular.Title }}Repository } from "@/repositories/admin/{{ .Name.Singular.Snake }}_repository";
+import { auth } from "@/libraries/auth";
+import { {{ .Name.Singular.Title }}CreateRequest } from "@/requests/admin/{{ .Name.Singular.Snake }}_create_request";
+
+export async function create{{ .Name.Singular.Title }}(
+  data: {{ .Name.Singular.Title }}CreateRequest
+): Promise<string | null> {
+  "use server";
+  const session = await auth();
+  const repository = new {{ .Name.Singular.Title }}Repository(session?.access_token);
+
+  try {
+    const {{ .Name.Singular.Snake }} = await repository.create(data);
+    return {{ .Name.Singular.Snake }}.id;
+  } catch (error) {
+    console.error("Failed to create {{ .Name.Singular.Snake }}:", error);
+    throw new Error("Failed to create {{ .Name.Singular.Snake }}");
+  }
+  return null;
+}

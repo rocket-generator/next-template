@@ -1,0 +1,1 @@
+      "{{ .Name.Plural.Snake }}": "{{ .Name.Plural.Title }}",

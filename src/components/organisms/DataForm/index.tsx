@@ -2,6 +2,7 @@
 import DataTextInputField from "@/components/molecules/DataTextInputField";
 import DataSelectInputField from "@/components/molecules/DataSelectSingleInputField";
 import DataCheckboxMultiInputField from "@/components/molecules/DataCheckboxMultiInputField";
+import DataDateTimeInputField from "@/components/molecules/DataDateTimeInputField";
 import {
   Controller,
   SubmitHandler,
@@ -31,8 +32,14 @@ export default function DataForm<T extends z.ZodType<any, any>>({
   structure,
   submitAction,
 }: Props<T>) {
-  const { control, handleSubmit } = useForm<T>();
-  const tCrud = useTranslations("Crud");
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<T>({
+    mode: "onChange",
+  });
+  const t = useTranslations("Components.DataForm");
   const [isLoading, setIsLoading] = React.useState(false);
 
   const onSubmit: SubmitHandler<z.infer<T>> = async (data: z.infer<T>) => {
@@ -59,12 +66,21 @@ export default function DataForm<T extends z.ZodType<any, any>>({
                   name={field.key as Path<T>}
                   control={control}
                   defaultValue={field.value as PathValue<T, Path<T>>}
-                  rules={{ required: field.required }}
+                  rules={{
+                    required:
+                      field.required && field.type !== "checkbox_multi"
+                        ? `${field.name}は必須です`
+                        : false,
+                  }}
                   render={({
                     field: { onChange, value },
                     fieldState: { error },
                   }) => {
-                    if (field.type === "text") {
+                    if (
+                      field.type === "text" ||
+                      field.type === "string" ||
+                      field.type === "number"
+                    ) {
                       return (
                         <DataTextInputField
                           data_key={field.key}
@@ -120,7 +136,9 @@ export default function DataForm<T extends z.ZodType<any, any>>({
                           data_key={field.key}
                           name={field.name}
                           value={Array.isArray(value) ? value : []}
-                          onChange={onChange}
+                          onChange={(newValue) => {
+                            onChange(newValue.length === 0 ? [] : newValue);
+                          }}
                           placeholder={field.placeholder}
                           required={field.required}
                           options={field.options}
@@ -130,14 +148,27 @@ export default function DataForm<T extends z.ZodType<any, any>>({
                           )}
                         />
                       );
+                    } else if (field.type === "datetime") {
+                      return (
+                        <DataDateTimeInputField
+                          data_key={field.key}
+                          name={field.name}
+                          value={value as number}
+                          onChange={(e) => onChange(e.target.value)}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                          disabled={isLoading}
+                          options={field.options}
+                        />
+                      );
                     }
                     return <div>Invalid field type</div>;
                   }}
                 />
-                {control.getFieldState(field.key as Path<T>).error && (
+                {errors[field.key as string] && (
                   <p className="mt-1 text-sm text-red-500">
-                    {control.getFieldState(field.key as Path<T>).error
-                      ?.message || `${field.name}は必須です`}
+                    {errors[field.key as string]?.message ||
+                      `${field.name}は必須です`}
                   </p>
                 )}
               </div>
@@ -151,13 +182,13 @@ export default function DataForm<T extends z.ZodType<any, any>>({
           type="button"
           className="text-sm font-semibold leading-6 text-gray-900"
         >
-          {tCrud("cancel")}
+          {t("cancel")}
         </button>
         <button
           type="submit"
           className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
         >
-          {isLoading ? tCrud("saving") : tCrud("save")}
+          {isLoading ? t("saving") : t("save")}
         </button>
       </div>
     </form>

@@ -20,20 +20,7 @@ export default function DescriptionList(props: Props) {
         <dl className="divide-y divide-gray-100">
           {props.structure.map((column, index) => {
             let value: React.ReactNode | string = "";
-            if (column.type === "text") {
-              value = (
-                <DataTextItem
-                  record={props.data}
-                  name={column.name}
-                  columnKey={column.key}
-                  options={column.options}
-                  key={index + "-" + column.key}
-                />
-              );
-            } else if (
-              column.type == "link" &&
-              props.data[column.key] != null
-            ) {
+            if (column.type == "link" && props.data[column.key] != null) {
               value = (
                 <DataLinkItem
                   record={props.data}
@@ -61,6 +48,16 @@ export default function DescriptionList(props: Props) {
                   columnKey={column.key}
                   options={column.options}
                   key={column.key}
+                />
+              );
+            } else {
+              value = (
+                <DataTextItem
+                  record={props.data}
+                  name={column.name}
+                  columnKey={column.key}
+                  options={column.options}
+                  key={index + "-" + column.key}
                 />
               );
             }

@@ -1,0 +1,61 @@
+import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
+import AdminPageHeader from "@/components/molecules/AdminPageHeader";
+import DataForm from "@/components/organisms/DataForm";
+import { {{ .Name.Singular.Title }} } from "@/models/admin/{{ .Name.Singular.Snake }}";
+import { create{{ .Name.Singular.Title }} } from "./actions";
+import { redirect } from "next/navigation";
+import { {{ .Name.Singular.Title }}CreateRequestSchema } from "@/requests/admin/{{ .Name.Singular.Snake }}_create_request";
+
+export default async function Page() {
+  const tMenu = await getTranslations("Menu.Admin");
+  const t = await getTranslations("{{ .Name.Plural.Title }}");
+  const data: {{ .Name.Singular.Title }} = {
+{{- range .Columns}}
+    {{ .Name.Original }}: "",
+{{- end }}
+  };
+
+  const structure = [
+{{- range .Columns}}
+    {
+      name: t("{{ .Name.Original }}"),
+      key: "{{ .Name.Original }}",
+      type: "{{ .ObjectType }}",
+      value: data.{{ .Name.Original }},
+      required: true,
+      placeholder: t("{{ .Name.Original }}"),
+      options: {},
+    },
+{{- end }}
+  ];
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <main>
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 text-stone-800">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <AdminPageHeader
+              breadcrumbLinks={[
+                { href: "/admin/dashboard", label: tMenu("dashboard") },
+              ]}
+              title="新規ユーザー作成"
+              buttons={[]}
+            />
+            <DataForm<typeof {{ .Name.Singular.Title }}CreateRequestSchema>
+              structure={structure}
+              submitAction={async (data) => {
+                "use server";
+                const id = await create{{ .Name.Singular.Title }}(data);
+                if (id) {
+                  redirect(`/admin/{{ .Name.Plural.Snake }}/${id}`);
+                }
+                return false;
+              }}
+            />
+          </div>
+        </div>
+      </main>
+    </Suspense>
+  );
+}

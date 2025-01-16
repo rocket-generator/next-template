@@ -40,7 +40,6 @@ export const permissionsSchema = z
       invalid_type_error: "Permission must be a string",
     })
   )
-  .nullable()
   .default([]);
 
 export const UserCreateRequestSchema = z.object({

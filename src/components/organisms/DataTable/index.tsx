@@ -122,7 +122,7 @@ export default function CRUDTable({
                       >
                         {props.structure.map((column, colIndex) => {
                           const className = cn(
-                            "whitespace-nowrap py-5 text-sm text-gray-500",
+                            "whitespace-nowrap py-1 text-sm text-gray-500",
                             colIndex === 0 ? "pl-4 pr-3 sm:pl-6" : "px-3"
                           );
                           if (column.type == "link") {
@@ -190,7 +190,7 @@ export default function CRUDTable({
                             );
                           }
                         })}
-                        <td className="relative whitespace-nowrap py-5 pl-3 pr-4 sm:pr-6 text-sm font-medium text-center">
+                        <td className="relative whitespace-nowrap py-1 pl-3 pr-4 sm:pr-6 text-sm font-medium text-center">
                           <div className="flex justify-center space-x-2">
                             {showEyeIcon && (
                               <a href={props.basePath + "/" + record.id}>

@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { auth } from "@/libraries/auth";
-import { UserRepository } from "@/repositories/user_repository";
+import { UserRepository } from "@/repositories/admin/user_repository";
 import { getTranslations } from "next-intl/server";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataForm from "@/components/organisms/DataForm";
 import { notFound } from "next/navigation";
-import { User } from "@/models/user";
+import { User } from "@/models/admin/user";
 import { updateUser } from "./actions";
 import { UserUpdateRequestSchema } from "@/requests/admin/user_update_request";
 import { redirect } from "next/navigation";
@@ -25,7 +25,7 @@ export default async function Page({ params }: Props) {
   let data: User | null = null;
   try {
     const repository = new UserRepository(session?.access_token);
-    data = await repository.getById(id);
+    data = await repository.findUserById(id);
   } catch (error) {
     console.log(error);
     return notFound();

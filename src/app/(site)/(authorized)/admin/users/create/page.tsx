@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataForm from "@/components/organisms/DataForm";
-import { User } from "@/models/user";
+import { User } from "@/models/admin/user";
 import { createUser } from "./actions";
 import { redirect } from "next/navigation";
 import { UserCreateRequestSchema } from "@/requests/admin/user_create_request";

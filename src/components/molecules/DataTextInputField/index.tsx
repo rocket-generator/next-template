@@ -17,7 +17,7 @@ type Props = {
 
 export default function DataTextInputField(props: Props) {
   return (
-    <div className="col-span-full space-y-2">
+    <div className="col-span-full space-y-1">
       <Label htmlFor={props.data_key}>{props.name}</Label>
       <Input
         key={props.data_key}
