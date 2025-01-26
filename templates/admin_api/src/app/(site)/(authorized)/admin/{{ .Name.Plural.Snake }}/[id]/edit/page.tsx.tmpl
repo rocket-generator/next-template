@@ -11,13 +11,11 @@ import { {{ .Name.Singular.Title }}UpdateRequestSchema } from "@/requests/admin/
 import { redirect } from "next/navigation";
 
 type Props = {
-  params: {
-    id: string;
-  };
-};
+  params: Promise<{ id: string }>;
+}
 
 export default async function Page({ params }: Props) {
-  const id = params.id;
+  const id = (await params).id;
   const tMenu = await getTranslations("Menu.Admin");
   const t = await getTranslations("{{ .Name.Plural.Title }}");
 
@@ -25,7 +23,7 @@ export default async function Page({ params }: Props) {
   let data: {{ .Name.Singular.Title }} | null = null;
   try {
     const repository = new {{ .Name.Singular.Title }}Repository(session?.access_token);
-    data = await repository.find{{ .Name.Singular.Title }}ById(id);
+    data = await repository.findById(id);
   } catch (error) {
     console.log(error);
     return notFound();
