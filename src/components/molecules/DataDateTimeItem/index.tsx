@@ -2,24 +2,24 @@ import * as React from "react";
 
 type Props = {
   className?: string;
-  record: { [key: string]: any };
+  record: { [key: string]: unknown };
   name: string;
   columnKey: string;
-  options: { [key: string]: any } | undefined;
+  options: { [key: string]: unknown } | undefined;
 };
 
 export default function DataDateTimeItem(props: Props) {
-  let label = props.record[props.columnKey] || "";
+  let label = props.record[props.columnKey] as string || "";
   if (
-    props.options &&
-    props.options["labels"] &&
-    props.options["labels"][label]
+    props.options?.labels &&
+    typeof props.options.labels === 'object' &&
+    Object.prototype.hasOwnProperty.call(props.options.labels, label)
   ) {
-    label = props.options["labels"][label];
+    label = (props.options.labels as Record<string, string>)[label];
   }
   // Convert to Tokyo timezone
   const tokyoDate = new Date(
-    props.record[props.columnKey] * 1000
+    Number(props.record[props.columnKey]) * 1000
   ).toLocaleString("en-US", {
     timeZone: "Asia/Tokyo",
   });

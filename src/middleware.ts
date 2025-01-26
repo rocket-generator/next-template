@@ -10,7 +10,7 @@ const PUBLIC_PAGES = [
   "/auth/reset-password",
 ];
 
-export default auth((request: any) => {
+export default auth((request: { nextUrl: URL; auth: unknown; url: string }) => {
   const { nextUrl } = request;
   const isAuthenticated = !!request.auth;
   const isPublicPage = PUBLIC_PAGES.includes(nextUrl.pathname);

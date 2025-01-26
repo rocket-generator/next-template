@@ -2,12 +2,10 @@ import { AuthRepository } from "@/repositories/auth_repository";
 import { SignInRequest } from "@/requests/signin_request";
 import { SignUpRequest } from "@/requests/signup_request";
 import type { NextAuthConfig } from "next-auth";
-import NextAuth, { AuthError } from "next-auth";
+import NextAuth, { Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-const _basePath =
-  process.env.NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL ||
-  process.env.NEXT_BACKEND_API_BASE_URL;
 
 export const authConfig: NextAuthConfig = {
   trustHost: true,
@@ -93,16 +91,19 @@ export const authConfig: NextAuthConfig = {
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: any }) {
-      if (session.user && token.id) {
-        session.user.id = token.id;
-        session.user.name = token.name;
-        session.user.permissions = token.permissions;
-      }
-      session.access_token = token.access_token;
-      session.name = token.name;
-      session.permissions = token.permissions;
-      return session;
+    async session({ session, token }: { session: Session; token: JWT }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+          name: token.name || null,
+          permissions: token.permissions || [],
+        },
+        access_token: token.access_token || null,
+        name: token.name || null,
+        permissions: token.permissions || [],
+      };
     },
   },
 };

@@ -4,12 +4,12 @@ import DataDateTimeItem from "@/components/molecules/DataDateTimeItem";
 import DataBooleanItem from "@/components/molecules/DataBooleanItem";
 
 type Props = {
-  data: { [key: string]: any };
+  data: { [key: string]: unknown };
   structure: {
     name: string;
     key: string;
     type: string;
-    options?: { [key: string]: any } | undefined;
+    options?: { [key: string]: unknown } | undefined;
   }[];
 };
 

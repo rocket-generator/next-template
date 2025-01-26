@@ -6,11 +6,11 @@ type Props = {
   name: string;
   data_key: string;
   type: string;
-  value: string | number | boolean | readonly string[];
+  value: string | number | readonly string[] | undefined;
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  options: { [key: string]: any } | undefined;
+  options: { [key: string]: unknown } | undefined;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
 };

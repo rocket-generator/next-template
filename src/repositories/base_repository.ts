@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ApiError } from "@/exceptions/api_error";
 import { APIClient } from "@/libraries/api_client";
 
-export abstract class BaseRepository<T extends z.ZodType<any, any>> {
+export abstract class BaseRepository<T extends z.ZodObject<z.ZodRawShape, "strip">> {
   protected schema: T;
   protected endpoint: string;
   protected accessToken?: string;
@@ -22,7 +22,13 @@ export abstract class BaseRepository<T extends z.ZodType<any, any>> {
   ): Promise<{ data: z.infer<T>[]; count: number }> {
     const response = await APIClient<{ data: z.infer<T>[]; count: number }>({
       path: this.endpoint,
-      params: { offset, limit, order, direction, query },
+      params: { 
+        offset, 
+        limit,
+        ...(order && { order }),
+        ...(direction && { direction }), 
+        ...(query && { query })
+      },
       accessToken: this.accessToken,
     });
 

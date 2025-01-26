@@ -5,7 +5,7 @@ import DataForm from "@/components/organisms/DataForm";
 import { User } from "@/models/admin/user";
 import { createUser } from "./actions";
 import { redirect } from "next/navigation";
-import { UserCreateRequestSchema } from "@/requests/admin/user_create_request";
+import { UserCreateRequest } from "@/requests/admin/user_create_request";
 
 export default async function Page() {
   const tMenu = await getTranslations("Menu.Admin");
@@ -67,7 +67,7 @@ export default async function Page() {
               title="新規ユーザー作成"
               buttons={[]}
             />
-            <DataForm<typeof UserCreateRequestSchema>
+            <DataForm<UserCreateRequest>
               structure={structure}
               submitAction={async (data) => {
                 "use server";

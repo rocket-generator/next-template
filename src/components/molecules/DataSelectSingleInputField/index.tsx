@@ -36,8 +36,7 @@ export default function DataSelectSingleInputField(props: Props) {
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {options.map((option: { name: string; value: string }) => (
-            <SelectItem key={option.value} value={option.value}>
+          {(options as { name: string; value: string }[]).map((option) => (            <SelectItem key={option.value} value={option.value}>
               {option.name}
             </SelectItem>
           ))}

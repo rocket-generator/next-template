@@ -9,7 +9,6 @@ import { headers } from "next/headers";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataTable from "@/components/organisms/DataTable";
 import { Plus } from "lucide-react";
-import { Skeleton } from "@/components/atoms/skeleton";
 import DataTableSkeleton from "@/components/molecules/DataTableSkeleton";
 
 type SearchParams = {
@@ -22,12 +21,12 @@ type SearchParams = {
 };
 
 type Props = {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 };
 
 export default async function Page(props: Props) {
   const session = await auth();
-  const searchParams = await props.searchParams;
+  const searchParams = (await props.searchParams);
   const offset = searchParams.offset ? parseInt(searchParams.offset) : 0;
   const limit = searchParams.limit ? parseInt(searchParams.limit) : 20;
   const order = searchParams.order ? String(searchParams.order) : "name";

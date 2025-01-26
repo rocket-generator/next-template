@@ -9,13 +9,13 @@ import {
   useForm,
   Path,
   PathValue,
+  FieldError,
 } from "react-hook-form";
 import React from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/libraries/css";
-import { z } from "zod";
 
-type Props<T> = {
+type Props<T extends Record<string, unknown>> = {
   structure: {
     name: string;
     key: string;
@@ -23,12 +23,12 @@ type Props<T> = {
     value: string | number | boolean | string[] | undefined;
     required: boolean;
     placeholder: string;
-    options?: { [key: string]: any } | undefined;
+    options?: { [key: string]: unknown } | undefined;
   }[];
   submitAction?: (data: T) => Promise<boolean>;
 };
 
-export default function DataForm<T extends z.ZodType<any, any>>({
+export default function DataForm<T extends Record<string, unknown>>({
   structure,
   submitAction,
 }: Props<T>) {
@@ -42,7 +42,7 @@ export default function DataForm<T extends z.ZodType<any, any>>({
   const t = useTranslations("Components.DataForm");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const onSubmit: SubmitHandler<z.infer<T>> = async (data: z.infer<T>) => {
+  const onSubmit: SubmitHandler<T> = async (data) => {
     setIsLoading(true);
     try {
       if (submitAction) {
@@ -167,7 +167,7 @@ export default function DataForm<T extends z.ZodType<any, any>>({
                 />
                 {errors[field.key as string] && (
                   <p className="mt-1 text-sm text-red-500">
-                    {errors[field.key as string]?.message ||
+                    {((errors[field.key as string] as FieldError)?.message as string) ||
                       `${field.name}は必須です`}
                   </p>
                 )}

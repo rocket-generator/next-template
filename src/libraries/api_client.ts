@@ -1,10 +1,10 @@
 import AuthError from "@/exceptions/auth_error";
 
 interface APIClientProps {
-  method?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   path: string;
-  params?: Record<string, any>;
-  body?: object;
+  params?: Record<string, string | number | boolean | null>;
+  body?: Record<string, unknown>;
   accessToken?: string;
 }
 
@@ -29,7 +29,13 @@ export async function APIClient<T>({
     Object.keys(params).forEach(
       (key) => params[key] === undefined && delete params[key]
     );
-    url += "?" + new URLSearchParams(params).toString();
+    const searchParams: Record<string, string> = {};
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== null) {
+        searchParams[key] = String(value);
+      }
+    });
+    url += "?" + new URLSearchParams(searchParams).toString();
   }
   console.log("URL:", url);
   const headers: Record<string, string> = {};

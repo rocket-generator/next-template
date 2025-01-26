@@ -7,17 +7,15 @@ import DataForm from "@/components/organisms/DataForm";
 import { notFound } from "next/navigation";
 import { User } from "@/models/admin/user";
 import { updateUser } from "./actions";
-import { UserUpdateRequestSchema } from "@/requests/admin/user_update_request";
+import { UserUpdateRequest } from "@/requests/admin/user_update_request";
 import { redirect } from "next/navigation";
 
 type Props = {
-  params: {
-    id: string;
-  };
-};
+  params: Promise<{ id: string }>;
+}
 
 export default async function Page({ params }: Props) {
-  const id = params.id;
+  const id = (await params).id;
   const tMenu = await getTranslations("Menu.Admin");
   const tUser = await getTranslations("Users");
 
@@ -25,7 +23,7 @@ export default async function Page({ params }: Props) {
   let data: User | null = null;
   try {
     const repository = new UserRepository(session?.access_token);
-    data = await repository.findUserById(id);
+    data = await repository.findById(id);
   } catch (error) {
     console.log(error);
     return notFound();
@@ -82,7 +80,7 @@ export default async function Page({ params }: Props) {
               title={data.name}
               buttons={[]}
             />
-            <DataForm<typeof UserUpdateRequestSchema>
+            <DataForm<UserUpdateRequest>
               structure={structure}
               submitAction={async (data) => {
                 "use server";

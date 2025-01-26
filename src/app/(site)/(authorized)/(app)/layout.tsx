@@ -8,7 +8,7 @@ import { UserRepository } from "@/repositories/admin/user_repository";
 import AuthError from "@/exceptions/auth_error";
 import { redirect, notFound } from "next/navigation";
 import { User } from "@/models/admin/user";
-import { CheckCircle, Users, Settings, Home, BarChart2 } from "lucide-react";
+import { CheckCircle, Home } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 type Props = {

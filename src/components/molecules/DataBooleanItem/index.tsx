@@ -3,10 +3,10 @@ import * as React from "react";
 
 type Props = {
   className?: string;
-  record: { [key: string]: any };
+  record: { [key: string]: unknown };
   name: string;
   columnKey: string;
-  options?: { [key: string]: any } | undefined;
+  options?: { [key: string]: unknown } | undefined;
 };
 
 export default function DataBooleanItem(props: Props) {

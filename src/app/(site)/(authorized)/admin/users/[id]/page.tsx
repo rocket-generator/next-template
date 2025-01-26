@@ -11,13 +11,11 @@ import { Pencil, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";
 
 type Props = {
-  params: {
-    id: string;
-  };
-};
+  params: Promise<{ id: string }>;
+}
 
 export default async function Page({ params }: Props) {
-  const id = params.id;
+  const id = (await params).id;
 
   const session = await auth();
   let data: User | null = null;

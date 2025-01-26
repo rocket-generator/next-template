@@ -7,11 +7,11 @@ import { useState } from "react";
 type Props = {
   name: string;
   data_key: string;
-  value: any;
+  value: unknown;
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  options: { [key: string]: any } | undefined;
+  options: { [key: string]: unknown } | undefined;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
 };
@@ -19,7 +19,7 @@ type Props = {
 export default function FormInputField(props: Props) {
   console.log("props", props);
   const [datetimeValue, setDatetimeValue] = useState<number | undefined>(
-    props.value
+    props.value as number | undefined
   );
   const onChangeFunction = (date: Date | undefined) => {
     if (!date) {
