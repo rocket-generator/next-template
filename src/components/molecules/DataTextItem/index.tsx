@@ -9,7 +9,7 @@ type Props = {
 };
 
 export default function DataTextItem(props: Props) {
-  const value = props.record[props.columnKey] as string || "";
+  const value = (props.record[props.columnKey] as string) || "";
   const className =
     props.className || "text-gray-900 whitespace-normal break-words max-w-xs";
   return <div className={className}>{value}</div>;

@@ -1,7 +1,7 @@
 import AuthError from "@/exceptions/auth_error";
 
 interface APIClientProps {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   path: string;
   params?: Record<string, string | number | boolean | null>;
   body?: Record<string, unknown>;

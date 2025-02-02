@@ -18,7 +18,7 @@ export default function DataLinkItem(props: Props) {
     (props.options && (props.options["display"] as string)) || "name";
   const getNestedValue = (obj: unknown, path: string): unknown => {
     return path.split(".").reduce((acc: unknown, part: string) => {
-      if (acc && typeof acc === 'object') {
+      if (acc && typeof acc === "object") {
         return (acc as Record<string, unknown>)[part];
       }
       return undefined;
@@ -35,7 +35,9 @@ export default function DataLinkItem(props: Props) {
     <div className={className}>
       <Link
         className={"text-indigo-900 hover:text-indigo-900"}
-        href={link_base_url + (recordValue as { [key: string]: string })[link_key]}
+        href={
+          link_base_url + (recordValue as { [key: string]: string })[link_key]
+        }
       >
         {(recordValue as { [key: string]: string })[link_display]}
       </Link>

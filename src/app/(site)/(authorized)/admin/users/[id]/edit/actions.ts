@@ -4,7 +4,10 @@ import { UserRepository } from "@/repositories/admin/user_repository";
 import { auth } from "@/libraries/auth";
 import { UserUpdateRequest } from "@/requests/admin/user_update_request";
 
-export async function updateUser(id: string, data: UserUpdateRequest): Promise<boolean> {
+export async function updateUser(
+  id: string,
+  data: UserUpdateRequest
+): Promise<boolean> {
   const session = await auth();
   const repository = new UserRepository(session?.access_token);
 

@@ -27,7 +27,7 @@ export default function DataCheckboxMultiInputField(props: Props) {
     <div className={cn("col-span-full space-y-4", props.className)}>
       <Label>{props.name}</Label>
       <div className="grid grid-cols-2 gap-4">
-      {(options as { name: string; value: string }[]).map((option) => (
+        {(options as { name: string; value: string }[]).map((option) => (
           <div key={option.value} className="flex items-center space-x-2">
             <Checkbox
               id={`${props.data_key}-${option.value}`}

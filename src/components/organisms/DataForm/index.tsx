@@ -167,8 +167,8 @@ export default function DataForm<T extends Record<string, unknown>>({
                 />
                 {errors[field.key as string] && (
                   <p className="mt-1 text-sm text-red-500">
-                    {((errors[field.key as string] as FieldError)?.message as string) ||
-                      `${field.name}は必須です`}
+                    {((errors[field.key as string] as FieldError)
+                      ?.message as string) || `${field.name}は必須です`}
                   </p>
                 )}
               </div>

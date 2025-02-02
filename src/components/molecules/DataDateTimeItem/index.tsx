@@ -9,10 +9,10 @@ type Props = {
 };
 
 export default function DataDateTimeItem(props: Props) {
-  let label = props.record[props.columnKey] as string || "";
+  let label = (props.record[props.columnKey] as string) || "";
   if (
     props.options?.labels &&
-    typeof props.options.labels === 'object' &&
+    typeof props.options.labels === "object" &&
     Object.prototype.hasOwnProperty.call(props.options.labels, label)
   ) {
     label = (props.options.labels as Record<string, string>)[label];
