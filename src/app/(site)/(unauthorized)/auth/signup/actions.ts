@@ -12,7 +12,7 @@ export async function signUpAction(
     const validatedInput = SignUpRequestSchema.safeParse(rawInput);
     if (!validatedInput.success) return InvalidInput;
 
-    const result = await signIn("signup", {
+    const result = await signIn("prototype", {
       ...validatedInput.data,
       redirect: false,
     });

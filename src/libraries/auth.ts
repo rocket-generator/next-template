@@ -11,6 +11,30 @@ export const authConfig: NextAuthConfig = {
   secret: process.env.NEXT_AUTH_SECRET,
   providers: [
     CredentialsProvider({
+      id: "prototype",
+      name: "Prototype",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (
+          credentials.email === "admin@example.com" &&
+          credentials.password === "password"
+        ) {
+          return {
+            id: "prototype-admin",
+            access_token: "prototype-token",
+            permissions: ["admin"],
+            expires_in: 3600,
+            token_type: "Bearer",
+            name: "Prototype Admin",
+          };
+        }
+        return null;
+      },
+    }),
+    CredentialsProvider({
       id: "signin",
       name: "SignIn",
       credentials: {

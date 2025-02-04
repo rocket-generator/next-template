@@ -14,7 +14,7 @@ export async function signInAction(
       return InvalidInput;
     }
 
-    const result = await signIn("signin", {
+    const result = await signIn("prototype", {
       ...validatedInput.data,
       redirect: false,
     });
