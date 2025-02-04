@@ -3,8 +3,8 @@ import { auth } from "@/libraries/auth";
 import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
 
 import SideMenu from "@/components/organisms/SideMenu";
-import Header from "@/components/organisms/Header";
-import Footer from "@/components/organisms/Footer";
+import AdminHeader from "@/components/organisms/AdminHeader";
+import AdminFooter from "@/components/organisms/AdminFooter";
 import { UserRepository } from "@/repositories/admin/user_repository";
 import AuthError from "@/exceptions/auth_error";
 import { redirect, notFound } from "next/navigation";
@@ -62,9 +62,9 @@ export default async function SiteLayout({ children }: Props) {
         icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
       />
       <div className="flex-1 lg:ml-64 flex flex-col">
-        <Header signInUser={me} />
+        <AdminHeader signInUser={me} />
         <main className="p-6 flex-grow">{children}</main>
-        <Footer />
+        <AdminFooter />
       </div>
     </div>
   );

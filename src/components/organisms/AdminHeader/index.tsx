@@ -1,11 +1,11 @@
-import { User as UserModel } from "@/models/app/user";
+import { User as UserModel } from "@/models/admin/user";
 import HeaderUserMenu from "@/components/molecules/HeaderUserMenu";
 
 type Props = {
   signInUser: UserModel | null;
 };
 
-export default function header({ signInUser }: Props) {
+export default function AdminHeader({ signInUser }: Props) {
   return (
     <header className="sticky top-0 z-30 w-full bg-white border-b">
       <div className="px-4 h-16 flex items-center justify-end gap-4">
