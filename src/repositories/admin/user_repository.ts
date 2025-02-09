@@ -14,4 +14,14 @@ export class UserRepository extends BaseRepository<typeof UserSchema> {
     });
     return this.schema.parse(data);
   }
+
+  async getMePrototype(): Promise<User> {
+    const data = {
+      id: "prototype-admin",
+      name: "Prototype Admin",
+      email: "admin@example.com",
+      permissions: ["admin"],
+    };
+    return this.schema.parse(data);
+  }
 }

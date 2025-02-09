@@ -1,0 +1,6 @@
+{
+  "id": "prototype-admin",
+  "name": "Prototype Admin",
+  "email": "admin@example.com",
+  "permissions": ["admin"]
+}

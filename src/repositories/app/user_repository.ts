@@ -1,27 +1,21 @@
-import { BaseRepository } from "@/repositories/base_repository";
+import { LocalRepository } from "@/repositories/local_repository";
 import { User, UserSchema } from "@/models/app/user";
-import { APIClient } from "@/libraries/api_client";
 
-export class UserRepository extends BaseRepository<typeof UserSchema> {
+export class UserRepository extends LocalRepository<typeof UserSchema> {
   public constructor(accessToken?: string) {
-    super(UserSchema, "/app/users", accessToken);
+    super(
+      UserSchema,
+      "/app/users",
+      {
+        directory: "public/data/users",
+      },
+      accessToken
+    );
   }
 
   async getMe(): Promise<User> {
-    const data = await APIClient<User>({
-      path: `/me`,
-      accessToken: this.accessToken,
-    });
-    return this.schema.parse(data);
+    return this.findById("prototype-admin");
   }
 
-  async getMePrototype(): Promise<User> {
-    const data = {
-      id: "prototype-admin",
-      name: "Prototype Admin",
-      email: "admin@example.com",
-      permissions: ["admin"],
-    };
-    return this.schema.parse(data);
-  }
+  // getMePrototype is no longer needed as getMe now uses local file
 }

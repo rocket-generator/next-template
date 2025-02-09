@@ -20,7 +20,7 @@ export default async function SiteLayout({ children }: Props) {
   let me: User | null = null;
   try {
     const repository = new UserRepository(session?.access_token);
-    me = await repository.getMePrototype();
+    me = await repository.getMe();
   } catch (error) {
     console.log(error);
     if (error instanceof AuthError) {
