@@ -13,8 +13,13 @@ const PUBLIC_PAGES = [
 export default auth((request: { nextUrl: URL; auth: unknown; url: string }) => {
   const { nextUrl } = request;
   const isAuthenticated = !!request.auth;
-  const isPublicPage = PUBLIC_PAGES.includes(nextUrl.pathname);
-
+  let isPublicPage = PUBLIC_PAGES.includes(nextUrl.pathname);
+  if (
+    nextUrl.pathname.startsWith("/data/") ||
+    nextUrl.pathname.startsWith("/images/")
+  ) {
+    isPublicPage = true;
+  }
   if (!isPublicPage && !isAuthenticated) {
     const url = new URL("/auth/signin", request.url);
     url.searchParams.append("callback_url", encodeURI(request.url));

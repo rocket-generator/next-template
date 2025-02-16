@@ -1,0 +1,64 @@
+---
+description: 
+globs: *.tsx, *.ts
+---
+# データアクセス
+
+データアクセスには、`src/repositories` に格納されているリポジトリクラスを必ず利用する。
+
+## リポジトリのルール
+
+リポジトリ層はデータの種類ごとに作られる。また、管理画面用のリポジトリは `src/repositories/admin` に、ユーザー向けアプリケーション用のリポジトリは `src/repositories/app` にそれぞれ別に作る必要がある。例えばユーザー情報を取得するためのユーザー向けアプリケーション用のリポジトリは `src/repositories/app/user_repositories.ts` に作成することになる。これは、バックエンドがローカルやAirTableなどでも変わらない。
+
+すべてのリポジトリは [base_repository.ts](mdc:src/repositories/base_repository.ts) にある BaseRepository を継承する。ただし、そのデータの種類によって BaseRepositoryを継承した別のクラスを継承する場合がある。
+
+### 1. APIサーバを別途用意している場合
+
+BaseRepositoryを直接継承して作成する。
+
+### 2. ローカルデータにアクセスする場合
+
+プロトタイプを作る際には、別途サーバを用意するのでは無く、`public/data` 下にJSONデータや画像などを置き、それに直接アクセスさせる場合がある。その際には、 [local_repository.ts](mdc:src/repositories/local_repository.ts) のLocalRepositoryを継承して利用する。データは `public/data/[モデル名]/index.json` に一覧、`public/data/[モデル名]/[id].json` にデータを格納しておく。ローカルデータアクセスの場合は、データのアップデートや作成、削除は対応しない。
+
+### 3. AirTableにアクセスする場合
+
+プロトタイプを作る際でも、データを作成、保存、削除がしたい場合には、AirTableをバックエンドとして利用する。この場合は、 [airtable_repository.ts](mdc:src/repositories/airtable_repository.ts) を継承してリポジトリを作成する。
+
+### 4. Difyにアクセスする場合
+
+AIを利用する際に、AIのワークフロー実行にはDifyを利用する。チャットのために利用する場合は、 [chat_repository.ts](mdc:src/repositories/chat_repository.ts) を利用する。それ以外のワークフローを利用する場合は、 [workflow_repository.ts](mdc:src/repositories/workflow_repository.ts) を利用する。
+
+## 新たにAPIサーバ以外のサードパーティAPIにアクセスするRepositoryを作成する場合
+
+[airtable_repository.ts](mdc:src/repositories/airtable_repository.ts) と同様に、`/src/repositories/' に、 [base_repository.ts](mdc:src/repositories/base_repository.ts) のBaseRepositoryを継承したモデルを作成する。そして、そのサードパーティAPIを使うデータアクセスは、その新しいリポジトリを継承して作成する必要がある。
+
+### データモデル
+
+リポジトリによって返されるデータは、 `app/models/` の下に定義される。Repositoryと同様、管理画面用のモデルは `src/models/admin` に、ユーザー向けアプリケーション用のモデルは `src/models/app` に定義される。その名前は `users` のようにモデルの複数形となる（Snake Caseを利用）。モデルは以下のように、zod を利用して定義される。
+
+```typescript
+import { z } from "zod";
+
+export const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  permissions: z.array(z.string()),
+});
+
+export type User = z.infer<typeof UserSchema>;
+```
+
+リクエストは、`app/requests` の下に定義される。Repositoryと同様、管理画面用のモデルは `src/requests/admin` に、ユーザー向けアプリケーション用のモデルは `src/requests/app` に定義される。 [user_create_request.ts](mdc:src/requests/admin/user_create_request.ts) と [user_update_request.ts](mdc:src/requests/admin/user_update_request.ts) のように、[モデル名（単数形）]_[アクション名]_request.ts という名称で定義し、こちらも zod を使って定義する。
+
+```typescript
+export const UserCreateRequestSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  name: nameSchema,
+  permissions: permissionsSchema,
+});
+
+export type UserCreateRequest = z.infer<typeof UserCreateRequestSchema>;
+```
+

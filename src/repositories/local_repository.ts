@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { promises as fs } from "fs";
 import path from "path";
 import { BaseRepository } from "./base_repository";
 
@@ -24,11 +23,31 @@ export abstract class LocalRepository<
 
   private async readJsonFile<T>(filePath: string): Promise<T> {
     try {
-      const content = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(content) as T;
+      const response = await fetch(filePath);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data as T;
     } catch (error) {
       throw new Error(`Failed to read JSON file: ${error}`);
     }
+  }
+
+  private getPublicPath(filePath: string): string {
+    // Remove 'public' from the path if it exists
+    const pathWithoutPublic = filePath.replace(/^public\//, "");
+    
+    // Convert the file path to a URL path that can be fetched
+    const normalizedPath = pathWithoutPublic.replace(/\\/g, "/");
+    
+    // Ensure the path starts with a forward slash
+    const urlPath = normalizedPath.startsWith("/") ? normalizedPath : `/${normalizedPath}`;
+    
+    // Get the base URL from environment variable or construct it from request URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    
+    return `${baseUrl}${urlPath}`;
   }
 
   async get(
@@ -38,18 +57,15 @@ export abstract class LocalRepository<
     direction?: string,
     query?: string
   ): Promise<{ data: z.infer<T>[]; count: number }> {
-    console.log(query);
     try {
-      const files = await fs.readdir(this.directory);
-      const jsonFiles = files.filter((file) => file.endsWith(".json"));
-
+      // First, fetch the index file that contains the list of all available files
+      const indexPath = this.getPublicPath(path.join(this.directory, "index.json"));
+      const { data } = await this.readJsonFile<{ data: z.infer<T>[] }>(indexPath);
+      
       const allData: z.infer<T>[] = [];
-      for (const file of jsonFiles) {
-        const filePath = path.join(this.directory, file);
-        const data = await this.readJsonFile<z.infer<T>>(filePath);
-        allData.push(this.schema.parse(data));
+      for (const item of data) {
+          allData.push(this.schema.parse(item));
       }
-
       // Apply search if query is specified
       let filteredData = allData;
       if (query) {
@@ -85,7 +101,7 @@ export abstract class LocalRepository<
 
   async findById(id: string): Promise<z.infer<T>> {
     try {
-      const filePath = path.join(this.directory, `${id}.json`);
+      const filePath = this.getPublicPath(path.join(this.directory, `${id}.json`));
       const data = await this.readJsonFile<z.infer<T>>(filePath);
       return this.schema.parse(data);
     } catch (error) {
