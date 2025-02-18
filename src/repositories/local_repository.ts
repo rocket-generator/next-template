@@ -37,16 +37,18 @@ export abstract class LocalRepository<
   private getPublicPath(filePath: string): string {
     // Remove 'public' from the path if it exists
     const pathWithoutPublic = filePath.replace(/^public\//, "");
-    
+
     // Convert the file path to a URL path that can be fetched
     const normalizedPath = pathWithoutPublic.replace(/\\/g, "/");
-    
+
     // Ensure the path starts with a forward slash
-    const urlPath = normalizedPath.startsWith("/") ? normalizedPath : `/${normalizedPath}`;
-    
+    const urlPath = normalizedPath.startsWith("/")
+      ? normalizedPath
+      : `/${normalizedPath}`;
+
     // Get the base URL from environment variable or construct it from request URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
     return `${baseUrl}${urlPath}`;
   }
 
@@ -59,12 +61,16 @@ export abstract class LocalRepository<
   ): Promise<{ data: z.infer<T>[]; count: number }> {
     try {
       // First, fetch the index file that contains the list of all available files
-      const indexPath = this.getPublicPath(path.join(this.directory, "index.json"));
-      const { data } = await this.readJsonFile<{ data: z.infer<T>[] }>(indexPath);
-      
+      const indexPath = this.getPublicPath(
+        path.join(this.directory, "index.json")
+      );
+      const { data } = await this.readJsonFile<{ data: z.infer<T>[] }>(
+        indexPath
+      );
+
       const allData: z.infer<T>[] = [];
       for (const item of data) {
-          allData.push(this.schema.parse(item));
+        allData.push(this.schema.parse(item));
       }
       // Apply search if query is specified
       let filteredData = allData;
@@ -101,7 +107,9 @@ export abstract class LocalRepository<
 
   async findById(id: string): Promise<z.infer<T>> {
     try {
-      const filePath = this.getPublicPath(path.join(this.directory, `${id}.json`));
+      const filePath = this.getPublicPath(
+        path.join(this.directory, `${id}.json`)
+      );
       const data = await this.readJsonFile<z.infer<T>>(filePath);
       return this.schema.parse(data);
     } catch (error) {

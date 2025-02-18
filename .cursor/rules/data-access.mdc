@@ -12,6 +12,8 @@ globs: *.tsx, *.ts
 
 すべてのリポジトリは [base_repository.ts](mdc:src/repositories/base_repository.ts) にある BaseRepository を継承する。ただし、そのデータの種類によって BaseRepositoryを継承した別のクラスを継承する場合がある。
 
+なお、リクエストやレスポンスなどのスキーマをRepositoryのファイルに書くことは禁止する。レスポンスのモデルは `/src/models` 以下に、リクエストは `/src/requests` に書くこと。
+
 ### 1. APIサーバを別途用意している場合
 
 BaseRepositoryを直接継承して作成する。

@@ -4,72 +4,35 @@ import {
   WorkflowExecutionSchema,
   WorkflowStreamChunk,
   WorkflowStreamChunkSchema,
-  WorkflowInputValue,
 } from "@/models/workflow";
+import type {
+  WorkflowRunOptions,
+  UploadedFile,
+} from "@/requests/workflow_request";
 
-interface WorkflowRunOptions {
-  inputs: Record<string, WorkflowInputValue>;
-  response_mode: "streaming" | "blocking";
-  user: string;
-  files?: Array<{
-    type: "document" | "image" | "audio" | "video" | "custom";
-    transfer_method: "remote_url" | "local_file";
-    url?: string;
-    upload_file_id?: string;
-  }>;
-}
-
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  extension: string;
-  mime_type: string;
-  created_by: string;
-  created_at: number;
-}
-
-export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionSchema> {
-  private readonly baseUrl: string;
-  private readonly apiKey: string;
-
-  private cleanJsonString(jsonStr: string): string {
-    // Find the first occurrence of '{'
-    const startIndex = jsonStr.indexOf('{');
-    // Find the last occurrence of '}'
-    const endIndex = jsonStr.lastIndexOf('}');
-    
-    if (startIndex === -1 || endIndex === -1) {
-      throw new Error('Invalid JSON string: missing brackets');
-    }
-    
-    // Extract only the JSON part
-    return jsonStr.slice(startIndex, endIndex + 1);
-  }
-
-  constructor(accessToken?: string) {
-    super(WorkflowExecutionSchema, "/workflows", accessToken);
-
-    const baseUrl = process.env.NEXT_PUBLIC_DIFY_API_URL;
-    const apiKey = process.env.NEXT_PUBLIC_DIFY_API_KEY;
-
-    if (!baseUrl || !apiKey) {
-      throw new Error("Dify API URL or API Key is not set in environment variables");
-    }
-
-    this.baseUrl = baseUrl;
-    this.apiKey = apiKey;
+export class WorkflowRepository extends BaseRepository<
+  typeof WorkflowExecutionSchema
+> {
+  constructor(baseUrl: string, apiKey: string) {
+    super(WorkflowExecutionSchema, baseUrl, apiKey);
   }
 
   private getHeaders(contentType: string = "application/json"): HeadersInit {
     return {
       "Content-Type": contentType,
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.accessToken}`,
     };
   }
 
-  private getUrl(path: string): string {
-    return `${this.baseUrl}${path}`;
+  private cleanJsonString(jsonStr: string): string {
+    const startIndex = jsonStr.indexOf("{");
+    const endIndex = jsonStr.lastIndexOf("}");
+
+    if (startIndex === -1 || endIndex === -1) {
+      throw new Error("Invalid JSON string: missing brackets");
+    }
+
+    return jsonStr.slice(startIndex, endIndex + 1);
   }
 
   async uploadFile(file: File, user: string): Promise<UploadedFile> {
@@ -77,10 +40,10 @@ export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionS
     formData.append("file", file);
     formData.append("user", user);
 
-    const response = await fetch(this.getUrl("/files/upload"), {
+    const response = await fetch(`${this.endpoint}/files/upload`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.accessToken}`,
       },
       body: formData,
     });
@@ -99,9 +62,7 @@ export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionS
     task_id: string;
     data: WorkflowExecution;
   }> {
-    console.log("Running workflow with options:", options);
-    console.log("URL:", this.getUrl("/workflows/run"));
-    const response = await fetch(this.getUrl("/workflows/run"), {
+    const response = await fetch(`${this.endpoint}/workflows/run`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(options),
@@ -115,7 +76,6 @@ export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionS
 
     const rawData = await response.text();
     const data = JSON.parse(rawData);
-    console.log("Workflow run response:", data);
 
     // Extract and parse the JSON string from the text output
     const outputText = data.data.outputs.text;
@@ -134,8 +94,10 @@ export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionS
     };
   }
 
-  async runStreaming(options: WorkflowRunOptions): Promise<ReadableStream<WorkflowStreamChunk>> {
-    const response = await fetch(this.getUrl("/workflows/run"), {
+  async runStreaming(
+    options: WorkflowRunOptions
+  ): Promise<ReadableStream<WorkflowStreamChunk>> {
+    const response = await fetch(`${this.endpoint}/workflows/run`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify({
@@ -172,7 +134,8 @@ export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionS
                   try {
                     const cleanedJsonStr = this.cleanJsonString(jsonStr);
                     const parsed = JSON.parse(cleanedJsonStr);
-                    const validatedChunk = WorkflowStreamChunkSchema.parse(parsed);
+                    const validatedChunk =
+                      WorkflowStreamChunkSchema.parse(parsed);
                     controller.enqueue(validatedChunk);
                   } catch (e) {
                     console.error("Failed to parse chunk:", e);
@@ -192,7 +155,7 @@ export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionS
 
   async stop(taskId: string, user: string): Promise<{ result: string }> {
     const response = await fetch(
-      this.getUrl(`/workflows/tasks/${taskId}/stop`),
+      `${this.endpoint}/workflows/tasks/${taskId}/stop`,
       {
         method: "POST",
         headers: this.getHeaders(),
@@ -210,14 +173,16 @@ export class WorkflowRepository extends BaseRepository<typeof WorkflowExecutionS
 
   async getExecution(workflowId: string): Promise<WorkflowExecution> {
     const response = await fetch(
-      this.getUrl(`/workflows/run/${workflowId}`),
+      `${this.endpoint}/workflows/run/${workflowId}`,
       {
         headers: this.getHeaders(),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to get workflow execution: ${response.statusText}`);
+      throw new Error(
+        `Failed to get workflow execution: ${response.statusText}`
+      );
     }
 
     const data = await response.json();

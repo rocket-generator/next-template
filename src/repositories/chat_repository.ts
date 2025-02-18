@@ -1,27 +1,21 @@
-import { BaseRepository } from "base_repository";
+import { BaseRepository } from "@/repositories/base_repository";
 import type {
   ChatMessage,
   ChatHistoryResponse,
   ConversationsResponse,
   SuggestedQuestionsResponse,
-} from "@/models/app/chat";
-import type {
-    ChatMessageRequest
-} from "@/requests/app/chat_request"
+} from "@/models/chat";
+import { ChatMessageSchema } from "@/models/chat";
+import type { ChatMessageRequest } from "@/requests/chat_request";
 
-export class ChatRepository extends BaseRepository {
-  private readonly baseUrl: string;
-  private readonly apiKey: string;
-
+export class ChatRepository extends BaseRepository<typeof ChatMessageSchema> {
   constructor(baseUrl: string, apiKey: string) {
-    super();
-    this.baseUrl = baseUrl;
-    this.apiKey = apiKey;
+    super(ChatMessageSchema, baseUrl, apiKey);
   }
 
   private getHeaders(): HeadersInit {
     return {
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.accessToken}`,
       "Content-Type": "application/json",
     };
   }
@@ -40,7 +34,7 @@ export class ChatRepository extends BaseRepository {
     queryParams.append("user", params.user);
 
     const response = await fetch(
-      `${this.baseUrl}/conversations?${queryParams.toString()}`,
+      `${this.endpoint}/conversations?${queryParams.toString()}`,
       {
         headers: this.getHeaders(),
       }
@@ -58,7 +52,7 @@ export class ChatRepository extends BaseRepository {
     user: string
   ): Promise<void> {
     const response = await fetch(
-      `${this.baseUrl}/conversations/${conversationId}`,
+      `${this.endpoint}/conversations/${conversationId}`,
       {
         method: "DELETE",
         headers: this.getHeaders(),
@@ -85,7 +79,7 @@ export class ChatRepository extends BaseRepository {
     if (params.limit) queryParams.append("limit", params.limit.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/messages?${queryParams.toString()}`,
+      `${this.endpoint}/messages?${queryParams.toString()}`,
       {
         headers: this.getHeaders(),
       }
@@ -99,7 +93,7 @@ export class ChatRepository extends BaseRepository {
   }
 
   async sendMessage(message: ChatMessageRequest): Promise<ChatMessage> {
-    const response = await fetch(`${this.baseUrl}/chat-messages`, {
+    const response = await fetch(`${this.endpoint}/chat-messages`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(message),
@@ -122,7 +116,7 @@ export class ChatRepository extends BaseRepository {
 
     const response = await fetch(
       `${
-        this.baseUrl
+        this.endpoint
       }/messages/${messageId}/suggested?${queryParams.toString()}`,
       {
         headers: this.getHeaders(),
@@ -152,19 +146,21 @@ export class ChatRepository extends BaseRepository {
     }
   ): Promise<void> {
     const response = await fetch(
-      `${this.baseUrl}/conversations/${conversationId}/name`,
+      `${this.endpoint}/conversations/${conversationId}/name`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.accessToken}`,
         },
         body: JSON.stringify(params),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to update conversation name: ${response.statusText}`);
+      throw new Error(
+        `Failed to update conversation name: ${response.statusText}`
+      );
     }
   }
 }

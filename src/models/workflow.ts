@@ -31,7 +31,7 @@ export const WorkflowOutputValueSchema = z.union([
   z.boolean(),
   z.array(z.string()),
   z.array(z.number()),
-  z.array(z.object({})),  // Allow array of any object
+  z.array(z.object({})), // Allow array of any object
   z.record(z.string(), z.string()),
   z.record(z.string(), z.number()),
 ]);
@@ -67,11 +67,13 @@ export const WorkflowNodeDataSchema = z.object({
   status: z.enum(["running", "succeeded", "failed", "stopped"]).optional(),
   error: z.string().optional(),
   elapsed_time: z.number().optional(),
-  execution_metadata: z.object({
-    total_tokens: z.number().optional(),
-    total_price: z.number().optional(),
-    currency: z.string().optional(),
-  }).optional(),
+  execution_metadata: z
+    .object({
+      total_tokens: z.number().optional(),
+      total_price: z.number().optional(),
+      currency: z.string().optional(),
+    })
+    .optional(),
   created_at: z.number().optional(),
 });
 
@@ -96,4 +98,4 @@ export const WorkflowStreamChunkSchema = z.object({
   created_at: z.number().optional(),
 });
 
-export type WorkflowStreamChunk = z.infer<typeof WorkflowStreamChunkSchema>; 
+export type WorkflowStreamChunk = z.infer<typeof WorkflowStreamChunkSchema>;
