@@ -1,11 +1,11 @@
 ---
-description: Rules for Next.JS
-globs: *.tsx, *.ts
+description: This is a specification of this service. Need to refer every time. Apply this rule to the entire repository
+globs: *
+alwaysApply: true
 ---
-# Next.js 開発のルール
+# Next.js Development Guidelines
 
-
-## ディレクトリ構造
+## Directory Structure
 
 ├── components.json
 ├── messages

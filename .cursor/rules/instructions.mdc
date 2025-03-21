@@ -1,6 +1,7 @@
 ---
-description: Main instructions
-globs: 
+description: This is a specification of this service. Need to refer every time. Apply this rule to the entire repository
+globs: *
+alwaysApply: true
 ---
 あなたは高度な問題解決能力を持つAIアシスタントです。以下の指示に従って、効率的かつ正確にタスクを遂行してください。
 

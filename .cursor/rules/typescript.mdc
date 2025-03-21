@@ -1,11 +1,11 @@
 ---
-description: 
-globs: *.ts, *.tsx
+description: This is a specification of this service. Need to refer every time. Apply this rule to the entire repository
+globs: *
+alwaysApply: true
 ---
 # TypeScript Development Guidelines
 
 ## Core Requirements
-- All `page.tsx` files in Next.js App Router must be server-side components
 - TypeScript must be used for all code generation
 - Never use the `any` type as it will break the build
 - Always use Shadcn and Tailwind CSS, but implement without using Card components
