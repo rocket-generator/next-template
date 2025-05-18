@@ -9,9 +9,9 @@ alwaysApply: true
 
 ## リポジトリのルール
 
-リポジトリ層はデータの種類ごとに作られる。また、管理画面用のリポジトリは `src/repositories/admin` に、ユーザー向けアプリケーション用のリポジトリは `src/repositories/app` にそれぞれ別に作る必要がある。例えばユーザー情報を取得するためのユーザー向けアプリケーション用のリポジトリは `src/repositories/app/user_repositories.ts` に作成することになる。これは、バックエンドがローカルやAirTableなどでも変わらない。
+リポジトリ層はデータの種類ごとに作られる。例えばユーザー情報を取得するためのユーザー向けアプリケーション用のリポジトリは `src/repositories/user_repositories.ts` に作成することになる。これは、バックエンドがローカルやAirTableなどでも変わらない。
 
-すべてのリポジトリは [base_repository.ts](mdc:src/repositories/base_repository.ts) にある BaseRepository を継承する。ただし、そのデータの種類によって BaseRepositoryを継承した別のクラスを継承する場合がある。
+すべてのリポジトリは [base_repository.ts](mdc:src/repositories/base_repository.ts) にある BaseRepository を継承する。ただし、そのデータの種類によって BaseRepositoryを継承した別のクラスを継承する場合がある。たとえば、Prismaを利用する場合は、
 
 なお、リクエストやレスポンスなどのスキーマをRepositoryのファイルに書くことは禁止する。レスポンスのモデルは `/src/models` 以下に、リクエストは `/src/requests` に書くこと。
 
@@ -37,7 +37,7 @@ AIを利用する際に、AIのワークフロー実行にはDifyを利用する
 
 ### データモデル
 
-リポジトリによって返されるデータは、 `app/models/` の下に定義される。Repositoryと同様、管理画面用のモデルは `src/models/admin` に、ユーザー向けアプリケーション用のモデルは `src/models/app` に定義される。その名前は `users` のようにモデルの複数形となる（Snake Caseを利用）。モデルは以下のように、zod を利用して定義される。
+リポジトリによって返されるデータは、 `app/models/` の下に定義される。Repositoryと同様、管理画面用のモデルは `src/models` に、ユーザー向けアプリケーション用のモデルは `src/models` に定義される。その名前は `users` のようにモデルの複数形となる（Snake Caseを利用）。モデルは以下のように、zod を利用して定義される。
 
 ```typescript
 import { z } from "zod";

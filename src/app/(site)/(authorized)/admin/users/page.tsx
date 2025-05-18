@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { User } from "@/models/admin/user";
+import { User } from "@/models/user";
 import { auth } from "@/libraries/auth";
-import { UserRepository } from "@/repositories/admin/user_repository";
+import { UserRepository } from "@/repositories/user_repository";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import AuthError from "@/exceptions/auth_error";

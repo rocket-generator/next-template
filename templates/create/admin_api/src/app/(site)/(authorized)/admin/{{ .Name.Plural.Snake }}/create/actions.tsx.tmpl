@@ -1,6 +1,6 @@
 "use server";
 
-import { {{ .Name.Singular.Title }}Repository } from "@/repositories/admin/{{ .Name.Singular.Snake }}_repository";
+import { {{ .Name.Singular.Title }}Repository } from "@/repositories/{{ .Name.Singular.Snake }}_repository";
 import { auth } from "@/libraries/auth";
 import { {{ .Name.Singular.Title }}CreateRequest } from "@/requests/admin/{{ .Name.Singular.Snake }}_create_request";
 

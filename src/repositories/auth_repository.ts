@@ -1,5 +1,4 @@
-import { BaseRepository } from "@/repositories/base_repository";
-import { UserSchema } from "@/models/admin/user";
+import { UserSchema } from "@/models/user";
 import { APIClient } from "@/libraries/api_client";
 import { SignInRequest } from "@/requests/signin_request";
 import { AccessToken, AccessTokenSchema } from "@/models/access_token";
@@ -7,8 +6,9 @@ import { SignUpRequest } from "@/requests/signup_request";
 import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
 import { Status, StatusSchema } from "@/models/status";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
+import { APIRepository } from "./api_repository";
 
-export class AuthRepository extends BaseRepository<typeof UserSchema> {
+export class AuthRepository extends APIRepository<typeof UserSchema> {
   public constructor(accessToken?: string) {
     super(UserSchema, "/auth", accessToken);
   }

@@ -1,6 +1,6 @@
 "use server";
 
-import { UserRepository } from "@/repositories/admin/user_repository";
+import { UserRepository } from "@/repositories/user_repository";
 import { auth } from "@/libraries/auth";
 import { UserUpdateRequest } from "@/requests/admin/user_update_request";
 

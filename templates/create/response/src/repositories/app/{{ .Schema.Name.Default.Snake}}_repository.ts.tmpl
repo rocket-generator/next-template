@@ -1,5 +1,5 @@
 import { BaseRepository } from "@/repositories/base_repository";
-import { {{ .Schema.Name.Default.Title }}, {{ .Schema.Name.Default.Title}}Schema } from "@/models/app/{{ .Name.Singular.Snake }}";
+import { {{ .Schema.Name.Default.Title }}, {{ .Schema.Name.Default.Title}}Schema } from "@/models/{{ .Name.Singular.Snake }}";
 import { APIClient } from "@/libraries/api_client";
 
 export class {{ .Schema.Name.Singular.Title }}Repository extends BaseRepository<typeof {{ .Schema.Name.Singular.Title }}Schema> {

@@ -5,10 +5,10 @@ import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
 import SideMenu from "@/components/organisms/SideMenu";
 import AdminHeader from "@/components/organisms/AdminHeader";
 import AdminFooter from "@/components/organisms/AdminFooter";
-import { UserRepository } from "@/repositories/admin/user_repository";
+import { UserRepository } from "@/repositories/user_repository";
 import AuthError from "@/exceptions/auth_error";
 import { redirect, notFound } from "next/navigation";
-import { User } from "@/models/admin/user";
+import { User } from "@/models/user";
 import { getTranslations } from "next-intl/server";
 
 type Props = {

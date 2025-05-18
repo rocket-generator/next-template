@@ -25,13 +25,8 @@ export abstract class AirTableRepository<
   private readonly apiKey: string;
   private readonly appId: string;
 
-  protected constructor(
-    schema: T,
-    endpoint: string,
-    config: AirTableConfig,
-    accessToken?: string
-  ) {
-    super(schema, endpoint, accessToken);
+  protected constructor(schema: T, config: AirTableConfig) {
+    super(schema);
 
     const apiKey = process.env.AIRTABLE_API_KEY;
     const appId = process.env.AIRTABLE_APP_ID;

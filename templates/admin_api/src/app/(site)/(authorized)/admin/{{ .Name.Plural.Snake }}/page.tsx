@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { {{ .Name.Singular.Title }} } from "@/models/admin/{{ .Name.Singular.Snake }}";
+import { {{ .Name.Singular.Title }} } from "@/models/{{ .Name.Singular.Snake }}";
 import { auth } from "@/libraries/auth";
-import { {{ .Name.Singular.Title }}Repository } from "@/repositories/admin/{{ .Name.Singular.Snake }}_repository";
+import { {{ .Name.Singular.Title }}Repository } from "@/repositories/{{ .Name.Singular.Snake }}_repository";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import AuthError from "@/exceptions/auth_error";

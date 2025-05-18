@@ -1,4 +1,4 @@
-import { User as UserModel } from "@/models/admin/user";
+import { User as UserModel } from "@/models/user";
 import HeaderUserMenu from "@/components/molecules/HeaderUserMenu";
 
 type Props = {

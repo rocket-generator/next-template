@@ -1,4 +1,3 @@
-import { BaseRepository } from "@/repositories/base_repository";
 import type {
   ChatMessage,
   ChatHistoryResponse,
@@ -7,8 +6,9 @@ import type {
 } from "@/models/chat";
 import { ChatMessageSchema } from "@/models/chat";
 import type { ChatMessageRequest } from "@/requests/chat_request";
+import { APIRepository } from "./api_repository";
 
-export class ChatRepository extends BaseRepository<typeof ChatMessageSchema> {
+export class ChatRepository extends APIRepository<typeof ChatMessageSchema> {
   constructor(baseUrl: string, apiKey: string) {
     super(ChatMessageSchema, baseUrl, apiKey);
   }

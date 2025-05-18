@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { auth } from "@/libraries/auth";
-import { {{ .Name.Singular.Title }}Repository } from "@/repositories/admin/{{ .Name.Singular.Snake }}_repository";
+import { {{ .Name.Singular.Title }}Repository } from "@/repositories/{{ .Name.Singular.Snake }}_repository";
 import { getTranslations } from "next-intl/server";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataForm from "@/components/organisms/DataForm";
 import { notFound } from "next/navigation";
-import { {{ .Name.Singular.Title }} } from "@/models/admin/{{ .Name.Singular.Snake }}";
+import { {{ .Name.Singular.Title }} } from "@/models/{{ .Name.Singular.Snake }}";
 import { update{{ .Name.Singular.Title }} } from "./actions";
 import { {{ .Name.Singular.Title }}UpdateRequestSchema } from "@/requests/admin/{{ .Name.Singular.Snake }}_update_request";
 import { redirect } from "next/navigation";

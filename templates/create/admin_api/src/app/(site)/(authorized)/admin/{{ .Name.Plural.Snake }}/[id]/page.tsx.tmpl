@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { auth } from "@/libraries/auth";
-import { {{ .Name.Singular.Title }}Repository } from "@/repositories/admin/{{ .Name.Singular.Snake }}_repository";
+import { {{ .Name.Singular.Title }}Repository } from "@/repositories/{{ .Name.Singular.Snake }}_repository";
 import { getTranslations } from "next-intl/server";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataView from "@/components/organisms/DataView";
 import { notFound } from "next/navigation";
-import { {{ .Name.Singular.Title }} } from "@/models/admin/{{ .Name.Singular.Snake }}";
+import { {{ .Name.Singular.Title }} } from "@/models/{{ .Name.Singular.Snake }}";
 import { delete{{ .Name.Singular.Title }} } from "./actions";
 import { Pencil, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";

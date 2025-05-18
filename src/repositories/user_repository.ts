@@ -1,5 +1,5 @@
 import { LocalRepository } from "@/repositories/local_repository";
-import { User, UserSchema } from "@/models/app/user";
+import { User, UserSchema } from "@/models/user";
 
 export class UserRepository extends LocalRepository<typeof UserSchema> {
   public constructor(accessToken?: string) {
