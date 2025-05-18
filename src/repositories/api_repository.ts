@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ApiError } from "@/exceptions/api_error";
 import { APIClient } from "@/libraries/api_client";
-import { BaseRepository } from "./base_repository";
+import { BaseRepository, SearchCondition } from "./base_repository";
 
 export abstract class APIRepository<
   T extends z.ZodObject<z.ZodRawShape, "strip">
@@ -20,8 +20,10 @@ export abstract class APIRepository<
     limit: number = 20,
     order?: string,
     direction?: string,
-    query?: string
+    query?: string,
+    conditions?: SearchCondition[]
   ): Promise<{ data: z.infer<T>[]; count: number }> {
+    console.log(conditions);
     const response = await APIClient<{ data: z.infer<T>[]; count: number }>({
       path: this.endpoint,
       params: {

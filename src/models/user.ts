@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { User as PrismaModel } from "@/generated/prisma";
 
 export const UserSchema = z.object({
   id: z.string(),
@@ -8,3 +9,7 @@ export const UserSchema = z.object({
 });
 
 export type User = z.infer<typeof UserSchema>;
+
+export function transformPrismToModel(data: PrismaModel): User {
+  return UserSchema.parse({ ...data, title: "タイトル" });
+}

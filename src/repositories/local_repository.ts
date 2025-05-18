@@ -11,13 +11,8 @@ export abstract class LocalRepository<
 > extends BaseRepository<T> {
   private readonly directory: string;
 
-  protected constructor(
-    schema: T,
-    endpoint: string,
-    config: LocalConfig,
-    accessToken?: string
-  ) {
-    super(schema, endpoint, accessToken);
+  protected constructor(schema: T, config: LocalConfig) {
+    super(schema);
     this.directory = config.directory;
   }
 

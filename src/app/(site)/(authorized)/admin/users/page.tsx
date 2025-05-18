@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { User } from "@/models/user";
-import { auth } from "@/libraries/auth";
 import { UserRepository } from "@/repositories/user_repository";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -25,7 +24,6 @@ type Props = {
 };
 
 export default async function Page(props: Props) {
-  const session = await auth();
   const searchParams = await props.searchParams;
   const offset = searchParams.offset ? parseInt(searchParams.offset) : 0;
   const limit = searchParams.limit ? parseInt(searchParams.limit) : 20;
@@ -41,7 +39,7 @@ export default async function Page(props: Props) {
 
   let data: { data: User[]; count: number } | null = null;
   try {
-    const repository = new UserRepository(session?.access_token);
+    const repository = new UserRepository();
     data = await repository.get(offset, limit, order, direction, query);
   } catch (error) {
     if (error instanceof AuthError) {

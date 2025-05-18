@@ -1,15 +1,13 @@
 "use server";
 
 import { UserRepository } from "@/repositories/user_repository";
-import { auth } from "@/libraries/auth";
 import { UserUpdateRequest } from "@/requests/admin/user_update_request";
 
 export async function updateUser(
   id: string,
   data: UserUpdateRequest
 ): Promise<boolean> {
-  const session = await auth();
-  const repository = new UserRepository(session?.access_token);
+  const repository = new UserRepository();
 
   try {
     await repository.update(id, data);

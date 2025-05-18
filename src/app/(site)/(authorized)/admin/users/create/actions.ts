@@ -1,15 +1,13 @@
 "use server";
 
 import { UserRepository } from "@/repositories/user_repository";
-import { auth } from "@/libraries/auth";
 import { UserCreateRequest } from "@/requests/admin/user_create_request";
 
 export async function createUser(
   data: UserCreateRequest
 ): Promise<string | null> {
   "use server";
-  const session = await auth();
-  const repository = new UserRepository(session?.access_token);
+  const repository = new UserRepository();
 
   try {
     const user = await repository.create(data);

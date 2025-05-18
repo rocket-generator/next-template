@@ -1,10 +1,8 @@
 import { z } from "zod";
 import { BaseRepository } from "./base_repository";
 import { prisma } from "@/libraries/prisma";
-// Import SearchCondition and SearchOperator from base_repository
 import { SearchCondition } from "./base_repository";
 
-// Prismaモデルに動的にアクセスするためのユーティリティ関数
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getPrismaModel(modelName: string): any {
   // keyof typeofを使用してprisma clientのモデル名を取得し、それに対応するモデルを返す
@@ -42,6 +40,7 @@ export class PrismaRepository<
     limit: number = 20,
     order?: string,
     direction?: string,
+    query?: string,
     conditions?: SearchCondition[]
   ): Promise<{ data: z.infer<T>[]; count: number }> {
     const orderBy = order

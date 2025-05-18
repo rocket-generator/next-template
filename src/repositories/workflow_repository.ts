@@ -1,4 +1,3 @@
-import { BaseRepository } from "./base_repository";
 import {
   WorkflowExecution,
   WorkflowExecutionSchema,
@@ -9,8 +8,9 @@ import type {
   WorkflowRunOptions,
   UploadedFile,
 } from "@/requests/workflow_request";
+import { APIRepository } from "./api_repository";
 
-export class WorkflowRepository extends BaseRepository<
+export class WorkflowRepository extends APIRepository<
   typeof WorkflowExecutionSchema
 > {
   constructor(baseUrl: string, apiKey: string) {

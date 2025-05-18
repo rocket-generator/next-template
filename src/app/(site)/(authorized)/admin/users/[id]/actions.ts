@@ -1,11 +1,9 @@
 "use server";
 
 import { UserRepository } from "@/repositories/user_repository";
-import { auth } from "@/libraries/auth";
 
 export async function deleteUser(userId: string) {
-  const session = await auth();
-  const repository = new UserRepository(session?.access_token);
+  const repository = new UserRepository();
 
   try {
     await repository.delete(userId);

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { auth } from "@/libraries/auth";
 import { UserRepository } from "@/repositories/user_repository";
 import { getTranslations } from "next-intl/server";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
@@ -17,10 +16,9 @@ type Props = {
 export default async function Page({ params }: Props) {
   const id = (await params).id;
 
-  const session = await auth();
   let data: User | null = null;
   try {
-    const repository = new UserRepository(session?.access_token);
+    const repository = new UserRepository();
     data = await repository.findById(id);
   } catch (error) {
     console.log(error);

@@ -1,5 +1,4 @@
 import React from "react";
-import { auth } from "@/libraries/auth";
 
 import SideMenu from "@/components/organisms/SideMenu";
 import Header from "@/components/organisms/Header";
@@ -16,10 +15,9 @@ type Props = {
 };
 
 export default async function SiteLayout({ children }: Props) {
-  const session = await auth();
   let me: User | null = null;
   try {
-    const repository = new UserRepository(session?.access_token);
+    const repository = new UserRepository();
     me = await repository.getMe();
   } catch (error) {
     console.log(error);

@@ -1,5 +1,22 @@
 import { z } from "zod";
 
+// Define and export SearchOperator and SearchCondition here
+export type SearchOperator =
+  | "="
+  | "!="
+  | "contains"
+  | ">"
+  | ">="
+  | "<"
+  | "<="
+  | "in";
+
+export interface SearchCondition {
+  column: string;
+  value: unknown; // Use unknown instead of any
+  operator?: SearchOperator; // Optional, defaults to '='
+}
+
 export abstract class BaseRepository<
   T extends z.ZodObject<z.ZodRawShape, "strip">
 > {
@@ -14,7 +31,8 @@ export abstract class BaseRepository<
     limit?: number,
     order?: string,
     direction?: string,
-    query?: string
+    query?: string,
+    conditions?: SearchCondition[]
   ): Promise<{ data: z.infer<T>[]; count: number }>;
 
   abstract findById(id: string): Promise<z.infer<T>>;
