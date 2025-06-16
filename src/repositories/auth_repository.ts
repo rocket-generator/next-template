@@ -1,55 +1,187 @@
-import { UserSchema } from "@/models/user";
-import { APIClient } from "@/libraries/api_client";
+import { AuthSchema, Auth } from "@/models/auth";
+import { z } from "zod";
 import { SignInRequest } from "@/requests/signin_request";
 import { AccessToken, AccessTokenSchema } from "@/models/access_token";
 import { SignUpRequest } from "@/requests/signup_request";
 import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
 import { Status, StatusSchema } from "@/models/status";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
-import { APIRepository } from "./api_repository";
+import { PrismaRepository } from "./prisma_repository";
+import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
 
-export class AuthRepository extends APIRepository<typeof UserSchema> {
-  public constructor(accessToken?: string) {
-    super(UserSchema, "/auth", accessToken);
+export abstract class AuthRepository extends PrismaRepository<
+  typeof AuthSchema
+> {
+  constructor(
+    schema: typeof AuthSchema,
+    modelName: string,
+    converter: (data: any) => z.infer<typeof AuthSchema>,
+    searchableColumns: string[]
+  ) {
+    super(schema, modelName, converter, searchableColumns);
   }
 
   async postSignIn(request: SignInRequest): Promise<AccessToken> {
-    const data = await APIClient<AccessToken>({
-      path: `/auth/signin`,
-      accessToken: undefined,
-      method: "POST",
-      body: request,
+    // Find user by email
+    const users = await this.get(0, 1, undefined, undefined, undefined, [
+      { column: "email", operator: "=", value: request.email },
+    ]);
+
+    if (users.data.length === 0) {
+      throw new Error("Invalid credentials");
+    }
+
+    const user = users.data[0];
+
+    // Verify password
+    const isValidPassword = await verifyPassword(
+      request.password,
+      user.password
+    );
+    if (!isValidPassword) {
+      throw new Error("Invalid credentials");
+    }
+
+    // Generate access token
+    const accessToken = await generateToken();
+
+    return AccessTokenSchema.parse({
+      id: user.id,
+      access_token: accessToken,
+      token_type: "Bearer",
+      expires_in: 3600,
+      permissions: user.permissions,
     });
-    return AccessTokenSchema.parse(data);
   }
 
   async postSignUp(request: SignUpRequest): Promise<AccessToken> {
-    const data = await APIClient<AccessToken>({
-      path: `/auth/signup`,
-      accessToken: undefined,
-      method: "POST",
-      body: request,
+    // Check if user already exists
+    const existingUsers = await this.get(
+      0,
+      1,
+      undefined,
+      undefined,
+      undefined,
+      [{ column: "email", operator: "=", value: request.email }]
+    );
+
+    if (existingUsers.data.length > 0) {
+      throw new Error("User already exists");
+    }
+
+    // Hash password
+    const hashedPassword = await hashPassword(request.password);
+
+    // Create user
+    const newUser = await this.create({
+      email: request.email,
+      password: hashedPassword,
+      name: request.name,
+      permissions: [],
     });
-    return AccessTokenSchema.parse(data);
+
+    // Generate access token
+    const accessToken = await generateToken();
+
+    return AccessTokenSchema.parse({
+      id: newUser.id,
+      access_token: accessToken,
+      token_type: "Bearer",
+      expires_in: 3600,
+      permissions: newUser.permissions,
+    });
   }
 
   async postForgotPassword(request: ForgotPasswordRequest): Promise<Status> {
-    const data = await APIClient<Status>({
-      path: `/auth/password/forgot`,
-      accessToken: undefined,
-      method: "POST",
-      body: request,
+    // Find user by email
+    const users = await this.get(0, 1, undefined, undefined, undefined, [
+      { column: "email", operator: "=", value: request.email },
+    ]);
+
+    if (users.data.length === 0) {
+      // Don't reveal whether email exists or not
+      return StatusSchema.parse({
+        status: "success",
+        message:
+          "If an account with that email exists, a password reset link has been sent.",
+      });
+    }
+
+    // In a real implementation, you would send an email with a reset token
+    // For now, just return success
+    return StatusSchema.parse({
+      status: "success",
+      message:
+        "If an account with that email exists, a password reset link has been sent.",
     });
-    return StatusSchema.parse(data);
   }
 
   async postResetPassword(request: ResetPasswordRequest): Promise<Status> {
-    const data = await APIClient<Status>({
-      path: `/auth/password/reset`,
-      accessToken: undefined,
-      method: "POST",
-      body: request,
+    // In a real implementation, you would verify the reset token
+    // For now, find user by email and update password
+    const users = await this.get(0, 1, undefined, undefined, undefined, [
+      { column: "email", operator: "=", value: request.email },
+    ]);
+
+    if (users.data.length === 0) {
+      throw new Error("Invalid reset token");
+    }
+
+    const user = users.data[0];
+
+    // Hash new password
+    const hashedPassword = await hashPassword(request.password);
+
+    // Update user password
+    await this.update(user.id, {
+      password: hashedPassword,
     });
-    return StatusSchema.parse(data);
+
+    return StatusSchema.parse({
+      status: "success",
+      message: "Password has been reset successfully.",
+    });
+  }
+
+  async updateUserPassword(userId: string, newPassword: string): Promise<void> {
+    if (!newPassword || newPassword.trim() === "") {
+      // Don't update if password is empty
+      return;
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    await this.update(userId, {
+      password: hashedPassword,
+    });
+  }
+
+  async createUserWithHashedPassword(
+    userData: Omit<z.infer<typeof AuthSchema>, "id" | "password"> & {
+      password: string;
+    }
+  ): Promise<z.infer<typeof AuthSchema>> {
+    const hashedPassword = await hashPassword(userData.password);
+
+    return this.create({
+      ...userData,
+      password: hashedPassword,
+    });
+  }
+
+  async updateUserData(
+    userId: string,
+    userData: Partial<z.infer<typeof AuthSchema>>
+  ): Promise<z.infer<typeof AuthSchema>> {
+    const updateData = { ...userData };
+
+    // If password is provided and not empty, hash it
+    if (updateData.password && updateData.password.trim() !== "") {
+      updateData.password = await hashPassword(updateData.password);
+    } else {
+      // Remove password from update data if it's empty
+      delete updateData.password;
+    }
+
+    return this.update(userId, updateData);
   }
 }

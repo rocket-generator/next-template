@@ -13,6 +13,17 @@ import { APIRepository } from "./api_repository";
 export class WorkflowRepository extends APIRepository<
   typeof WorkflowExecutionSchema
 > {
+  searchFields: string[] = [
+    "id",
+    "workflow_id",
+    "status",
+    "outputs",
+    "created_at",
+    "finished_at",
+    "task_id",
+    "user",
+  ];
+
   constructor(baseUrl: string, apiKey: string) {
     super(WorkflowExecutionSchema, baseUrl, apiKey);
   }

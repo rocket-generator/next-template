@@ -9,6 +9,16 @@ import type { ChatMessageRequest } from "@/requests/chat_request";
 import { APIRepository } from "./api_repository";
 
 export class ChatRepository extends APIRepository<typeof ChatMessageSchema> {
+  searchFields: string[] = [
+    "id",
+    "conversation_id",
+    "query",
+    "answer",
+    "created_at",
+    "feedback",
+    "inputs",
+  ];
+
   constructor(baseUrl: string, apiKey: string) {
     super(ChatMessageSchema, baseUrl, apiKey);
   }

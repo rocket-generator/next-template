@@ -21,6 +21,7 @@ export abstract class BaseRepository<
   T extends z.ZodObject<z.ZodRawShape, "strip">
 > {
   protected schema: T;
+  protected abstract searchFields: string[];
 
   protected constructor(schema: T) {
     this.schema = schema;
