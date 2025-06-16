@@ -12,11 +12,10 @@ export async function signUpAction(
     const validatedInput = SignUpRequestSchema.safeParse(rawInput);
     if (!validatedInput.success) return InvalidInput;
 
-    const result = await signIn("prototype", {
+    const result = await signIn("signup", {
       ...validatedInput.data,
       redirect: false,
     });
-    console.log(result);
     if (!result || result.error) {
       return InvalidCredentials;
     }

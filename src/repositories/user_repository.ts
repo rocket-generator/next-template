@@ -4,7 +4,7 @@ import { auth } from "@/libraries/auth";
 
 export class UserRepository extends AuthRepository {
   public constructor() {
-    super(UserSchema, "users", transformPrismToModel, ["name"]);
+    super(UserSchema, "user", transformPrismToModel, ["name"]);
   }
 
   async getMe(): Promise<User> {

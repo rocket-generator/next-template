@@ -19,13 +19,14 @@ export default async function SiteLayout({ children }: Props) {
   try {
     const repository = new UserRepository();
     me = await repository.getMe();
+    console.log(me);
   } catch (error) {
     console.log(error);
     if (error instanceof AuthError) {
       redirect("/auth/signin");
     }
   }
-  if (!me || !me.permissions.includes("admin")) {
+  if (!me) {
     return notFound();
   }
   const t = await getTranslations("Menu.App");
