@@ -1,12 +1,8 @@
 import { z } from "zod";
 import { User as PrismaModel } from "@/generated/prisma";
+import { AuthSchema } from "./auth";
 
-export const UserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  permissions: z.array(z.string()),
-});
+export const UserSchema = AuthSchema;
 
 export type User = z.infer<typeof UserSchema>;
 

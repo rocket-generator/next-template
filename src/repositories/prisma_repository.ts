@@ -18,7 +18,7 @@ export class PrismaRepository<
   T extends z.ZodObject<z.ZodRawShape, "strip">
 > extends BaseRepository<T> {
   protected modelName: string;
-  protected searchFields: string[] = [];
+  protected searchFields: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected transform: TransformFunction<T>;
 
@@ -27,7 +27,7 @@ export class PrismaRepository<
     modelName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     transform: TransformFunction<T>,
-    searchFields: string[] = []
+    searchFields: string[]
   ) {
     super(schema);
     this.modelName = modelName;
@@ -46,7 +46,8 @@ export class PrismaRepository<
     const orderBy = order
       ? { [order]: direction === "desc" ? "desc" : "asc" }
       : undefined;
-    const where = conditions ? this.buildSearchQuery(conditions) : undefined;
+
+    const where = this.buildWhereClause(query, conditions);
 
     const [prismaData, count] = await Promise.all([
       getPrismaModel(this.modelName).findMany({
@@ -110,6 +111,50 @@ export class PrismaRepository<
     await getPrismaModel(this.modelName).delete({
       where: { id },
     });
+  }
+
+  // Build WHERE clause combining query search and conditions
+  protected buildWhereClause(
+    query?: string,
+    conditions?: SearchCondition[]
+  ): Record<string, unknown> {
+    const queryCondition = this.buildQuerySearch(query);
+    const searchCondition = conditions ? this.buildSearchQuery(conditions) : {};
+
+    if (
+      Object.keys(queryCondition).length === 0 &&
+      Object.keys(searchCondition).length === 0
+    ) {
+      return {};
+    }
+
+    if (Object.keys(queryCondition).length === 0) {
+      return searchCondition;
+    }
+
+    if (Object.keys(searchCondition).length === 0) {
+      return queryCondition;
+    }
+
+    return {
+      AND: [queryCondition, searchCondition],
+    };
+  }
+
+  // Build query search condition (LIKE search with OR)
+  protected buildQuerySearch(query?: string): Record<string, unknown> {
+    if (!query || query.trim() === "" || this.searchFields.length === 0) {
+      return {};
+    }
+
+    const orConditions = this.searchFields.map((field) => ({
+      [field]: {
+        contains: query.trim(),
+        mode: "insensitive",
+      },
+    }));
+
+    return orConditions.length === 1 ? orConditions[0] : { OR: orConditions };
   }
 
   // Updated buildSearchQuery method

@@ -1,10 +1,10 @@
 import { User, UserSchema, transformPrismToModel } from "@/models/user";
-import { PrismaRepository } from "./prisma_repository";
+import { AuthRepository } from "./auth_repository";
 import { auth } from "@/libraries/auth";
 
-export class UserRepository extends PrismaRepository<typeof UserSchema> {
+export class UserRepository extends AuthRepository {
   public constructor() {
-    super(UserSchema, "/app/users", transformPrismToModel);
+    super(UserSchema, "user", transformPrismToModel, ["name"]);
   }
 
   async getMe(): Promise<User> {
@@ -14,6 +14,4 @@ export class UserRepository extends PrismaRepository<typeof UserSchema> {
     }
     return this.findById(session.user.id);
   }
-
-  // getMePrototype is no longer needed as getMe now uses local file
 }

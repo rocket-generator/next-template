@@ -1,4 +1,4 @@
-import { AuthRepository } from "@/repositories/auth_repository";
+import { UserRepository } from "@/repositories/user_repository";
 import { SignInRequest } from "@/requests/signin_request";
 import { SignUpRequest } from "@/requests/signup_request";
 import type { NextAuthConfig } from "next-auth";
@@ -24,6 +24,8 @@ export const authConfig: NextAuthConfig = {
         ) {
           return {
             id: "prototype-admin",
+            email: "admin@example.com",
+            password: "",
             access_token: "prototype-token",
             permissions: ["admin"],
             expires_in: 3600,
@@ -42,7 +44,7 @@ export const authConfig: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const repository = new AuthRepository(undefined);
+        const repository = new UserRepository();
         const request = {
           email: credentials.email,
           password: credentials.password,
@@ -52,6 +54,9 @@ export const authConfig: NextAuthConfig = {
           if (response.access_token) {
             return {
               id: response.id,
+              email: credentials.email as string,
+              password: "",
+              name: "",
               access_token: response.access_token,
               permissions: response.permissions,
               expires_in: response.expires_in,
@@ -75,7 +80,7 @@ export const authConfig: NextAuthConfig = {
         confirm_password: { label: "Confirm Password", type: "password" },
       },
       async authorize(credentials) {
-        const repository = new AuthRepository(undefined);
+        const repository = new UserRepository();
         const request = {
           email: credentials.email,
           password: credentials.password,
@@ -87,6 +92,9 @@ export const authConfig: NextAuthConfig = {
           if (response.access_token) {
             return {
               id: response.id,
+              email: credentials.email as string,
+              password: "",
+              name: credentials.name as string,
               access_token: response.access_token,
               permissions: response.permissions,
               expires_in: response.expires_in,
@@ -119,12 +127,12 @@ export const authConfig: NextAuthConfig = {
         ...session,
         user: {
           ...session.user,
-          id: token.id,
-          name: token.name || null,
+          id: token.id as string,
+          name: token.name || undefined,
           permissions: token.permissions || [],
         },
-        access_token: token.access_token || null,
-        name: token.name || null,
+        access_token: token.access_token || undefined,
+        name: token.name || undefined,
         permissions: token.permissions || [],
       };
     },

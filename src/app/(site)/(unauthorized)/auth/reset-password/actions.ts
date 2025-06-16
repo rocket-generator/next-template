@@ -5,7 +5,7 @@ import {
   ResetPasswordRequest,
 } from "@/requests/reset_password_request";
 import { InvalidInput, Success } from "@/constants/auth";
-import { AuthRepository } from "@/repositories/auth_repository";
+import { UserRepository } from "@/repositories/user_repository";
 
 export async function resetPasswordAction(
   rawInput: ResetPasswordRequest
@@ -16,7 +16,7 @@ export async function resetPasswordAction(
       return InvalidInput;
     }
 
-    const authRepository = new AuthRepository();
+    const authRepository = new UserRepository();
     await authRepository.postResetPassword(validatedInput.data);
 
     return Success;

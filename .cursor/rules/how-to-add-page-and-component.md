@@ -1,0 +1,130 @@
+---
+description: React page and component create/update guideline, need alyways check when you build pages / components.
+globs: *
+alwaysApply: true
+---
+# ページ・コンポーネント作成ガイドライン
+
+このドキュメントは、本プロジェクトにおけるNext.js (App Router) を使用したページおよびコンポーネントの作成方法に関するルールとベストプラクティスをまとめたものです。
+
+## 1. 基本原則
+
+-   **TypeScript の徹底**: 全てのコードはTypeScriptで記述します。`any` 型の使用は原則禁止です。
+-   **Server Components First**:可能な限りServer Componentsを使用し、インタラクティブ性が必要な場合にのみClient Componentsを導入します。
+-   **関心の分離**: UI、状態管理、データフェッチのロジックを適切に分離します。
+-   **命名規則**: ファイル名、ディレクトリ名、コンポーネント名、変数名などは一貫性のある命名規則に従います。（詳細は後述）
+-   **ディレクトリ構造**: 機能ごと、またコンポーネントの種類（atoms, molecules, organisms）ごとに整理されたディレクトリ構造を維持します。（詳細は後述）
+-   **PWA対応**: PWAとしての動作を意識し、必要な箇所（ヘッダー、フッターなど）には `env(safe-area-inset-*)` を適用します。
+
+## 2. ディレクトリ構造とファイル命名規則
+
+### 2.1. ページ (App Router)
+
+-   ページは `src/app` ディレクトリ以下に配置します。
+-   ルートセグメントのディレクトリ名（例: `(site)`, `(authorized)`, `(app)`）は小文字ケバブケース（例: `my-page`）または括弧で囲まれたグループ名を使用します。
+-   各ページのメインファイルは `page.tsx` とします。
+-   ページに関連するServer Actionsは、同階層または専用の `actions.ts` ファイルに記述します。
+    -   例: `src/app/(site)/(authorized)/(app)/actions.ts`
+
+### 2.2. コンポーネント (`src/components`)
+
+-   再利用可能なUIコンポーネントは `src/components` ディレクトリ以下に配置します。
+-   コンポーネントはAtomic Designの考え方に基づき、`atoms`, `molecules`, `organisms` のいずれかのサブディレクトリに分類します。
+    -   **atoms**: それ以上分割できない最小単位のUI要素（例: `Button`, `Input`, `Icon`）。Shadcn/UIから提供されるコンポーネントが主にここに該当します。原則として、このディレクトリにカスタムコンポーネントを新規作成することは避け、Shadcn/UIのものをそのまま利用するか、ラッパーを作成する場合は `molecules` 以上に配置します。
+    -   **molecules**: 複数のatomを組み合わせて作られる、より具体的な機能を持つUI部品（例: `SearchInput` (Input atom + Button atom), `UserAvatarMenu`）。
+    -   **organisms**: 複数のmoleculeやatomを組み合わせて作られる、ページのセクションや独立したUI領域（例: `AppHeader`, `RecordList`, `ProductCardGrid`）。
+-   **各コンポーネントのファイル構成**: `molecules` および `organisms` に属するコンポーネントは、以下の構造を取ります。
+    -   コンポーネント名を `PascalCase` としたディレクトリを作成します。
+    -   そのディレクトリ直下に `index.tsx` を作成し、コンポーネントのメインロジックを記述します。
+    -   例:
+        ```
+        src/components/
+        ├── molecules/
+        │   └── PetFilter/
+        │       └── index.tsx  // PetFilterコンポーネント本体
+        └── organisms/
+            └── AppHeader/
+                └── index.tsx  // AppHeaderコンポーネント本体
+        ```
+-   **`atoms` のコンポーネント**: Shadcn/UIから提供されるものは、通常 `src/components/ui` に配置されることが多いですが、本プロジェクトでは既存の `src/components/atoms` をShadcn/UIコンポーネントの格納場所として扱います。これらは直接編集せず、拡張する場合は `molecules` 以上でラップします。
+
+### 2.3. 型定義
+
+-   プロジェクト全体で使用する型定義は `src/types/index.ts` に集約します。
+-   コンポーネント固有の型定義（Propsの型など）は、そのコンポーネントファイル (`index.tsx`) 内に記述します。
+
+## 3. コンポーネント設計
+
+### 3.1. Server Components と Client Components の使い分け
+
+-   **Server Components (`page.tsx` や `organisms` の一部など)**:
+    -   データフェッチ（Server Actions経由または直接的なDBアクセス）や、状態を持たないUIのレンダリングを担当します。
+    -   イベントハンドラ（`onClick` など）を直接持つことはできません。
+    -   `async/await` を使用してデータ取得が可能です。
+-   **Client Components (`molecules` の一部やインタラティブな `organisms` の一部など)**:
+    -   ファイルの先頭に `'use client';` ディレクティブを記述します。
+    -   `useState`, `useEffect`, `useRouter` などのReactフックを使用できます。
+    -   イベントハンドラを持つことができます。
+    -   状態管理やクライアントサイドルーティング、ブラウザAPIへのアクセスが必要な場合に使用します。
+-   **原則**: Server Component内で完結できるものはServer Componentとして実装します。インタラクティブ性が必要な部分のみを最小限のClient Componentに切り出します。
+    -   **NG例**: ページ全体を1つの大きなClient Componentでラップする。
+    -   **OK例**: `page.tsx` (Server Component) が静的なレイアウトとデータ取得を行い、ヘッダー内の検索ボタンやフィルタードロップダウン、メインコンテンツ内の月ナビゲーションボタンなど、個々のインタラクティブな要素をそれぞれ独立した小さなClient Componentとして呼び出す。
+
+### 3.2. データフローと状態管理
+
+-   **データ取得**: Server Componentsでは、Server Actions (`actions.ts` に定義) を介してデータを取得します。Client Componentsからデータを再取得・更新する場合も、Server Actionsを呼び出します。
+-   **状態管理**: Client Components内のローカルなUI状態は `useState` を使用します。
+-   **URLによる状態管理**: ページ全体に影響するフィルター条件（例：選択されたペットID、表示月）は、URLのクエリパラメータで管理することを推奨します。
+    -   Client Component（例: `PetFilter`, `MonthNavigator`）がユーザー操作に応じて `next/navigation` の `useRouter` を使ってクエリパラメータを更新します。
+    -   URLの変更により `page.tsx` が再実行され、新しいクエリパラメータに基づいてServer Actionsがデータを再取得し、ページが更新されます。
+-   **Props Drilling の回避**: 複雑な状態共有が必要な場合は、React Contextや状態管理ライブラリ（Zustandなど）の導入を検討しますが、まずはServer ComponentsとURLによる状態管理、Server Actionsによるデータ更新で対応できないか検討します。
+
+### 3.3. Props
+
+-   コンポーネント間で渡すPropsの型は明確に定義します。
+-   Server ComponentsからClient Componentsへ関数（イベントハンドラなど）を渡すことはできません。Client Componentが必要とするインタラクションは、そのClient Component内部で完結させるか、Server Actionsを呼び出す形にします。
+
+### 3.4. スタイリング
+
+-   Tailwind CSS を使用します。
+-   コンポーネントのスタイルは、そのコンポーネントファイル内のJSXに直接クラス名を記述します。
+-   共通の色やテーマは `tailwind.config.js` で定義されているものを利用します。
+
+## 4. Server Actions (`actions.ts`)
+
+-   ファイルの先頭に `'use server';` ディレクティブを記述します。
+-   データベースアクセスや外部API呼び出しなど、サーバーサイドで実行すべきビジネスロジックをここに記述します。
+-   データ取得用の関数や、データの作成・更新・削除を行う関数を定義します。
+-   Server ComponentsからもClient Componentsからも呼び出し可能です。
+
+## 5. 具体的な実装例 (ホーム画面の場合)
+
+-   `src/app/(site)/(authorized)/(app)/page.tsx` (Server Component):
+    -   URLのクエリパラメータ (`petId`, `month`) を読み取ります。
+    -   `getPetsServerAction`, `getRecordsServerAction` を呼び出して初期データを取得します。
+    -   `AppHeader` (Organism, Server Component) を呼び出し、`leftContent` と `rightContent` にそれぞれ `PetFilter` (Molecule, Client Component) と `SearchButton` (Molecule, Client Component) を `<Suspense>` でラップして配置します。
+    -   メインコンテンツエリアに `MonthNavigator` (Molecule, Client Component) と `RecordList` (Organism, Server Component) を配置します。`MonthNavigator` も `<Suspense>` でラップします。
+    -   `FloatingActionButton` (Molecule, Client Component) と `TabBar` (Organism, Server Component) を配置します。
+-   `src/components/molecules/PetFilter/index.tsx` (Client Component):
+    -   `pets` (ペットリスト) をpropsとして受け取ります。
+    -   `useState` で選択中のペットIDを管理します。
+    -   `useEffect` でURLのクエリパラメータ `petId` を監視し、内部状態と同期します。
+    -   ペット選択UI（例: ボタンやShadcn/UIのSelect）をレンダリングし、選択が変更されたら `useRouter` を使ってURLの `petId` クエリパラメータを更新します。
+-   `src/components/molecules/MonthNavigator/index.tsx` (Client Component):
+    -   Propsは受け取りません（あるいは初期表示月に関するpropsを受け取ることも可能）。
+    -   `useState` で現在の表示月 (`Date` オブジェクト) を管理します。
+    -   `useEffect` でURLのクエリパラメータ `month` を監視し、内部状態と同期します。
+    -   「前月」「次月」ボタンを持ち、クリックされると内部状態を更新し、`useRouter` を使ってURLの `month` クエリパラメータを更新します。
+-   `src/components/molecules/SearchButton/index.tsx` (Client Component):
+    -   クリックハンドラを持ち、クライアント側での検索UIの表示などを担当します。
+-   `src/components/molecules/FloatingActionButton/index.tsx` (Client Component):
+    -   クリックハンドラを持ち、クライアント側での新規記録作成ページへの遷移などを担当します。
+-   `src/components/organisms/RecordList/index.tsx` (Server Component):
+    -   `records` (記録リスト) をpropsとして受け取り、`RecordCard` (Molecule, Server Component) を使って一覧表示します。
+
+## 6. Storybook 対応 (将来的な考慮)
+
+-   コンポーネントを `CamelCaseディレクトリ/index.tsx` の形式で作成することにより、将来的にStorybookの`*.stories.tsx` ファイルを各コンポーネントディレクトリ内に配置しやすくなります。
+    -   例: `src/components/molecules/PetFilter/PetFilter.stories.tsx`
+
+このガイドラインに従って、一貫性があり、メンテナンスしやすく、パフォーマンスの高いアプリケーションを構築してください。

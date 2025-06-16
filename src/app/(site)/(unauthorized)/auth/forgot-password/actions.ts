@@ -5,7 +5,7 @@ import {
   ForgotPasswordRequest,
 } from "@/requests/forgot_password_request";
 import { InvalidInput, Success } from "@/constants/auth";
-import { AuthRepository } from "@/repositories/auth_repository";
+import { UserRepository } from "@/repositories/user_repository";
 
 export async function forgotPasswordAction(
   rawInput: ForgotPasswordRequest
@@ -16,7 +16,7 @@ export async function forgotPasswordAction(
       return InvalidInput;
     }
 
-    const authRepository = new AuthRepository();
+    const authRepository = new UserRepository();
     await authRepository.postForgotPassword(validatedInput.data);
 
     return Success;
