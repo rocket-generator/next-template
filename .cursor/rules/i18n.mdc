@@ -1,0 +1,651 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Next.js + next-intl 国際化システム実装ガイド
+
+このドキュメントは、Next.js 15.3.3とnext-intl 3.26.3を使用した国際化（i18n）システムの実装方法を詳細に説明します。
+
+## 目次
+
+1. [概要](mdc:#概要)
+2. [必要な依存関係](mdc:#必要な依存関係)
+3. [ディレクトリ構造](mdc:#ディレクトリ構造)
+4. [実装手順](mdc:#実装手順)
+5. [ファイル別実装詳細](mdc:#ファイル別実装詳細)
+6. [使用方法](mdc:#使用方法)
+7. [高度な機能](mdc:#高度な機能)
+8. [ベストプラクティス](mdc:#ベストプラクティス)
+
+## 概要
+
+このi18nシステムは以下の特徴を持ちます：
+
+- **next-intl** を使用した型安全な国際化
+- **日本語と英語**の多言語対応
+- **Server Components**と**Client Components**の両方に対応
+- **階層的なメッセージ構造**による管理しやすい翻訳
+- **TypeScript**による型安全性
+- **自動的な言語検出**とフォールバック
+- **タイムゾーン対応**（Asia/Tokyo）
+
+## 必要な依存関係
+
+```json
+{
+  "dependencies": {
+    "next": "15.3.3",
+    "next-intl": "^3.26.3",
+    "react": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}
+```
+
+## ディレクトリ構造
+
+```
+project/
+├── src/
+│   ├── i18n/
+│   │   ├── request.ts           # next-intl設定
+│   │   └── routing.ts           # ルーティング設定
+│   ├── app/
+│   │   ├── layout.tsx           # ルートレイアウト
+│   │   └── providers.tsx        # Providers設定
+│   └── ...
+├── messages/
+│   ├── ja.json                  # 日本語メッセージ
+│   └── en.json                  # 英語メッセージ
+└── next.config.ts               # Next.js設定
+```
+
+## 実装手順
+
+### 1. Next.js設定の更新
+
+```typescript
+// next.config.ts
+import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin();
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default withNextIntl(nextConfig);
+```
+
+### 2. ルーティング設定
+
+```typescript
+// src/i18n/routing.ts
+import { createNavigation } from "next-intl/navigation";
+import { defineRouting } from "next-intl/routing";
+
+export const routing = defineRouting({
+  locales: ["ja", "en"],
+  defaultLocale: "ja",
+  pathnames: {
+    "/": "/",
+  },
+});
+
+export type Pathnames = keyof typeof routing.pathnames;
+export type Locale = (typeof routing.locales)[number];
+
+export const { Link, getPathname, redirect, usePathname, useRouter } =
+  createNavigation(routing);
+```
+
+### 3. リクエスト設定
+
+```typescript
+// src/i18n/request.ts
+import { getRequestConfig } from "next-intl/server";
+import { routing } from "./routing";
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  let locale = await requestLocale;
+  
+  // 有効なlocaleかチェック
+  if (
+    !locale ||
+    !routing.locales.includes(locale as (typeof routing.locales)[number])
+  ) {
+    locale = routing.defaultLocale;
+  }
+
+  return {
+    locale,
+    timeZone: "Asia/Tokyo",
+    messages: (
+      await (locale === "en"
+        ? // Turbopack使用時にHMRを有効にするため
+          import("../../messages/en.json")
+        : import(`../../messages/${locale}.json`))
+    ).default,
+  };
+});
+```
+
+## ファイル別実装詳細
+
+### 1. ルートレイアウト (`src/app/layout.tsx`)
+
+```typescript
+import type { Metadata } from "next";
+import { getLocale, getMessages } from "next-intl/server";
+import { Providers } from "./providers";
+
+export const metadata: Metadata = {
+  title: "Great App",
+  description: "The best app in the world",
+};
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  
+  return (
+    <html
+      lang={locale}
+      suppressHydrationWarning={true}
+      className="h-full bg-white"
+    >
+      <body>
+        <Providers messages={messages} locale={locale}>
+          {children}
+        </Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+### 2. Providers設定 (`src/app/providers.tsx`)
+
+```typescript
+"use client";
+import { ReactNode } from "react";
+import { NextIntlClientProvider } from "next-intl";
+import type { AbstractIntlMessages } from "use-intl";
+
+export function Providers({
+  children,
+  messages,
+  locale,
+}: {
+  children: ReactNode;
+  messages: AbstractIntlMessages;
+  locale: string;
+}) {
+  return (
+    <NextIntlClientProvider
+      messages={messages}
+      locale={locale}
+      timeZone="Asia/Tokyo"
+    >
+      {children}
+    </NextIntlClientProvider>
+  );
+}
+```
+
+### 3. メッセージファイル構造
+
+#### 日本語メッセージ (`messages/ja.json`)
+
+```json
+{
+  "Auth": {
+    "signin": "ログイン",
+    "signup": "新規登録",
+    "signout": "ログアウト",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "invalid_input": "入力内容が不正です",
+    "invalid_credentials": "メールアドレスまたはパスワードが不正です"
+  },
+  "Crud": {
+    "create": "新規作成",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "edit": "編集",
+    "delete": "削除",
+    "saving": "保存中..."
+  },
+  "Menu": {
+    "App": {
+      "dashboard": "ダッシュボード"
+    },
+    "Admin": {
+      "dashboard": "ダッシュボード",
+      "users": "ユーザー"
+    }
+  },
+  "Components": {
+    "Pagination": {
+      "previous": "前へ",
+      "next": "次へ",
+      "no_result_found": "該当するデータがありません"
+    }
+  }
+}
+```
+
+#### 英語メッセージ (`messages/en.json`)
+
+```json
+{
+  "Auth": {
+    "signin": "Sign In",
+    "signup": "Sign Up", 
+    "signout": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "invalid_input": "Invalid input",
+    "invalid_credentials": "Invalid credentials"
+  },
+  "Crud": {
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "saving": "Saving..."
+  },
+  "Menu": {
+    "App": {
+      "dashboard": "Dashboard"
+    },
+    "Admin": {
+      "dashboard": "Dashboard",
+      "users": "Users"
+    }
+  },
+  "Components": {
+    "Pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "no_result_found": "No results found"
+    }
+  }
+}
+```
+
+## 使用方法
+
+### Server Componentsでの使用
+
+```typescript
+import { getTranslations } from "next-intl/server";
+
+export default async function AdminLayout({ children }: Props) {
+  const t = await getTranslations("Menu.Admin");
+  
+  const menuItems = [
+    {
+      icon: <Home className="w-5 h-5" />,
+      label: t("dashboard"),
+      href: "/admin/dashboard",
+    },
+    {
+      icon: <Users className="w-5 h-5" />,
+      label: t("users"),
+      href: "/admin/users",
+    },
+  ];
+
+  return (
+    <div>
+      {/* レイアウトコンテンツ */}
+    </div>
+  );
+}
+```
+
+### Client Componentsでの使用
+
+```typescript
+"use client";
+import { useTranslations } from "next-intl";
+
+export default function SignInPage() {
+  const tAuth = useTranslations("Auth");
+  const tCrud = useTranslations("Crud");
+
+  return (
+    <div>
+      <h1>{tAuth("signin")}</h1>
+      <button>{tAuth("email")}</button>
+      <button>{tCrud("save")}</button>
+    </div>
+  );
+}
+```
+
+### フォームでの使用例
+
+```typescript
+"use client";
+import { useTranslations } from "next-intl";
+
+export default function ContactForm() {
+  const tAuth = useTranslations("Auth");
+  
+  const onSubmit = async (data) => {
+    try {
+      // フォーム送信処理
+    } catch (error) {
+      setError(tAuth("system_error"));
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <label>{tAuth("email")}</label>
+      <input type="email" />
+      
+      <label>{tAuth("password")}</label>
+      <input type="password" />
+      
+      <button type="submit">
+        {isLoading ? tAuth("signing_in") : tAuth("signin")}
+      </button>
+    </form>
+  );
+}
+```
+
+## 高度な機能
+
+### 1. 動的な翻訳
+
+```typescript
+// メッセージファイル
+{
+  "welcome": "こんにちは、{name}さん！",
+  "itemCount": "あなたは {count, plural, =0 {アイテムがありません} =1 {1つのアイテム} other {#個のアイテム}} を持っています"
+}
+
+// 使用例
+const t = useTranslations("Messages");
+<p>{t("welcome", { name: "山田太郎" })}</p>
+<p>{t("itemCount", { count: 5 })}</p>
+```
+
+### 2. Rich Textフォーマット
+
+```typescript
+// メッセージファイル
+{
+  "description": "詳細は<link>こちら</link>をご覧ください"
+}
+
+// 使用例
+const t = useTranslations("Messages");
+<p>{t.rich("description", {
+  link: (chunks) => <Link href="/details">{chunks}</Link>
+})}</p>
+```
+
+### 3. 日付・時間のフォーマット
+
+```typescript
+import { useFormatter } from "next-intl";
+
+export default function DateComponent() {
+  const format = useFormatter();
+  const now = new Date();
+
+  return (
+    <div>
+      <p>日付: {format.dateTime(now, "short")}</p>
+      <p>時刻: {format.dateTime(now, "medium")}</p>
+      <p>数値: {format.number(1234.5)}</p>
+    </div>
+  );
+}
+```
+
+### 4. 言語切り替えコンポーネント
+
+```typescript
+"use client";
+import { useLocale } from "next-intl";
+import { useRouter, usePathname } from "next/navigation";
+
+export default function LanguageSwitcher() {
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleLocaleChange = (newLocale: string) => {
+    // URL のロケールプレフィックスを更新
+    const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
+    router.push(newPath);
+  };
+
+  return (
+    <select 
+      value={locale} 
+      onChange={(e) => handleLocaleChange(e.target.value)}
+    >
+      <option value="ja">日本語</option>
+      <option value="en">English</option>
+    </select>
+  );
+}
+```
+### 5. 型安全な翻訳キー
+
+```typescript
+// types/i18n.ts
+type Messages = typeof import("../../messages/ja.json");
+type IntlMessages = Messages;
+
+declare global {
+  interface IntlMessages extends Messages {}
+}
+
+// 使用時に型安全性が確保される
+const t = useTranslations("Auth");
+t("signin"); // ✅ 有効
+t("invalid_key"); // ❌ TypeScriptエラー
+```
+
+### 6. ミドルウェアでの言語検出
+
+```typescript
+// middleware.ts
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./src/i18n/routing";
+
+export default createMiddleware(routing);
+
+export const config = {
+  matcher: ["/((?!api|_next|.*\\..*).*)"]
+};
+```
+
+## ベストプラクティス
+
+### 1. メッセージ構造の組織化
+
+```json
+{
+  "FeatureName": {
+    "ComponentName": {
+      "action": "翻訳テキスト",
+      "description": "説明文"
+    }
+  },
+  "Common": {
+    "buttons": {
+      "save": "保存",
+      "cancel": "キャンセル"
+    },
+    "messages": {
+      "loading": "読み込み中...",
+      "error": "エラーが発生しました"
+    }
+  }
+}
+```
+
+### 2. フックの分離
+
+```typescript
+// hooks/useAuthTranslations.ts
+import { useTranslations } from "next-intl";
+
+export function useAuthTranslations() {
+  const t = useTranslations("Auth");
+  
+  return {
+    signin: t("signin"),
+    signup: t("signup"),
+    email: t("email"),
+    password: t("password"),
+  };
+}
+
+// 使用例
+const auth = useAuthTranslations();
+<button>{auth.signin}</button>
+```
+
+### 3. 翻訳キーの定数化
+
+```typescript
+// constants/translationKeys.ts
+export const TRANSLATION_KEYS = {
+  AUTH: {
+    SIGNIN: "signin",
+    SIGNUP: "signup",
+    EMAIL: "email",
+  },
+  CRUD: {
+    SAVE: "save",
+    CANCEL: "cancel",
+  },
+} as const;
+
+// 使用例
+const t = useTranslations("Auth");
+<button>{t(TRANSLATION_KEYS.AUTH.SIGNIN)}</button>
+```
+
+### 4. 条件付き翻訳
+
+```typescript
+export default function StatusMessage({ status }: { status: string }) {
+  const t = useTranslations("Status");
+  
+  const getMessage = () => {
+    switch (status) {
+      case "success":
+        return t("success");
+      case "error":
+        return t("error");
+      case "loading":
+        return t("loading");
+      default:
+        return t("unknown");
+    }
+  };
+
+  return <div>{getMessage()}</div>;
+}
+```
+
+### 5. フォームエラーメッセージ
+
+```typescript
+// バリデーションスキーマで翻訳を使用
+import { useTranslations } from "next-intl";
+
+export function useFormSchema() {
+  const t = useTranslations("Validation");
+  
+  return z.object({
+    email: z
+      .string()
+      .min(1, t("required"))
+      .email(t("invalidEmail")),
+    password: z
+      .string()
+      .min(8, t("passwordMinLength")),
+  });
+}
+```
+
+## 開発環境での設定
+
+### 1. 翻訳ファイルの自動監視
+
+開発環境では、メッセージファイルの変更が自動的に反映されます：
+
+```typescript
+// next.config.ts で Turbopack を有効化
+const nextConfig: NextConfig = {
+  experimental: {
+    turbopack: true, // 開発環境でのHMR改善
+  },
+};
+```
+
+### 2. 翻訳の検証
+
+```bash
+# パッケージ追加
+npm install --save-dev @formatjs/cli
+
+# スクリプト追加（package.json）
+{
+  "scripts": {
+    "i18n:extract": "formatjs extract 'src/**/*.{ts,tsx}' --out-file messages/extracted.json",
+    "i18n:validate": "formatjs validate messages/ja.json messages/en.json"
+  }
+}
+```
+
+## トラブルシューティング
+
+### よくある問題
+
+1. **"useTranslations can only be used in Client Components"エラー**
+   - Server Componentでは `getTranslations` を使用
+   - Client Componentでは `useTranslations` を使用
+
+2. **翻訳が表示されない**
+   - メッセージファイルのJSONが正しい形式か確認
+   - キーの階層が正しいか確認
+   - import パスが正しいか確認
+
+3. **型エラーが発生する**
+   - `@types/node` がインストールされているか確認
+   - TypeScript設定でモジュール解決が正しいか確認
+
+## まとめ
+
+このドキュメントでは、next-intlを使用したNext.jsアプリケーションの国際化実装方法を説明しました。この実装により以下が実現できます：
+
+- **型安全性**: TypeScriptによる翻訳キーの検証
+- **パフォーマンス**: 必要な言語のメッセージのみロード
+- **開発効率**: Server/Client Componentsでの統一されたAPI
+- **保守性**: 階層的で管理しやすいメッセージ構造
+- **拡張性**: 新しい言語の追加が容易
+
+このガイドに従って実装することで、多言語対応の堅牢なアプリケーションを構築できます。
