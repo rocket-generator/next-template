@@ -101,18 +101,20 @@ export abstract class AuthRepository extends PrismaRepository<
     if (users.data.length === 0) {
       // Don't reveal whether email exists or not
       return StatusSchema.parse({
-        status: "success",
+        success: true,
         message:
           "If an account with that email exists, a password reset link has been sent.",
+        code: 200,
       });
     }
 
     // In a real implementation, you would send an email with a reset token
     // For now, just return success
     return StatusSchema.parse({
-      status: "success",
+      success: true,
       message:
         "If an account with that email exists, a password reset link has been sent.",
+      code: 200,
     });
   }
 
@@ -138,8 +140,9 @@ export abstract class AuthRepository extends PrismaRepository<
     });
 
     return StatusSchema.parse({
-      status: "success",
+      success: true,
       message: "Password has been reset successfully.",
+      code: 200,
     });
   }
 

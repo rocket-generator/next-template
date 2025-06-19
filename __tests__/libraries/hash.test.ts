@@ -202,7 +202,10 @@ describe("Hash Library", () => {
         expect(isValid).toBe(true);
 
         // Should fail with wrong password
-        const isInvalid = await verifyPassword(password + "wrong", hashedPassword);
+        const isInvalid = await verifyPassword(
+          password + "wrong",
+          hashedPassword
+        );
         expect(isInvalid).toBe(false);
       }
     });
