@@ -22,7 +22,7 @@ type Props = {
 };
 
 export default function DataSelectSingleInputField(props: Props) {
-  const options = props.options ? props.options["options"] : [];
+  const options = props.options?.options || [];
   return (
     <div className="col-span-full space-y-2">
       <Label htmlFor={props.data_key}>{props.name}</Label>
