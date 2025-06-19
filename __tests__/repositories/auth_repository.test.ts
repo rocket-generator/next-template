@@ -5,6 +5,7 @@ import { SignUpRequest } from "@/requests/signup_request";
 import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
+import { auth } from "@/libraries/auth";
 import { z } from "zod";
 
 // Mock the hash functions
@@ -12,6 +13,11 @@ jest.mock("@/libraries/hash", () => ({
   hashPassword: jest.fn(),
   verifyPassword: jest.fn(),
   generateToken: jest.fn(),
+}));
+
+// Mock the auth function
+jest.mock("@/libraries/auth", () => ({
+  auth: jest.fn(),
 }));
 
 // Create a concrete implementation for testing
@@ -103,6 +109,7 @@ describe("AuthRepository", () => {
   let mockHashPassword: jest.MockedFunction<typeof hashPassword>;
   let mockVerifyPassword: jest.MockedFunction<typeof verifyPassword>;
   let mockGenerateToken: jest.MockedFunction<typeof generateToken>;
+  let mockAuth: jest.MockedFunction<typeof auth>;
 
   beforeEach(() => {
     repository = new TestAuthRepository();
@@ -113,9 +120,68 @@ describe("AuthRepository", () => {
     mockGenerateToken = generateToken as jest.MockedFunction<
       typeof generateToken
     >;
+    mockAuth = auth as jest.MockedFunction<typeof auth>;
 
     // Reset all mocks
     jest.clearAllMocks();
+  });
+
+  describe("getMe", () => {
+    it("should return current user when authenticated", async () => {
+      const user: Auth = {
+        id: "user-1",
+        email: "test@example.com",
+        password: "hashedPassword",
+        name: "Test User",
+        permissions: ["read", "write"],
+      };
+      repository.addMockUser(user);
+
+      mockAuth.mockResolvedValue({
+        user: { id: "user-1" },
+      } as any);
+
+      const result = await repository.getMe();
+
+      expect(mockAuth).toHaveBeenCalled();
+      expect(result).toEqual(user);
+    });
+
+    it("should throw error when not authenticated", async () => {
+      mockAuth.mockResolvedValue(null);
+
+      await expect(repository.getMe()).rejects.toThrow("Unauthorized");
+      expect(mockAuth).toHaveBeenCalled();
+    });
+
+    it("should throw error when session has no user", async () => {
+      mockAuth.mockResolvedValue({
+        user: null,
+      } as any);
+
+      await expect(repository.getMe()).rejects.toThrow("Unauthorized");
+      expect(mockAuth).toHaveBeenCalled();
+    });
+
+    it("should throw error when session user has no id", async () => {
+      mockAuth.mockResolvedValue({
+        user: { email: "test@example.com" },
+      } as any);
+
+      await expect(repository.getMe()).rejects.toThrow("Unauthorized");
+      expect(mockAuth).toHaveBeenCalled();
+    });
+
+    it("should throw error when user not found by id", async () => {
+      mockAuth.mockResolvedValue({
+        user: { id: "nonexistent-user" },
+      } as any);
+
+      await expect(repository.getMe()).rejects.toThrow(
+        "User with id nonexistent-user not found"
+      );
+      expect(mockAuth).toHaveBeenCalled();
+    });
   });
 
   describe("postSignIn", () => {

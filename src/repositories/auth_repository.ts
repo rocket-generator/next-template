@@ -8,6 +8,7 @@ import { Status, StatusSchema } from "@/models/status";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { PrismaRepository } from "./prisma_repository";
 import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
+import { auth } from "@/libraries/auth";
 
 export abstract class AuthRepository extends PrismaRepository<
   typeof AuthSchema
@@ -20,6 +21,15 @@ export abstract class AuthRepository extends PrismaRepository<
   ) {
     super(schema, modelName, converter, searchableColumns);
   }
+
+  async getMe(): Promise<z.infer<typeof AuthSchema>> {
+    const session = await auth();
+    if (!session || !session?.user?.id) {
+      throw new Error("Unauthorized");
+    }
+    return this.findById(session.user.id);
+  }
+
 
   async postSignIn(request: SignInRequest): Promise<AccessToken> {
     // Find user by email
