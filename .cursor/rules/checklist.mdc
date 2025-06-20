@@ -9,5 +9,10 @@ alwaysApply: true
 
 - 全てのpage.tsx （App Routerのページファイル）は Server Side Componentになっている
 - ページやコンポーネントに書かれている全ての文字列は、国際化の対応がなされている
+- 全てのコンポーネントは、/src/components 以下に置かれ、/src/page には置かれていない
+- 新たに作成したコンポーネントは全てStorybookのコードが存在している
+- 全ての新しいコードにUnitTestのコードが書かれている
+- 書き換えたコードに関係するUnitTest / Storybookがきちんと更新されている
+- 全てのUnitTestのコードが正しくPassする
 
 

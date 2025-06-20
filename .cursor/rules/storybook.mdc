@@ -1,0 +1,256 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Storybook運用ガイドライン
+
+## 概要
+
+本プロジェクトでは、UIコンポーネントの開発とテストにStorybookを活用しています。このガイドラインでは、Storybookを効果的に運用するためのルールとベストプラクティスを定めます。
+
+## 基本原則
+
+### 1. Story作成の義務化
+
+- **新規コンポーネント作成時**: 必ずStorybookのStoryを同時に作成すること
+- **既存コンポーネント改修時**: 対応するStoryも必ず更新すること
+- **削除時**: コンポーネントを削除する際は、対応するStoryも削除すること
+
+### 2. コンポーネントの純粋性
+
+コンポーネントは以下の原則に従って実装する：
+
+- **ビジネスロジックの排除**: コンポーネント内にビジネスロジックを含めない
+- **外部依存性の排除**: API呼び出し、状態管理、ルーティングなどの外部依存を持たない
+- **Props経由での機能注入**: アクション、イベントハンドラー、データは全てPropsとして受け取る
+
+## ディレクトリ構造
+
+```
+src/
+├── components/
+│   ├── molecules/
+│   │   ├── AwesomeButton/
+│   │   │   ├── AwesomeButton.tsx
+│   │   │   ├── AwesomeButton.stories.tsx
+│   │   │   └── AwesomeButton.module.css
+│   │   └── ...
+│   └── organisms/
+│       └── ...
+```
+
+## Story作成のルール
+
+### 1. ファイル命名規則
+
+- Storyファイルは `[ComponentName].stories.tsx` の形式で命名
+- コンポーネントと同じディレクトリに配置
+
+### 2. Story構成の基本テンプレート
+
+```typescript
+import type { Meta, StoryObj } from '@storybook/react';
+import { ComponentName } from './ComponentName';
+
+const meta = {
+  title: 'カテゴリ/ComponentName',
+  component: ComponentName,
+  parameters: {
+    layout: 'centered', // または 'fullscreen', 'padded'
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    // Props の制御設定
+  },
+} satisfies Meta<typeof ComponentName>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// 基本的な使用例
+export const Default: Story = {
+  args: {
+    // デフォルトのProps
+  },
+};
+
+// バリエーション
+export const Variant1: Story = {
+  args: {
+    // バリエーション用のProps
+  },
+};
+```
+
+### 3. 必須のStoryパターン
+
+各コンポーネントには最低限以下のStoryを作成する：
+
+- **Default**: 最も一般的な使用例
+- **各状態のバリエーション**: loading, error, empty, disabledなど
+- **エッジケース**: 長いテキスト、特殊文字、境界値など
+
+### 4. アクションとモックデータ
+
+```typescript
+import { action } from '@storybook/addon-actions';
+
+export const WithActions: Story = {
+  args: {
+    onClick: action('clicked'),
+    onSubmit: action('submitted'),
+    data: {
+      // モックデータ
+      id: '1',
+      name: 'サンプルデータ',
+    },
+  },
+};
+```
+
+## ベストプラクティス
+
+### 1. コンポーネントの設計
+
+```typescript
+// ❌ 悪い例: ビジネスロジックが含まれている
+export const UserProfile = () => {
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    fetchUser().then(setUser); // 外部依存
+  }, []);
+  
+  return <div>{user?.name}</div>;
+};
+
+// ✅ 良い例: 純粋なコンポーネント
+interface UserProfileProps {
+  user: User | null;
+  onRefresh?: () => void;
+  loading?: boolean;
+}
+
+export const UserProfile = ({ user, onRefresh, loading }: UserProfileProps) => {
+  if (loading) return <Spinner />;
+  if (!user) return <EmptyState />;
+  
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <button onClick={onRefresh}>更新</button>
+    </div>
+  );
+};
+```
+
+### 2. Storyの網羅性
+
+```typescript
+// すべての状態をカバーする
+export const Loading: Story = {
+  args: {
+    loading: true,
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    user: null,
+    loading: false,
+  },
+};
+
+export const WithData: Story = {
+  args: {
+    user: {
+      id: '1',
+      name: '山田太郎',
+      email: 'yamada@example.com',
+    },
+    loading: false,
+  },
+};
+
+export const LongName: Story = {
+  args: {
+    user: {
+      id: '2',
+      name: '非常に長い名前のユーザーさんの表示確認用テストデータ',
+      email: 'long-name-user@example.com',
+    },
+  },
+};
+```
+
+### 3. インタラクティブなStory
+
+```typescript
+export const Interactive: Story = {
+  args: {
+    onSubmit: action('form-submitted'),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    
+    // ユーザーインタラクションをシミュレート
+    await userEvent.type(canvas.getByLabelText('名前'), '山田太郎');
+    await userEvent.click(canvas.getByRole('button', { name: '送信' }));
+  },
+};
+```
+
+## 運用フロー
+
+### 1. 開発時
+
+1. コンポーネントを作成/修正
+2. 対応するStoryを作成/更新
+3. Storybookで表示確認
+4. 各種状態やエッジケースを確認
+5. PRにStoryの更新も含める
+
+### 2. レビュー時
+
+- Storyが作成/更新されているか確認
+- すべての重要な状態がカバーされているか確認
+- コンポーネントが純粋性を保っているか確認
+
+### 3. メンテナンス
+
+- 定期的にStorybookビルドの成功を確認
+- 使われなくなったStoryの削除
+- 新しいパターンが生まれた場合のStory追加
+
+## コマンド
+
+```bash
+# Storybookの起動
+npm run storybook
+
+# Storybookのビルド
+npm run build-storybook
+
+# Storybookのテスト
+npm run test-storybook
+```
+
+## チェックリスト
+
+コンポーネント開発時は以下を確認：
+
+- [ ] コンポーネントにビジネスロジックが含まれていない
+- [ ] 外部依存性がPropsとして注入されている
+- [ ] Storyファイルが作成されている
+- [ ] Default Storyが存在する
+- [ ] 主要な状態のStoryが網羅されている
+- [ ] エッジケースのStoryが含まれている
+- [ ] アクションがaction()でモック化されている
+- [ ] Storyがエラーなく表示される
+
+## 参考資料
+
+- [Storybook公式ドキュメント](https://storybook.js.org/docs)
+- [Component Story Format (CSF)](https://storybook.js.org/docs/api/csf)
+- [Storybook for React](https://storybook.js.org/docs/get-started/react-vite)

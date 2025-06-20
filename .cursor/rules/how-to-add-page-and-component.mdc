@@ -15,6 +15,7 @@ alwaysApply: true
 -   **命名規則**: ファイル名、ディレクトリ名、コンポーネント名、変数名などは一貫性のある命名規則に従います。（詳細は後述）
 -   **ディレクトリ構造**: 機能ごと、またコンポーネントの種類（atoms, molecules, organisms）ごとに整理されたディレクトリ構造を維持します。（詳細は後述）
 -   **PWA対応**: PWAとしての動作を意識し、必要な箇所（ヘッダー、フッターなど）には `env(safe-area-inset-*)` を適用します。
+-   **Server Side Actionの利用**: DBへのアクセスなど、サーバでの処理が必要なものは、APIを作るのではなく、サーバ再度アクションで行う。`page.tsx` と同じディレクトリに、そのページで使うアクションをまとめた `actions.ts` を配置する。
 
 ## 2. ディレクトリ構造とファイル命名規則
 
@@ -25,10 +26,11 @@ alwaysApply: true
 -   各ページのメインファイルは `page.tsx` とします。
 -   ページに関連するServer Actionsは、同階層または専用の `actions.ts` ファイルに記述します。
     -   例: `src/app/(site)/(authorized)/(app)/actions.ts`
+-   `src/app/api` は Authのために作られたAPIを置くが、新たにAPIを作成することは**禁止**する。代わりにServer Side Actionを使う。
 
 ### 2.2. コンポーネント (`src/components`)
 
--   再利用可能なUIコンポーネントは `src/components` ディレクトリ以下に配置します。
+-   全てのUIコンポーネントは `src/components` ディレクトリ以下に配置します。
 -   コンポーネントはAtomic Designの考え方に基づき、`atoms`, `molecules`, `organisms` のいずれかのサブディレクトリに分類します。
     -   **atoms**: それ以上分割できない最小単位のUI要素（例: `Button`, `Input`, `Icon`）。Shadcn/UIから提供されるコンポーネントが主にここに該当します。原則として、このディレクトリにカスタムコンポーネントを新規作成することは避け、Shadcn/UIのものをそのまま利用するか、ラッパーを作成する場合は `molecules` 以上に配置します。
     -   **molecules**: 複数のatomを組み合わせて作られる、より具体的な機能を持つUI部品（例: `SearchInput` (Input atom + Button atom), `UserAvatarMenu`）。
