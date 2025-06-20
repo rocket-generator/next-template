@@ -3,13 +3,13 @@
 import { User, Settings, LogOut } from "lucide-react";
 import { User as UserModel } from "@/models/user";
 import { useState, useRef, useEffect } from "react";
-import { signOutAction } from "./actions";
 
 type Props = {
   signInUser: UserModel | null;
+  onSignOut: () => void;
 };
 
-export default function HeaderUserMenu({ signInUser }: Props) {
+export default function HeaderUserMenu({ signInUser, onSignOut }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -49,7 +49,7 @@ export default function HeaderUserMenu({ signInUser }: Props) {
           </button>
           <button
             className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-            onClick={signOutAction}
+            onClick={onSignOut}
           >
             <LogOut className="w-4 h-4" />
             ログアウト

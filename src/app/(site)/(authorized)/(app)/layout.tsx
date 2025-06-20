@@ -9,6 +9,7 @@ import { redirect, notFound } from "next/navigation";
 import { User } from "@/models/user";
 import { CheckCircle, Home } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { signOutAction } from "./actions";
 
 type Props = {
   children: React.ReactNode;
@@ -46,7 +47,7 @@ export default async function SiteLayout({ children }: Props) {
         icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
       />
       <div className="flex-1 lg:ml-64 flex flex-col">
-        <Header signInUser={me} />
+        <Header signInUser={me} onSignOut={signOutAction} />
         <main className="p-6 flex-grow">{children}</main>
         <Footer />
       </div>
