@@ -7,6 +7,12 @@ const mockSubmitAction = async (data: any) => {
   return true;
 };
 
+// Default submit action for stories without submitAction
+const defaultSubmitAction = async (data: any) => {
+  console.log('Default form submission:', data);
+  return true;
+};
+
 const meta: Meta<typeof DataForm> = {
   title: 'Organisms/DataForm',
   component: DataForm,
@@ -23,7 +29,18 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 
-const userRegistrationStructure = [
+const userRegistrationStructure: Array<{
+  name: string;
+  key: string;
+  type: string;
+  value: string | number | boolean | string[] | undefined;
+  required: boolean;
+  placeholder: string;
+  options?: {
+    options?: Array<{ value: string; name: string }>;
+    choices?: Array<{ value: string; label: string }>;
+  };
+}> = [
   {
     name: '名前',
     key: 'name',
@@ -64,11 +81,11 @@ const userRegistrationStructure = [
     required: true,
     placeholder: '部署を選択',
     options: {
-      choices: [
-        { value: 'engineering', label: '開発部' },
-        { value: 'sales', label: '営業部' },
-        { value: 'marketing', label: 'マーケティング部' },
-        { value: 'hr', label: '人事部' },
+      options: [
+        { value: 'engineering', name: '開発部' },
+        { value: 'sales', name: '営業部' },
+        { value: 'marketing', name: 'マーケティング部' },
+        { value: 'hr', name: '人事部' },
       ],
     },
   },
@@ -80,12 +97,12 @@ const userRegistrationStructure = [
     required: false,
     placeholder: 'スキルを選択',
     options: {
-      choices: [
-        { value: 'javascript', label: 'JavaScript' },
-        { value: 'typescript', label: 'TypeScript' },
-        { value: 'react', label: 'React' },
-        { value: 'nextjs', label: 'Next.js' },
-        { value: 'nodejs', label: 'Node.js' },
+      options: [
+        { value: 'javascript', name: 'JavaScript' },
+        { value: 'typescript', name: 'TypeScript' },
+        { value: 'react', name: 'React' },
+        { value: 'nextjs', name: 'Next.js' },
+        { value: 'nodejs', name: 'Node.js' },
       ],
     },
   },
@@ -99,7 +116,18 @@ const userRegistrationStructure = [
   },
 ];
 
-const productCreationStructure = [
+const productCreationStructure: Array<{
+  name: string;
+  key: string;
+  type: string;
+  value: string | number | boolean | string[] | undefined;
+  required: boolean;
+  placeholder: string;
+  options?: {
+    options?: Array<{ value: string; name: string }>;
+    choices?: Array<{ value: string; label: string }>;
+  };
+}> = [
   {
     name: '商品名',
     key: 'name',
@@ -132,11 +160,11 @@ const productCreationStructure = [
     required: true,
     placeholder: 'カテゴリを選択',
     options: {
-      choices: [
-        { value: 'laptop', label: 'ノートパソコン' },
-        { value: 'desktop', label: 'デスクトップPC' },
-        { value: 'tablet', label: 'タブレット' },
-        { value: 'smartphone', label: 'スマートフォン' },
+      options: [
+        { value: 'laptop', name: 'ノートパソコン' },
+        { value: 'desktop', name: 'デスクトップPC' },
+        { value: 'tablet', name: 'タブレット' },
+        { value: 'smartphone', name: 'スマートフォン' },
       ],
     },
   },
@@ -148,12 +176,12 @@ const productCreationStructure = [
     required: false,
     placeholder: '対応OSを選択',
     options: {
-      choices: [
-        { value: 'windows', label: 'Windows' },
-        { value: 'macos', label: 'macOS' },
-        { value: 'linux', label: 'Linux' },
-        { value: 'ios', label: 'iOS' },
-        { value: 'android', label: 'Android' },
+      options: [
+        { value: 'windows', name: 'Windows' },
+        { value: 'macos', name: 'macOS' },
+        { value: 'linux', name: 'Linux' },
+        { value: 'ios', name: 'iOS' },
+        { value: 'android', name: 'Android' },
       ],
     },
   },
@@ -200,10 +228,10 @@ export const EditUserForm: Story = {
         required: true,
         placeholder: '部署を選択',
         options: {
-          choices: [
-            { value: 'engineering', label: '開発部' },
-            { value: 'sales', label: '営業部' },
-            { value: 'marketing', label: 'マーケティング部' },
+          options: [
+            { value: 'engineering', name: '開発部' },
+            { value: 'sales', name: '営業部' },
+            { value: 'marketing', name: 'マーケティング部' },
           ],
         },
       },
@@ -215,11 +243,11 @@ export const EditUserForm: Story = {
         required: false,
         placeholder: 'スキルを選択',
         options: {
-          choices: [
-            { value: 'javascript', label: 'JavaScript' },
-            { value: 'typescript', label: 'TypeScript' },
-            { value: 'react', label: 'React' },
-            { value: 'vue', label: 'Vue.js' },
+          options: [
+            { value: 'javascript', name: 'JavaScript' },
+            { value: 'typescript', name: 'TypeScript' },
+            { value: 'react', name: 'React' },
+            { value: 'vue', name: 'Vue.js' },
           ],
         },
       },
@@ -248,7 +276,7 @@ export const FormWithoutSubmitAction: Story = {
         placeholder: '説明を入力',
       },
     ],
-    // submitAction は意図的に省略
+    submitAction: defaultSubmitAction,
   },
 };
 
@@ -303,10 +331,10 @@ export const FormWithAllFieldTypes: Story = {
         required: true,
         placeholder: '選択してください',
         options: {
-          choices: [
-            { value: 'option1', label: 'オプション1' },
-            { value: 'option2', label: 'オプション2' },
-            { value: 'option3', label: 'オプション3' },
+          options: [
+            { value: 'option1', name: 'オプション1' },
+            { value: 'option2', name: 'オプション2' },
+            { value: 'option3', name: 'オプション3' },
           ],
         },
       },
@@ -318,10 +346,10 @@ export const FormWithAllFieldTypes: Story = {
         required: false,
         placeholder: 'チェックボックス',
         options: {
-          choices: [
-            { value: 'check1', label: 'チェック1' },
-            { value: 'check2', label: 'チェック2' },
-            { value: 'check3', label: 'チェック3' },
+          options: [
+            { value: 'check1', name: 'チェック1' },
+            { value: 'check2', name: 'チェック2' },
+            { value: 'check3', name: 'チェック3' },
           ],
         },
       },
@@ -329,7 +357,7 @@ export const FormWithAllFieldTypes: Story = {
         name: '日時',
         key: 'datetime',
         type: 'datetime',
-        value: 1640991600,
+        value: undefined,
         required: false,
         placeholder: '日時を選択',
       },

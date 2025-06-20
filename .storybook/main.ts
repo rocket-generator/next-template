@@ -32,10 +32,6 @@ const config: StorybookConfig = {
       '@/libraries/prisma': mockPath,
       '../generated/prisma': mockPath,
       '../../generated/prisma': mockPath,
-      'next-auth': resolve(__dirname, 'mocks/next-auth.ts'),
-      'next-auth/react': resolve(__dirname, 'mocks/next-auth-react.ts'),
-      'next-auth/providers/credentials': resolve(__dirname, 'mocks/next-auth-providers-credentials.ts'),
-      '@/libraries/auth': resolve(__dirname, 'mocks/auth.ts'),
     };
     
     config.define = {
