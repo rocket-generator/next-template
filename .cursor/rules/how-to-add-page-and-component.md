@@ -122,7 +122,7 @@ alwaysApply: true
 -   `src/components/organisms/RecordList/index.tsx` (Server Component):
     -   `records` (記録リスト) をpropsとして受け取り、`RecordCard` (Molecule, Server Component) を使って一覧表示します。
 
-## 6. Storybook 対応 (将来的な考慮)
+## 6. Storybook 対応
 
 -   コンポーネントを `CamelCaseディレクトリ/index.tsx` の形式で作成することにより、将来的にStorybookの`*.stories.tsx` ファイルを各コンポーネントディレクトリ内に配置しやすくなります。
     -   例: `src/components/molecules/PetFilter/PetFilter.stories.tsx`

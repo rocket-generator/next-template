@@ -8,6 +8,7 @@ import { Status, StatusSchema } from "@/models/status";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { PrismaRepository } from "./prisma_repository";
 import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
+import { auth } from "@/libraries/auth";
 
 export abstract class AuthRepository extends PrismaRepository<
   typeof AuthSchema
@@ -20,6 +21,15 @@ export abstract class AuthRepository extends PrismaRepository<
   ) {
     super(schema, modelName, converter, searchableColumns);
   }
+
+  async getMe(): Promise<z.infer<typeof AuthSchema>> {
+    const session = await auth();
+    if (!session || !session?.user?.id) {
+      throw new Error("Unauthorized");
+    }
+    return this.findById(session.user.id);
+  }
+
 
   async postSignIn(request: SignInRequest): Promise<AccessToken> {
     // Find user by email
@@ -101,18 +111,20 @@ export abstract class AuthRepository extends PrismaRepository<
     if (users.data.length === 0) {
       // Don't reveal whether email exists or not
       return StatusSchema.parse({
-        status: "success",
+        success: true,
         message:
           "If an account with that email exists, a password reset link has been sent.",
+        code: 200,
       });
     }
 
     // In a real implementation, you would send an email with a reset token
     // For now, just return success
     return StatusSchema.parse({
-      status: "success",
+      success: true,
       message:
         "If an account with that email exists, a password reset link has been sent.",
+      code: 200,
     });
   }
 
@@ -138,8 +150,9 @@ export abstract class AuthRepository extends PrismaRepository<
     });
 
     return StatusSchema.parse({
-      status: "success",
+      success: true,
       message: "Password has been reset successfully.",
+      code: 200,
     });
   }
 

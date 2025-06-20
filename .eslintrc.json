@@ -1,4 +1,10 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
-  "exclude": ["src/generated/**/*"]
+  "extends": [
+    "next/core-web-vitals",
+    "next/typescript",
+    "plugin:storybook/recommended"
+  ],
+  "exclude": [
+    "src/generated/**/*"
+  ]
 }
