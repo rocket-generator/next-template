@@ -1,24 +1,233 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TypeScript Next.js Template
 
-## Getting Started
+This is a [Next.js](https://nextjs.org) project with TypeScript, using App Router and a multi-layered architecture.
 
-First, run the development server:
+## 🚀 Technologies
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework**: Next.js 15.3.3 with App Router
+- **Language**: TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth.js v5 (beta)
+- **UI Components**: Radix UI + shadcn/ui
+- **Styling**: Tailwind CSS
+- **Forms**: React Hook Form + Zod validation
+- **Internationalization**: next-intl (Japanese/English)
+- **Containerization**: Docker & Docker Compose
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                 # Next.js App Router
+│   ├── (site)/(authorized)/    # Protected routes
+│   ├── (site)/(unauthorized)/  # Public auth routes
+│   └── api/auth/               # NextAuth.js API routes
+├── components/          # UI components (Atomic Design)
+│   ├── atoms/          # Basic UI elements
+│   ├── molecules/      # Composite components
+│   └── organisms/      # Complex feature components
+├── models/             # TypeScript interfaces
+├── repositories/       # Data access layer
+├── libraries/          # Utility functions
+├── requests/           # Zod schemas for validation
+└── i18n/              # Internationalization
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 20 or later
+- Docker and Docker Compose
+- PostgreSQL (if running locally without Docker)
+
+### Local Development (without Docker)
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Setup environment variables**
+   ```bash
+   cp .env.sample .env
+   # Edit .env with your database and auth settings
+   ```
+
+3. **Setup database**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+4. **Run development server**
+   ```bash
+   npm run dev
+   ```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+## 🐳 Docker Development
+
+### Quick Start with Docker
+
+1. **Clone and navigate to the project**
+   ```bash
+   git clone <repository-url>
+   cd typescript-next-template
+   ```
+
+2. **Start all services**
+   ```bash
+   docker compose up
+   ```
+
+   This will start:
+   - Next.js app (production build) at http://localhost:3000
+   - PostgreSQL database at localhost:5433
+   - LocalStack (S3 + SES emulation) at localhost:4566
+
+3. **For development with hot reload**
+   ```bash
+   docker compose --profile dev up web-dev
+   ```
+
+   Development server will be available at http://localhost:3001
+
+### Docker Commands
+
+#### Build Images
+```bash
+# Build all images
+docker compose build
+
+# Build specific service
+docker compose build web
+
+# Build development image
+docker compose build web-dev
+```
+
+#### Start Services
+```bash
+# Start all services in background
+docker compose up -d
+
+# Start only database and LocalStack
+docker compose up -d postgres localstack
+
+# Start production web app
+docker compose up web
+
+# Start development web app (with hot reload)
+docker compose --profile dev up web-dev
+```
+
+#### Database Operations
+```bash
+# Run Prisma commands in container
+docker compose exec web npx prisma generate
+docker compose exec web npx prisma db push
+docker compose exec web npx prisma migrate dev
+
+# Connect to database
+docker compose exec postgres psql -U postgres -d myapp
+```
+
+#### Logs and Debugging
+```bash
+# View logs for all services
+docker compose logs
+
+# View logs for specific service
+docker compose logs web
+docker compose logs postgres
+docker compose logs localstack
+
+# Follow logs in real-time
+docker compose logs -f web
+```
+
+#### Cleanup
+```bash
+# Stop all services
+docker compose down
+
+# Stop and remove volumes (⚠️ This will delete database data)
+docker compose down -v
+
+# Clean up Docker system
+docker system prune -f
+```
+
+### Environment Configuration
+
+#### For Docker Development
+Use the provided `.env.docker` file as reference for Docker-specific environment variables:
+
+```bash
+# Copy Docker environment template
+cp .env.docker .env
+```
+
+Key environment variables for Docker:
+- `DATABASE_URL`: PostgreSQL connection (automatically configured)
+- `AUTH_URL`: NextAuth.js URL
+- `AWS_ENDPOINT_URL_S3`: LocalStack S3 endpoint for local development
+- `AWS_ENDPOINT_URL_SES`: LocalStack SES endpoint for local development
+
+#### For Production
+Update environment variables for production AWS services:
+- Use real AWS S3 and SES endpoints
+- Configure proper AWS credentials
+- Update database connection for production PostgreSQL
+
+## 🎯 Available Scripts
+
+```bash
+# Development
+npm run dev          # Start development server with Turbopack
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+
+# Database
+npx prisma generate  # Generate Prisma Client
+npx prisma db push   # Push schema changes to database
+npx prisma migrate dev # Create and apply migrations
+npx prisma studio    # Open Prisma Studio GUI
+
+# Testing
+npm run test         # Run Jest tests
+npm run test:watch   # Run tests in watch mode
+
+# Storybook
+npm run storybook    # Start Storybook development server
+npm run build-storybook # Build Storybook for production
+```
+
+## 📊 Services Overview
+
+| Service | Local Port | Docker Port | Description |
+|---------|------------|-------------|-------------|
+| Next.js (prod) | 3000 | 3000 | Production Next.js application |
+| Next.js (dev) | 3001 | 3000 | Development Next.js with hot reload |
+| PostgreSQL | 5433 | 5432 | Database server |
+| LocalStack | 4566 | 4566 | AWS services emulation (S3, SES) |
+
+## 🔧 Development Tools
+
+- **Prisma Studio**: Database GUI at http://localhost:5555 (when running `npx prisma studio`)
+- **Storybook**: Component library at http://localhost:6006 (when running `npm run storybook`)
+- **LocalStack**: AWS services dashboard at http://localhost:4566
+
+## 📝 Architecture Notes
+
+- **Repository Pattern**: Multiple data source adapters (Prisma, API, Airtable, Local storage)
+- **Atomic Design**: Component organization for scalability
+- **Form Validation**: Consistent Zod schemas for client/server validation
+- **Internationalization**: Built-in Japanese/English support
+- **Authentication**: Secure NextAuth.js implementation
 
 ## Learn More
 

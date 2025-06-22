@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Next.js Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/myapp
+      - AUTH_URL=http://localhost:3000/api/auth
+      - AUTH_SECRET=FwpgXc8ejZgsKUQ5qXh7L7ftCBuhuOYig9GqKkdrXNI=
+      - NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=http://web:3000/api
+      - NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:3000/api
+      # LocalStack S3 Configuration
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_ENDPOINT_URL_S3=http://localstack:4566
+      - AWS_ENDPOINT_URL_SES=http://localstack:4566
+      - S3_BUCKET_NAME=my-app-bucket
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./prisma:/app/prisma
+    networks:
+      - app-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./prisma/schema.prisma:/docker-entrypoint-initdb.d/schema.prisma:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # LocalStack for AWS Services (S3, SES)
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=s3,ses
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+
+  # Development environment (for local development)
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/myapp
+      - AUTH_URL=http://localhost:3001/api/auth
+      - AUTH_SECRET=FwpgXc8ejZgsKUQ5qXh7L7ftCBuhuOYig9GqKkdrXNI=
+      - NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=http://web-dev:3000/api
+      - NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:3001/api
+      # LocalStack S3 Configuration
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_ENDPOINT_URL_S3=http://localstack:4566
+      - AWS_ENDPOINT_URL_SES=http://localstack:4566
+      - S3_BUCKET_NAME=my-app-bucket
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - app-network
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+  localstack_data:
+
+networks:
+  app-network:
+    driver: bridge
