@@ -80,3 +80,8 @@ Components follow Atomic Design in `/src/components/`:
 - `/molecules` - Composite components
 - `/organisms` - Complex feature components
 - All use Radix UI primitives with Tailwind styling
+
+### Coding rules
+
+Coding rules are defined in `.cursor/rules`.
+Check all the mdc files in `.cursor/rules` for more details before planning your code.

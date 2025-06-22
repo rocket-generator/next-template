@@ -4,7 +4,7 @@
     "next/typescript",
     "plugin:storybook/recommended"
   ],
-  "exclude": [
+  "ignorePatterns": [
     "src/generated/**/*"
   ]
 }
