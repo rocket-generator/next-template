@@ -10,7 +10,20 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "type-check": "tsc --noEmit",
+    "docker:db:migrate": "docker compose exec -T web npx prisma migrate dev",
+    "docker:db:push": "docker compose exec -T web npx prisma db push",
+    "docker:db:seed": "docker compose exec -T web npx prisma db seed",
+    "docker:db:reset": "docker compose exec -T web npx prisma migrate reset --force",
+    "docker:db:setup": "npm run docker:db:push && npm run docker:db:seed",
+    "docker:db:studio": "docker compose exec web npx prisma studio",
+    "docker:dev:db:migrate": "docker compose --profile dev exec -T web-dev npx prisma migrate dev",
+    "docker:dev:db:push": "docker compose --profile dev exec -T web-dev npx prisma db push",
+    "docker:dev:db:seed": "docker compose --profile dev exec -T web-dev npx prisma db seed",
+    "docker:dev:db:reset": "docker compose --profile dev exec -T web-dev npx prisma migrate reset --force",
+    "docker:dev:db:setup": "npm run docker:dev:db:push && npm run docker:dev:db:seed",
+    "docker:dev:db:studio": "docker compose --profile dev exec web-dev npx prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

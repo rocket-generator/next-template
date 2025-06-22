@@ -87,9 +87,18 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
    - PostgreSQL database at localhost:5433
    - LocalStack (S3 + SES emulation) at localhost:4566
 
-3. **For development with hot reload**
+3. **Initialize database**
+   ```bash
+   # Wait for services to be ready, then run:
+   npm run docker:db:setup
+   ```
+
+4. **For development with hot reload**
    ```bash
    docker compose --profile dev up web-dev
+   
+   # Initialize development database
+   npm run docker:dev:db:setup
    ```
 
    Development server will be available at http://localhost:3001
@@ -124,6 +133,45 @@ docker compose --profile dev up web-dev
 ```
 
 #### Database Operations
+
+##### Using npm scripts (Recommended)
+```bash
+# Production environment (web service)
+npm run docker:db:migrate    # Run migrations
+npm run docker:db:push       # Push schema to database
+npm run docker:db:seed       # Run seed data
+npm run docker:db:reset      # Reset database (⚠️ deletes all data)
+npm run docker:db:setup      # Initial setup (push + seed)
+npm run docker:db:studio     # Open Prisma Studio
+
+# Development environment (web-dev service)
+npm run docker:dev:db:migrate    # Run migrations in dev
+npm run docker:dev:db:push       # Push schema to dev database
+npm run docker:dev:db:seed       # Run seed data in dev
+npm run docker:dev:db:reset      # Reset dev database
+npm run docker:dev:db:setup      # Initial dev setup (push + seed)
+npm run docker:dev:db:studio     # Open Prisma Studio in dev
+```
+
+##### Usage Examples
+```bash
+# Initialize production database
+docker compose up -d
+npm run docker:db:setup
+
+# Initialize development database (requires --profile dev)
+docker compose --profile dev up -d
+npm run docker:dev:db:setup
+
+# Reset and reinitialize production database
+npm run docker:db:reset
+npm run docker:db:setup
+
+# Open Prisma Studio for database management
+npm run docker:db:studio  # Opens at http://localhost:5555
+```
+
+##### Direct Docker commands
 ```bash
 # Run Prisma commands in container
 docker compose exec web npx prisma generate
