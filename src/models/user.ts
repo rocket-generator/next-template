@@ -6,6 +6,6 @@ export const UserSchema = AuthSchema;
 
 export type User = z.infer<typeof UserSchema>;
 
-export function transformPrismToModel(data: PrismaModel): User {
-  return UserSchema.parse({ ...data, title: "タイトル" });
+export function transformPrismToModel(data: unknown): User {
+  return UserSchema.parse({ ...(data as PrismaModel), title: "タイトル" });
 }

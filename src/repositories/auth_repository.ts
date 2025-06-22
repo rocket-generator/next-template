@@ -1,4 +1,4 @@
-import { AuthSchema, Auth } from "@/models/auth";
+import { AuthSchema } from "@/models/auth";
 import { z } from "zod";
 import { SignInRequest } from "@/requests/signin_request";
 import { AccessToken, AccessTokenSchema } from "@/models/access_token";
@@ -16,7 +16,7 @@ export abstract class AuthRepository extends PrismaRepository<
   constructor(
     schema: typeof AuthSchema,
     modelName: string,
-    converter: (data: any) => z.infer<typeof AuthSchema>,
+    converter: (data: unknown) => z.infer<typeof AuthSchema>,
     searchableColumns: string[]
   ) {
     super(schema, modelName, converter, searchableColumns);

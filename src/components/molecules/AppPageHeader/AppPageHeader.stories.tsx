@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/nextjs';
 import AppPageHeader from './index';
 import { Plus, Trash2, Settings, Download } from 'lucide-react';
 // Mock function for actions

@@ -1,8 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import Pagination from './index';
+import type { Meta, StoryObj } from '@storybook/nextjs';
 
 // Mock the async component by creating a wrapper
-const PaginationWrapper = (props: any) => {
+const PaginationWrapper = (props: {
+  count: number;
+  offset: number;
+  limit: number;
+  basePath: string;
+}) => {
   // Mock the getTranslations function
   const mockTranslations = {
     previous: '前へ',

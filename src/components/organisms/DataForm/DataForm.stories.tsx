@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/nextjs';
 import DataForm from './index';
 // Mock function for form submission
-const mockSubmitAction = async (data: any) => {
+const mockSubmitAction = async (data: Record<string, unknown>) => {
   console.log('Form submitted with data:', data);
   await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate async operation
   return true;
 };
 
 // Default submit action for stories without submitAction
-const defaultSubmitAction = async (data: any) => {
+const defaultSubmitAction = async (data: Record<string, unknown>) => {
   console.log('Default form submission:', data);
   return true;
 };
