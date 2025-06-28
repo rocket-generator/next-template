@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
+import type { Meta, StoryObj } from "@storybook/nextjs";
 
 // Mock the async component by creating a wrapper
 const PaginationWrapper = (props: {
@@ -9,11 +9,11 @@ const PaginationWrapper = (props: {
 }) => {
   // Mock the getTranslations function
   const mockTranslations = {
-    previous: '前へ',
-    next: '次へ',
-    first: '最初',
-    last: '最後',
-    no_result_found: '結果が見つかりませんでした',
+    previous: "前へ",
+    next: "次へ",
+    first: "最初",
+    last: "最後",
+    no_result_found: "結果が見つかりませんでした",
   };
 
   // Create a sync version of the component for Storybook
@@ -34,7 +34,10 @@ const PaginationWrapper = (props: {
     const generatePageNumbers = () => {
       const pageNumbers = [];
       const maxVisiblePages = 7;
-      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let startPage = Math.max(
+        1,
+        currentPage - Math.floor(maxVisiblePages / 2)
+      );
       const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
       if (endPage - startPage + 1 < maxVisiblePages) {
@@ -166,15 +169,15 @@ const PaginationWrapper = (props: {
 };
 
 const meta: Meta<typeof PaginationWrapper> = {
-  title: 'Molecules/Pagination',
+  title: "Molecules/Pagination",
   component: PaginationWrapper,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
     nextjs: {
       appDirectory: true,
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -185,7 +188,7 @@ export const FirstPage: Story = {
     count: 100,
     offset: 0,
     limit: 10,
-    basePath: '/admin/users',
+    basePath: "/admin/users",
   },
 };
 
@@ -194,7 +197,7 @@ export const MiddlePage: Story = {
     count: 100,
     offset: 30,
     limit: 10,
-    basePath: '/admin/users',
+    basePath: "/admin/users",
   },
 };
 
@@ -203,7 +206,7 @@ export const LastPage: Story = {
     count: 100,
     offset: 90,
     limit: 10,
-    basePath: '/admin/users',
+    basePath: "/admin/users",
   },
 };
 
@@ -212,7 +215,7 @@ export const SinglePage: Story = {
     count: 5,
     offset: 0,
     limit: 10,
-    basePath: '/admin/users',
+    basePath: "/admin/users",
   },
 };
 
@@ -221,7 +224,7 @@ export const EmptyResults: Story = {
     count: 0,
     offset: 0,
     limit: 10,
-    basePath: '/admin/users',
+    basePath: "/admin/users",
   },
 };
 
@@ -230,7 +233,7 @@ export const ManyPages: Story = {
     count: 500,
     offset: 250,
     limit: 10,
-    basePath: '/admin/products',
+    basePath: "/admin/products",
   },
 };
 
@@ -239,7 +242,7 @@ export const LargeLimit: Story = {
     count: 100,
     offset: 0,
     limit: 50,
-    basePath: '/admin/orders',
+    basePath: "/admin/orders",
   },
 };
 
@@ -248,7 +251,7 @@ export const SecondPage: Story = {
     count: 45,
     offset: 10,
     limit: 10,
-    basePath: '/admin/customers',
+    basePath: "/admin/customers",
   },
 };
 
@@ -257,6 +260,6 @@ export const NearEnd: Story = {
     count: 23,
     offset: 20,
     limit: 10,
-    basePath: '/admin/reports',
+    basePath: "/admin/reports",
   },
 };

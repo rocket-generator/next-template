@@ -29,6 +29,7 @@ awslocal s3api put-bucket-cors --bucket my-app-bucket --cors-configuration '{
 echo "SESメールアドレスを確認します..."
 awslocal ses verify-email-identity --email-address test@example.com
 awslocal ses verify-email-identity --email-address noreply@example.com
+awslocal ses verify-email-identity --email-address noreply@localhost
 
 # SES送信統計の確認
 echo "SES設定を確認します..."
@@ -38,4 +39,4 @@ echo "LocalStack初期化が完了しました！"
 echo "S3エンドポイント: http://localhost:4566"
 echo "SESエンドポイント: http://localhost:4566"
 echo "S3バケット: my-app-bucket"
-echo "確認済みメールアドレス: test@example.com, noreply@example.com"
+echo "確認済みメールアドレス: test@example.com, noreply@example.com, noreply@localhost"

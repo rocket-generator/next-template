@@ -32,7 +32,6 @@ export abstract class AuthRepository extends PrismaRepository<
     return this.findById(session.user.id);
   }
 
-
   async postSignIn(request: SignInRequest): Promise<AccessToken> {
     // Find user by email
     const users = await this.get(0, 1, undefined, undefined, undefined, [
@@ -133,7 +132,7 @@ export abstract class AuthRepository extends PrismaRepository<
       // Send email with reset link
       const appUrl = process.env.APP_URL || "http://localhost:3000";
       const resetUrl = `${appUrl}/auth/reset-password?token=${resetToken.token}`;
-      
+
       const emailService = createEmailServiceInstance();
       await emailService.sendPasswordResetEmail(user.email, resetUrl);
 
@@ -145,7 +144,7 @@ export abstract class AuthRepository extends PrismaRepository<
       });
     } catch (error) {
       console.error("Error in postForgotPassword:", error);
-      
+
       // Still return success to avoid revealing system errors
       return StatusSchema.parse({
         success: true,
@@ -162,14 +161,14 @@ export abstract class AuthRepository extends PrismaRepository<
 
       // Find and validate the reset token
       const resetToken = await passwordResetRepo.findValidToken(request.token);
-      
+
       if (!resetToken) {
         throw new Error("Invalid or expired reset token");
       }
 
       // Find the user
       const user = await this.findById(resetToken.userId);
-      
+
       if (!user) {
         throw new Error("User not found");
       }

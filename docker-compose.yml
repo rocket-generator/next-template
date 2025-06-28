@@ -70,7 +70,7 @@ services:
       - S3_BUCKET_NAME=my-app-bucket
       # LocalStack SES Configuration (for unemail)
       - AWS_SES_REGION=us-east-1
-      - SES_FROM_EMAIL=noreply@localhost
+      - SES_FROM_EMAIL=noreply@example.com
       - LOCALSTACK_ENDPOINT=http://localstack:4566
     depends_on:
       postgres:
@@ -79,6 +79,19 @@ services:
       - ./:/app
       - /app/node_modules
       - /app/.next
+    networks:
+      - app-network
+
+  # LocalStack SES Email Viewer
+  ses-viewer:
+    build:
+      context: https://github.com/veertech/localstack-aws-ses-email-viewer.git
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - LOCALSTACK_HOST=http://localstack:4566
+      - PORT=3005
     networks:
       - app-network
 

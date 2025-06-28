@@ -1,33 +1,33 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import Header from '.';
-import type { User } from '@/models/user';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import Header from ".";
+import type { User } from "@/models/user";
 
 const meta: Meta<typeof Header> = {
-  title: 'Organisms/Header',
+  title: "Organisms/Header",
   component: Header,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 const mockUser: User = {
-  id: '1',
-  email: 'user@example.com',
-  password: 'password',
-  name: '田中太郎',
-  permissions: ['read', 'write'],
+  id: "1",
+  email: "user@example.com",
+  password: "password",
+  name: "田中太郎",
+  permissions: ["read", "write"],
 };
 
 const mockUserWithLongName: User = {
-  id: '2',
-  email: 'verylongname@example.com',
-  password: 'password',
-  name: 'とても長い名前のユーザー山田花子田中',
-  permissions: ['read', 'write', 'admin'],
+  id: "2",
+  email: "verylongname@example.com",
+  password: "password",
+  name: "とても長い名前のユーザー山田花子田中",
+  permissions: ["read", "write", "admin"],
 };
 
 export const WithSignedInUser: Story = {

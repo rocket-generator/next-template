@@ -43,7 +43,9 @@ export class SESProvider implements EmailProvider {
   async sendEmail(options: EmailOptions): Promise<EmailResult> {
     try {
       // Dynamic import for AWS SDK to ensure Edge Runtime compatibility
-      const { SESClient, SendEmailCommand } = await import("@aws-sdk/client-ses");
+      const { SESClient, SendEmailCommand } = await import(
+        "@aws-sdk/client-ses"
+      );
 
       // Create SES client with configuration
       const clientConfig: {
@@ -139,7 +141,9 @@ export class EmailServiceImpl implements EmailService {
       throw new Error("Failed to send password reset email");
     }
 
-    console.log(`Password reset email sent to ${to}, messageId: ${result.messageId}`);
+    console.log(
+      `Password reset email sent to ${to}, messageId: ${result.messageId}`
+    );
   }
 
   private generatePasswordResetEmailHTML(resetUrl: string): string {
@@ -177,7 +181,7 @@ export class EmailServiceImpl implements EmailService {
 // Configuration Factory
 export function createSESProviderConfig(): SESProviderConfig {
   const isProduction = process.env.NODE_ENV === "production";
-  
+
   if (isProduction) {
     // Production: Use AWS SES
     return {
@@ -200,8 +204,11 @@ export function createSESProviderConfig(): SESProviderConfig {
 export function createEmailServiceInstance(): EmailService {
   const sesConfig = createSESProviderConfig();
   const sesProvider = new SESProvider(sesConfig);
-  const fromEmail = process.env.SES_FROM_EMAIL || 
-    (process.env.NODE_ENV === "production" ? "noreply@example.com" : "noreply@localhost");
-  
+  const fromEmail =
+    process.env.SES_FROM_EMAIL ||
+    (process.env.NODE_ENV === "production"
+      ? "noreply@example.com"
+      : "noreply@localhost");
+
   return new EmailServiceImpl(sesProvider, fromEmail);
 }

@@ -1,30 +1,29 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import DataTextInputField from './index';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import DataTextInputField from "./index";
 // Mock function for onChange handlers
 const mockOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  console.log('Input changed:', event.target.value);
+  console.log("Input changed:", event.target.value);
 };
 
 const meta: Meta<typeof DataTextInputField> = {
-  title: 'Molecules/DataTextInputField',
+  title: "Molecules/DataTextInputField",
   component: DataTextInputField,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-
 export const TextInput: Story = {
   args: {
-    name: '名前',
-    data_key: 'name',
-    type: 'text',
-    value: '',
-    placeholder: '田中太郎',
+    name: "名前",
+    data_key: "name",
+    type: "text",
+    value: "",
+    placeholder: "田中太郎",
     required: true,
     disabled: false,
     options: {},
@@ -34,11 +33,11 @@ export const TextInput: Story = {
 
 export const EmailInput: Story = {
   args: {
-    name: 'メールアドレス',
-    data_key: 'email',
-    type: 'email',
-    value: '',
-    placeholder: 'example@company.com',
+    name: "メールアドレス",
+    data_key: "email",
+    type: "email",
+    value: "",
+    placeholder: "example@company.com",
     required: true,
     disabled: false,
     options: {},
@@ -48,11 +47,11 @@ export const EmailInput: Story = {
 
 export const PasswordInput: Story = {
   args: {
-    name: 'パスワード',
-    data_key: 'password',
-    type: 'password',
-    value: '',
-    placeholder: '8文字以上',
+    name: "パスワード",
+    data_key: "password",
+    type: "password",
+    value: "",
+    placeholder: "8文字以上",
     required: true,
     disabled: false,
     options: {},
@@ -62,11 +61,11 @@ export const PasswordInput: Story = {
 
 export const NumberInput: Story = {
   args: {
-    name: '年齢',
-    data_key: 'age',
-    type: 'number',
-    value: '',
-    placeholder: '25',
+    name: "年齢",
+    data_key: "age",
+    type: "number",
+    value: "",
+    placeholder: "25",
     required: false,
     disabled: false,
     options: {},
@@ -76,11 +75,11 @@ export const NumberInput: Story = {
 
 export const WithValue: Story = {
   args: {
-    name: '会社名',
-    data_key: 'company',
-    type: 'text',
-    value: '株式会社サンプル',
-    placeholder: '会社名を入力',
+    name: "会社名",
+    data_key: "company",
+    type: "text",
+    value: "株式会社サンプル",
+    placeholder: "会社名を入力",
     required: true,
     disabled: false,
     options: {},
@@ -90,11 +89,11 @@ export const WithValue: Story = {
 
 export const Disabled: Story = {
   args: {
-    name: 'ユーザーID',
-    data_key: 'userId',
-    type: 'text',
-    value: 'USER-123',
-    placeholder: 'ユーザーID',
+    name: "ユーザーID",
+    data_key: "userId",
+    type: "text",
+    value: "USER-123",
+    placeholder: "ユーザーID",
     required: true,
     disabled: true,
     options: {},
@@ -104,11 +103,11 @@ export const Disabled: Story = {
 
 export const Optional: Story = {
   args: {
-    name: '電話番号',
-    data_key: 'phone',
-    type: 'tel',
-    value: '',
-    placeholder: '090-1234-5678',
+    name: "電話番号",
+    data_key: "phone",
+    type: "tel",
+    value: "",
+    placeholder: "090-1234-5678",
     required: false,
     disabled: false,
     options: {},
@@ -118,26 +117,26 @@ export const Optional: Story = {
 
 export const WithError: Story = {
   args: {
-    name: '名前',
-    data_key: 'name',
-    type: 'text',
-    value: '',
-    placeholder: '田中太郎',
+    name: "名前",
+    data_key: "name",
+    type: "text",
+    value: "",
+    placeholder: "田中太郎",
     required: true,
     disabled: false,
     options: {},
     onChange: mockOnChange,
-    className: 'border-red-500 focus:ring-red-500',
+    className: "border-red-500 focus:ring-red-500",
   },
 };
 
 export const URLInput: Story = {
   args: {
-    name: 'ウェブサイト',
-    data_key: 'website',
-    type: 'url',
-    value: '',
-    placeholder: 'https://example.com',
+    name: "ウェブサイト",
+    data_key: "website",
+    type: "url",
+    value: "",
+    placeholder: "https://example.com",
     required: false,
     disabled: false,
     options: {},
@@ -147,11 +146,11 @@ export const URLInput: Story = {
 
 export const SearchInput: Story = {
   args: {
-    name: '検索',
-    data_key: 'search',
-    type: 'search',
-    value: '',
-    placeholder: 'キーワードを入力',
+    name: "検索",
+    data_key: "search",
+    type: "search",
+    value: "",
+    placeholder: "キーワードを入力",
     required: false,
     disabled: false,
     options: {},

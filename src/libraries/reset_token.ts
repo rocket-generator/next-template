@@ -3,7 +3,7 @@ export function generateResetToken(): string {
   if (typeof window !== "undefined") {
     throw new Error("generateResetToken can only be called on the server side");
   }
-  
+
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const crypto = require("crypto");
   return crypto.randomBytes(32).toString("hex");
@@ -20,5 +20,9 @@ export function createTokenExpiry(hoursFromNow: number = 24): Date {
 }
 
 export function isValidToken(token: string): boolean {
-  return typeof token === "string" && token.length === 64 && /^[a-f0-9]+$/.test(token);
+  return (
+    typeof token === "string" &&
+    token.length === 64 &&
+    /^[a-f0-9]+$/.test(token)
+  );
 }

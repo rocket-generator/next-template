@@ -1,20 +1,27 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import HeaderUserMenu from './index';
-import type { User } from '@/models/user';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import HeaderUserMenu from "./index";
+import type { User } from "@/models/user";
 
 const meta: Meta<typeof HeaderUserMenu> = {
-  title: 'Molecules/HeaderUserMenu',
+  title: "Molecules/HeaderUserMenu",
   component: HeaderUserMenu,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
     nextjs: {
       appDirectory: true,
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
-      <div style={{ height: '200px', display: 'flex', justifyContent: 'flex-end', paddingTop: '20px' }}>
+      <div
+        style={{
+          height: "200px",
+          display: "flex",
+          justifyContent: "flex-end",
+          paddingTop: "20px",
+        }}
+      >
         <Story />
       </div>
     ),
@@ -25,35 +32,35 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const mockUser: User = {
-  id: '1',
-  email: 'tanaka@example.com',
-  password: 'password',
-  name: '田中太郎',
-  permissions: ['read', 'write'],
+  id: "1",
+  email: "tanaka@example.com",
+  password: "password",
+  name: "田中太郎",
+  permissions: ["read", "write"],
 };
 
 const mockAdminUser: User = {
-  id: '2',
-  email: 'admin@example.com',
-  password: 'password',
-  name: '管理者',
-  permissions: ['read', 'write', 'admin', 'delete'],
+  id: "2",
+  email: "admin@example.com",
+  password: "password",
+  name: "管理者",
+  permissions: ["read", "write", "admin", "delete"],
 };
 
 const mockUserWithLongName: User = {
-  id: '3',
-  email: 'verylongname@example.com',
-  password: 'password',
-  name: 'とても長い名前のユーザー山田花子田中',
-  permissions: ['read'],
+  id: "3",
+  email: "verylongname@example.com",
+  password: "password",
+  name: "とても長い名前のユーザー山田花子田中",
+  permissions: ["read"],
 };
 
 const mockManagerUser: User = {
-  id: '4',
-  email: 'manager@example.com',
-  password: 'password',
-  name: '山田マネージャー',
-  permissions: ['read', 'write', 'manage'],
+  id: "4",
+  email: "manager@example.com",
+  password: "password",
+  name: "山田マネージャー",
+  permissions: ["read", "write", "manage"],
 };
 
 export const WithUser: Story = {

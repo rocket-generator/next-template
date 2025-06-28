@@ -8,7 +8,9 @@ interface ResetPasswordPageProps {
   searchParams: Promise<{ token?: string; email?: string }>;
 }
 
-export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+export default async function ResetPasswordPage({
+  searchParams,
+}: ResetPasswordPageProps) {
   const params = await searchParams;
   const token = params.token || "";
   const email = params.email || "";

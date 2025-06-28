@@ -56,7 +56,7 @@ export default function AuthSignupForm({ onSubmit }: AuthSignupFormProps) {
       }
     });
   };
-  
+
   return (
     <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
       <div className="text-center">
@@ -68,7 +68,10 @@ export default function AuthSignupForm({ onSubmit }: AuthSignupFormProps) {
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="mt-8 space-y-6">
+      <form
+        onSubmit={handleSubmit(handleFormSubmit)}
+        className="mt-8 space-y-6"
+      >
         <div className="space-y-4">
           <div>
             <Label

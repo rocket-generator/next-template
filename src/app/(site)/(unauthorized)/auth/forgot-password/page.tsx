@@ -8,7 +8,9 @@ interface ForgotPasswordPageProps {
   searchParams: Promise<{ sent?: string }>;
 }
 
-export default async function ForgotPasswordPage({ searchParams }: ForgotPasswordPageProps) {
+export default async function ForgotPasswordPage({
+  searchParams,
+}: ForgotPasswordPageProps) {
   const params = await searchParams;
   const isSubmitted = params.sent === "true";
 

@@ -95,10 +95,13 @@ export default function AuthResetPasswordForm({
         </div>
       )}
       {token && (
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="mt-8 space-y-6">
+        <form
+          onSubmit={handleSubmit(handleFormSubmit)}
+          className="mt-8 space-y-6"
+        >
           <div className="space-y-4">
             <Input type="hidden" {...register("token")} />
-            
+
             <div>
               <Label
                 htmlFor="email"

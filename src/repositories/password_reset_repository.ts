@@ -1,11 +1,22 @@
-import { PasswordResetSchema, transformPrismToModel } from "@/models/password_reset";
+import {
+  PasswordResetSchema,
+  transformPrismToModel,
+} from "@/models/password_reset";
 import { PrismaRepository } from "./prisma_repository";
 import { PasswordReset } from "@/models/password_reset";
-import { generateResetToken, createTokenExpiry, isTokenExpired } from "@/libraries/reset_token";
+import {
+  generateResetToken,
+  createTokenExpiry,
+  isTokenExpired,
+} from "@/libraries/reset_token";
 
-export class PasswordResetRepository extends PrismaRepository<typeof PasswordResetSchema> {
+export class PasswordResetRepository extends PrismaRepository<
+  typeof PasswordResetSchema
+> {
   public constructor() {
-    super(PasswordResetSchema, "passwordReset", transformPrismToModel, ["token"]);
+    super(PasswordResetSchema, "passwordReset", transformPrismToModel, [
+      "token",
+    ]);
   }
 
   async createResetToken(userId: string): Promise<PasswordReset> {
@@ -27,10 +38,17 @@ export class PasswordResetRepository extends PrismaRepository<typeof PasswordRes
 
   async findValidToken(token: string): Promise<PasswordReset | null> {
     try {
-      const resetTokens = await this.get(0, 1, undefined, undefined, undefined, [
-        { column: "token", operator: "=", value: token },
-        { column: "usedAt", operator: "=", value: null },
-      ]);
+      const resetTokens = await this.get(
+        0,
+        1,
+        undefined,
+        undefined,
+        undefined,
+        [
+          { column: "token", operator: "=", value: token },
+          { column: "usedAt", operator: "=", value: null },
+        ]
+      );
 
       if (resetTokens.data.length === 0) {
         return null;
@@ -57,9 +75,14 @@ export class PasswordResetRepository extends PrismaRepository<typeof PasswordRes
 
   async deleteUserTokens(userId: string): Promise<void> {
     try {
-      const userTokens = await this.get(0, 100, undefined, undefined, undefined, [
-        { column: "userId", operator: "=", value: userId },
-      ]);
+      const userTokens = await this.get(
+        0,
+        100,
+        undefined,
+        undefined,
+        undefined,
+        [{ column: "userId", operator: "=", value: userId }]
+      );
 
       for (const token of userTokens.data) {
         await this.delete(token.id);
@@ -72,15 +95,22 @@ export class PasswordResetRepository extends PrismaRepository<typeof PasswordRes
   async cleanupExpiredTokens(): Promise<void> {
     try {
       const now = new Date();
-      const expiredTokens = await this.get(0, 1000, undefined, undefined, undefined, [
-        { column: "expiresAt", operator: "<", value: now },
-      ]);
+      const expiredTokens = await this.get(
+        0,
+        1000,
+        undefined,
+        undefined,
+        undefined,
+        [{ column: "expiresAt", operator: "<", value: now }]
+      );
 
       for (const token of expiredTokens.data) {
         await this.delete(token.id);
       }
 
-      console.log(`Cleaned up ${expiredTokens.data.length} expired password reset tokens`);
+      console.log(
+        `Cleaned up ${expiredTokens.data.length} expired password reset tokens`
+      );
     } catch (error) {
       console.error("Error cleaning up expired tokens:", error);
     }
@@ -88,9 +118,14 @@ export class PasswordResetRepository extends PrismaRepository<typeof PasswordRes
 
   async findByToken(token: string): Promise<PasswordReset | null> {
     try {
-      const resetTokens = await this.get(0, 1, undefined, undefined, undefined, [
-        { column: "token", operator: "=", value: token },
-      ]);
+      const resetTokens = await this.get(
+        0,
+        1,
+        undefined,
+        undefined,
+        undefined,
+        [{ column: "token", operator: "=", value: token }]
+      );
 
       return resetTokens.data.length > 0 ? resetTokens.data[0] : null;
     } catch (error) {

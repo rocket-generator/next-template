@@ -101,7 +101,10 @@ export default function AuthForgotPasswordForm({
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="mt-8 space-y-6">
+      <form
+        onSubmit={handleSubmit(handleFormSubmit)}
+        className="mt-8 space-y-6"
+      >
         <div className="space-y-4">
           <div>
             <Label

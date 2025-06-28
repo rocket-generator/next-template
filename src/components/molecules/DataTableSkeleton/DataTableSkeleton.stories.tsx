@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import DataTableSkeleton from './index';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import DataTableSkeleton from "./index";
 
 const meta: Meta<typeof DataTableSkeleton> = {
-  title: 'Molecules/DataTableSkeleton',
+  title: "Molecules/DataTableSkeleton",
   component: DataTableSkeleton,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
