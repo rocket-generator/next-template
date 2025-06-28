@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ResetPasswordRequest,
-  ResetPasswordRequestSchema,
+  createResetPasswordRequestSchema,
 } from "@/requests/reset_password_request";
 import { InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
@@ -31,12 +31,18 @@ export default function AuthResetPasswordForm({
   const [isLoading, setIsLoading] = React.useState(false);
   const tAuth = useTranslations("Auth");
 
+  // 国際化されたバリデーションスキーマを作成
+  const resetPasswordSchema = React.useMemo(
+    () => createResetPasswordRequestSchema(tAuth),
+    [tAuth]
+  );
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<ResetPasswordRequest>({
-    resolver: zodResolver(ResetPasswordRequestSchema),
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       email,
       token,

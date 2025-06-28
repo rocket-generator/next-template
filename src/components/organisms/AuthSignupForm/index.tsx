@@ -3,7 +3,10 @@ import * as React from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { SignUpRequest, SignUpRequestSchema } from "@/requests/signup_request";
+import {
+  SignUpRequest,
+  createSignUpRequestSchema,
+} from "@/requests/signup_request";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,12 +25,18 @@ export default function AuthSignupForm({ onSubmit }: AuthSignupFormProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const tAuth = useTranslations("Auth");
 
+  // 国際化されたバリデーションスキーマを作成
+  const signUpSchema = React.useMemo(
+    () => createSignUpRequestSchema(tAuth),
+    [tAuth]
+  );
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignUpRequest>({
-    resolver: zodResolver(SignUpRequestSchema),
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       email: "",
       password: "",
