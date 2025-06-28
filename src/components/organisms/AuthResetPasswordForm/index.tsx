@@ -24,6 +24,9 @@ export default function AuthResetPasswordForm() {
   const searchParams = useSearchParams();
   const tAuth = useTranslations("Auth");
 
+  const token = searchParams.get("token") || "";
+  const email = searchParams.get("email") || "";
+
   const {
     register,
     handleSubmit,
@@ -31,12 +34,20 @@ export default function AuthResetPasswordForm() {
   } = useForm<ResetPasswordRequest>({
     resolver: zodResolver(ResetPasswordRequestSchema),
     defaultValues: {
-      email: searchParams.get("email") || "",
-      token: searchParams.get("token") || "",
+      email,
+      token,
       password: "",
       confirm_password: "",
     },
   });
+
+  // Redirect if no token is provided
+  React.useEffect(() => {
+    if (!token) {
+      setError(tAuth("invalid_reset_link"));
+      setTimeout(() => router.push("/auth/forgot-password"), 3000);
+    }
+  }, [token, tAuth, router]);
 
   const onSubmit = (formData: ResetPasswordRequest) => {
     setError(null);
@@ -76,8 +87,32 @@ export default function AuthResetPasswordForm() {
       )}
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
         <div className="space-y-4">
-          <Input type="hidden" {...register("email")} />
           <Input type="hidden" {...register("token")} />
+          
+          <div>
+            <Label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {tAuth("email")}
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              className={cn(
+                "mt-1",
+                errors.email && "border-red-500 focus:ring-red-500"
+              )}
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
 
           <div>
             <Label
