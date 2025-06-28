@@ -11,15 +11,23 @@ import {
   ForgotPasswordRequest,
   ForgotPasswordRequestSchema,
 } from "@/requests/forgot_password_request";
-import { forgotPasswordAction } from "@/app/(site)/(unauthorized)/auth/forgot-password/actions";
-import { Success, InvalidInput } from "@/constants/auth";
+import { InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
 import { Mail, Loader2 } from "lucide-react";
 
-export default function AuthForgotPasswordForm() {
+interface AuthForgotPasswordFormProps {
+  isSubmitted: boolean;
+  onSubmit: (formData: ForgotPasswordRequest) => Promise<string>;
+  onTryAgain: () => Promise<void>;
+}
+
+export default function AuthForgotPasswordForm({
+  isSubmitted,
+  onSubmit,
+  onTryAgain,
+}: AuthForgotPasswordFormProps) {
   const [, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const tAuth = useTranslations("Auth");
 
@@ -34,20 +42,16 @@ export default function AuthForgotPasswordForm() {
     },
   });
 
-  const onSubmit = (formData: ForgotPasswordRequest) => {
+  const handleFormSubmit = (formData: ForgotPasswordRequest) => {
     setError(null);
     setIsLoading(true);
     startTransition(async () => {
       try {
-        const message = await forgotPasswordAction(formData);
-        switch (message) {
-          case InvalidInput:
-            setError(tAuth("invalid_input"));
-            break;
-          case Success:
-            setIsSubmitted(true);
-            break;
+        const message = await onSubmit(formData);
+        if (message === InvalidInput) {
+          setError(tAuth("invalid_input"));
         }
+        // Success case is handled by parent component (setIsSubmitted)
       } catch (error) {
         console.error(error);
         setError(tAuth("system_error"));
@@ -73,7 +77,7 @@ export default function AuthForgotPasswordForm() {
           <p className="text-sm text-gray-600">
             {tAuth("didnt_receive_email")}{" "}
             <button
-              onClick={() => setIsSubmitted(false)}
+              onClick={onTryAgain}
               className="font-medium text-blue-600 hover:underline"
             >
               {tAuth("try_again")}
@@ -97,7 +101,7 @@ export default function AuthForgotPasswordForm() {
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="mt-8 space-y-6">
         <div className="space-y-4">
           <div>
             <Label

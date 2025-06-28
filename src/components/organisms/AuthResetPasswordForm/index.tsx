@@ -3,7 +3,6 @@ import * as React from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,21 +10,26 @@ import {
   ResetPasswordRequest,
   ResetPasswordRequestSchema,
 } from "@/requests/reset_password_request";
-import { resetPasswordAction } from "@/app/(site)/(unauthorized)/auth/reset-password/actions";
-import { Success, InvalidInput } from "@/constants/auth";
+import { InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
-export default function AuthResetPasswordForm() {
+interface AuthResetPasswordFormProps {
+  token: string;
+  email: string;
+  onSubmit: (formData: ResetPasswordRequest) => Promise<string>;
+}
+
+export default function AuthResetPasswordForm({
+  token,
+  email,
+  onSubmit,
+}: AuthResetPasswordFormProps) {
   const [, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const tAuth = useTranslations("Auth");
-
-  const token = searchParams.get("token") || "";
-  const email = searchParams.get("email") || "";
 
   const {
     register,
@@ -41,28 +45,23 @@ export default function AuthResetPasswordForm() {
     },
   });
 
-  // Redirect if no token is provided
+  // Set error if no token is provided
   React.useEffect(() => {
     if (!token) {
       setError(tAuth("invalid_reset_link"));
-      setTimeout(() => router.push("/auth/forgot-password"), 3000);
     }
-  }, [token, tAuth, router]);
+  }, [token, tAuth]);
 
-  const onSubmit = (formData: ResetPasswordRequest) => {
+  const handleFormSubmit = (formData: ResetPasswordRequest) => {
     setError(null);
     setIsLoading(true);
     startTransition(async () => {
       try {
-        const message = await resetPasswordAction(formData);
-        switch (message) {
-          case InvalidInput:
-            setError(tAuth("invalid_input"));
-            break;
-          case Success:
-            router.push("/auth/signin");
-            break;
+        const message = await onSubmit(formData);
+        if (message === InvalidInput) {
+          setError(tAuth("invalid_input"));
         }
+        // Success case is handled by parent component (redirect)
       } catch (error) {
         console.error(error);
         setError(tAuth("system_error"));
@@ -82,100 +81,112 @@ export default function AuthResetPasswordForm() {
       </div>
       {error && (
         <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded">
-          {error}
+          <p>{error}</p>
+          {!token && (
+            <div className="mt-2">
+              <Link
+                href="/auth/forgot-password"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                {tAuth("go_to_forgot_password")}
+              </Link>
+            </div>
+          )}
         </div>
       )}
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
-        <div className="space-y-4">
-          <Input type="hidden" {...register("token")} />
-          
-          <div>
-            <Label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              {tAuth("email")}
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              className={cn(
-                "mt-1",
-                errors.email && "border-red-500 focus:ring-red-500"
+      {token && (
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            <Input type="hidden" {...register("token")} />
+            
+            <div>
+              <Label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
+                {tAuth("email")}
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                className={cn(
+                  "mt-1",
+                  errors.email && "border-red-500 focus:ring-red-500"
+                )}
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.email.message}
+                </p>
               )}
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.email.message}
-              </p>
-            )}
+            </div>
+
+            <div>
+              <Label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                {tAuth("new_password")}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                className={cn(
+                  "mt-1",
+                  errors.password && "border-red-500 focus:ring-red-500"
+                )}
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label
+                htmlFor="confirm_password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                {tAuth("confirm_password")}
+              </Label>
+              <Input
+                id="confirm_password"
+                type="password"
+                autoComplete="new-password"
+                required
+                className={cn(
+                  "mt-1",
+                  errors.confirm_password && "border-red-500 focus:ring-red-500"
+                )}
+                {...register("confirm_password")}
+              />
+              {errors.confirm_password && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.confirm_password.message}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div>
-            <Label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              {tAuth("new_password")}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className={cn(
-                "mt-1",
-                errors.password && "border-red-500 focus:ring-red-500"
-              )}
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.password.message}
-              </p>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {tAuth("resetting")}
+              </>
+            ) : (
+              tAuth("reset_password")
             )}
-          </div>
-
-          <div>
-            <Label
-              htmlFor="confirm_password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              {tAuth("confirm_password")}
-            </Label>
-            <Input
-              id="confirm_password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className={cn(
-                "mt-1",
-                errors.confirm_password && "border-red-500 focus:ring-red-500"
-              )}
-              {...register("confirm_password")}
-            />
-            {errors.confirm_password && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.confirm_password.message}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {tAuth("resetting")}
-            </>
-          ) : (
-            tAuth("reset_password")
-          )}
-        </Button>
-      </form>
+          </Button>
+        </form>
+      )}
     </div>
   );
 }

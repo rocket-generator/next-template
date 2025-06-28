@@ -4,22 +4,21 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { SignInRequest, SignInRequestSchema } from "@/requests/signin_request";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { signInAction } from "@/app/(site)/(unauthorized)/auth/signin/actions";
 import { Loader2 } from "lucide-react";
-import { Success, InvalidCredentials, InvalidInput } from "@/constants/auth";
+import { InvalidCredentials, InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
 
-export default function AuthSigninForm() {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callback_url") ?? "";
+interface AuthSigninFormProps {
+  onSubmit: (formData: SignInRequest) => Promise<string>;
+}
+
+export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
   const [, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
-  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -33,27 +32,18 @@ export default function AuthSigninForm() {
   });
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const onSubmit = (formData: SignInRequest) => {
+  const handleFormSubmit = (formData: SignInRequest) => {
     setError(null);
     setIsLoading(true);
     startTransition(async () => {
       try {
-        const message = await signInAction(formData);
-        switch (message) {
-          case InvalidInput:
-            setError(tAuth("invalid_input"));
-            break;
-          case InvalidCredentials:
-            setError(tAuth("invalid_credentials"));
-            break;
-          case Success:
-            if (callbackUrl) {
-              router.push(callbackUrl);
-            } else {
-              router.push("/dashboard");
-            }
-            break;
+        const message = await onSubmit(formData);
+        if (message === InvalidInput) {
+          setError(tAuth("invalid_input"));
+        } else if (message === InvalidCredentials) {
+          setError(tAuth("invalid_credentials"));
         }
+        // Success case is handled by parent component (redirect)
       } catch (error) {
         console.error(error);
         setError(tAuth("system_error"));
@@ -76,7 +66,7 @@ export default function AuthSigninForm() {
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="mt-8 space-y-6">
         <div className="space-y-4">
           <div>
             <Label
