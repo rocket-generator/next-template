@@ -1,10 +1,18 @@
 // Storage Service Interface
 export interface StorageService {
-  uploadFile(key: string, data: Buffer | Uint8Array, contentType?: string): Promise<UploadResult>;
+  uploadFile(
+    key: string,
+    data: Buffer | Uint8Array,
+    contentType?: string
+  ): Promise<UploadResult>;
   downloadFile(key: string): Promise<DownloadResult>;
   generateSignedUrl(key: string, expiresIn?: number): Promise<string>;
   deleteFile(key: string): Promise<void>;
-  updateFile(key: string, data: Buffer | Uint8Array, contentType?: string): Promise<UploadResult>;
+  updateFile(
+    key: string,
+    data: Buffer | Uint8Array,
+    contentType?: string
+  ): Promise<UploadResult>;
   listFiles(prefix?: string, maxKeys?: number): Promise<ListResult>;
 }
 
@@ -192,9 +200,7 @@ export class S3Provider implements StorageProvider {
 
   async delete(key: string): Promise<void> {
     try {
-      const { DeleteObjectCommand } = await import(
-        "@aws-sdk/client-s3"
-      );
+      const { DeleteObjectCommand } = await import("@aws-sdk/client-s3");
 
       const s3Client = await this.createS3Client();
 
@@ -217,9 +223,7 @@ export class S3Provider implements StorageProvider {
 
   async list(prefix?: string, maxKeys: number = 1000): Promise<ListResult> {
     try {
-      const { ListObjectsV2Command } = await import(
-        "@aws-sdk/client-s3"
-      );
+      const { ListObjectsV2Command } = await import("@aws-sdk/client-s3");
 
       const s3Client = await this.createS3Client();
 
@@ -232,12 +236,19 @@ export class S3Provider implements StorageProvider {
       const command = new ListObjectsV2Command(params);
       const result = await s3Client.send(command);
 
-      const files: StorageFile[] = (result.Contents || []).map((object: { Key?: string; Size?: number; LastModified?: Date; ETag?: string }) => ({
-        key: object.Key!,
-        size: object.Size || 0,
-        lastModified: object.LastModified || new Date(),
-        etag: object.ETag,
-      }));
+      const files: StorageFile[] = (result.Contents || []).map(
+        (object: {
+          Key?: string;
+          Size?: number;
+          LastModified?: Date;
+          ETag?: string;
+        }) => ({
+          key: object.Key!,
+          size: object.Size || 0,
+          lastModified: object.LastModified || new Date(),
+          etag: object.ETag,
+        })
+      );
 
       return {
         success: true,
@@ -485,7 +496,10 @@ export class StorageServiceImpl implements StorageService {
     return result;
   }
 
-  async generateSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+  async generateSignedUrl(
+    key: string,
+    expiresIn: number = 3600
+  ): Promise<string> {
     const url = await this.provider.getSignedUrl(key, expiresIn);
     console.log(`Signed URL generated for ${key}, expires in ${expiresIn}s`);
     return url;
@@ -509,7 +523,9 @@ export class StorageServiceImpl implements StorageService {
     const result = await this.provider.list(prefix, maxKeys);
 
     if (result.success) {
-      console.log(`Listed ${result.files.length} files with prefix: ${prefix || 'none'}`);
+      console.log(
+        `Listed ${result.files.length} files with prefix: ${prefix || "none"}`
+      );
     } else {
       console.error(`Failed to list files:`, result.error);
     }
@@ -545,14 +561,31 @@ export function createS3ProviderConfig(): S3ProviderConfig {
 
 // Storage Service Factory
 export function createStorageServiceInstance(): StorageService {
-  const storageType = process.env.STORAGE_PROVIDER || "s3"; // Default to S3
+  // Edge Runtime環境やNode.js環境以外では常にS3を使用
+  const isNodeRuntime =
+    typeof process !== "undefined" &&
+    typeof process.versions !== "undefined" &&
+    typeof process.versions.node !== "undefined";
+
+  // デフォルトでS3を使用し、Node.js環境でのみローカルストレージの選択を許可
+  const storageType = isNodeRuntime
+    ? process.env.STORAGE_PROVIDER || "s3"
+    : "s3";
 
   let provider: StorageProvider;
 
   switch (storageType) {
     case "local":
-      const localPath = process.env.LOCAL_STORAGE_PATH || "./uploads";
-      provider = new LocalStorageProvider(localPath);
+      if (!isNodeRuntime) {
+        console.warn(
+          "LocalStorageProvider is not supported in non-Node.js runtime, falling back to S3"
+        );
+        const s3Config = createS3ProviderConfig();
+        provider = new S3Provider(s3Config);
+      } else {
+        const localPath = process.env.LOCAL_STORAGE_PATH || "./uploads";
+        provider = new LocalStorageProvider(localPath);
+      }
       break;
 
     case "s3":
@@ -563,4 +596,4 @@ export function createStorageServiceInstance(): StorageService {
   }
 
   return new StorageServiceImpl(provider);
-} 
+}
