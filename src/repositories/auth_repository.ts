@@ -175,7 +175,7 @@ export abstract class AuthRepository extends PrismaRepository<
 
       // Verify that the email matches (extra security check)
       if (user.email !== request.email) {
-        throw new Error("Email does not match the reset token");
+        throw new Error("Invalid or expired reset token");
       }
 
       // Hash new password

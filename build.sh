@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Production Docker Image Build Script
 # This script builds a production-ready Docker image for x86 architecture

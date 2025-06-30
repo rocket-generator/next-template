@@ -66,7 +66,6 @@ services:
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_ENDPOINT_URL_S3=http://localstack:4566
-      - AWS_ENDPOINT_URL_SES=http://localstack:4566
       - S3_BUCKET_NAME=my-app-bucket
       # LocalStack SES Configuration (for unemail)
       - AWS_SES_REGION=us-east-1

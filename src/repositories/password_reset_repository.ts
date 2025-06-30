@@ -20,7 +20,7 @@ export class PasswordResetRepository extends PrismaRepository<
   }
 
   async createResetToken(userId: string): Promise<PasswordReset> {
-    const token = generateResetToken();
+    const token = await generateResetToken();
     const expiresAt = createTokenExpiry();
     const now = new Date();
 

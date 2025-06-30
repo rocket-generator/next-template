@@ -1,12 +1,13 @@
-export function generateResetToken(): string {
+import { generateToken } from "./hash";
+
+export async function generateResetToken(): Promise<string> {
   // Server-side only function
   if (typeof window !== "undefined") {
     throw new Error("generateResetToken can only be called on the server side");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const crypto = require("crypto");
-  return crypto.randomBytes(32).toString("hex");
+  // Use Web Crypto API compatible token generation
+  return generateToken(32); // 32 bytes = 64 hex characters
 }
 
 export function isTokenExpired(expiresAt: Date): boolean {
