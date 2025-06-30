@@ -20,6 +20,7 @@ model User {
   email               String         @unique @db.Text
   password            String         @db.Text
   permissions         Json
+  avatar_key          String?        @db.Text
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
