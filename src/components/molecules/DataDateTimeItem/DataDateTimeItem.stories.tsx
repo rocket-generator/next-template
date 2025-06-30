@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import DataDateTimeItem from './index';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import DataDateTimeItem from "./index";
 
 const meta: Meta<typeof DataDateTimeItem> = {
-  title: 'Molecules/DataDateTimeItem',
+  title: "Molecules/DataDateTimeItem",
   component: DataDateTimeItem,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -18,8 +18,8 @@ export const CurrentTime: Story = {
     record: {
       createdAt: Math.floor(Date.now() / 1000), // 現在時刻のUnixタイムスタンプ
     },
-    name: '作成日時',
-    columnKey: 'createdAt',
+    name: "作成日時",
+    columnKey: "createdAt",
     options: {},
   },
 };
@@ -29,8 +29,8 @@ export const PastDate: Story = {
     record: {
       joinDate: 1640991600, // 2022-01-01T00:00:00Z
     },
-    name: '入社日',
-    columnKey: 'joinDate',
+    name: "入社日",
+    columnKey: "joinDate",
     options: {},
   },
 };
@@ -40,8 +40,8 @@ export const RecentDate: Story = {
     record: {
       lastLogin: 1703980800, // 2023-12-30T00:00:00Z
     },
-    name: '最終ログイン',
-    columnKey: 'lastLogin',
+    name: "最終ログイン",
+    columnKey: "lastLogin",
     options: {},
   },
 };
@@ -51,8 +51,8 @@ export const MorningTime: Story = {
     record: {
       appointmentTime: 1704067200, // 2024-01-01T09:00:00Z
     },
-    name: '予約時間',
-    columnKey: 'appointmentTime',
+    name: "予約時間",
+    columnKey: "appointmentTime",
     options: {},
   },
 };
@@ -62,8 +62,8 @@ export const EveningTime: Story = {
     record: {
       meetingTime: 1704135600, // 2024-01-01T22:00:00Z
     },
-    name: '会議時間',
-    columnKey: 'meetingTime',
+    name: "会議時間",
+    columnKey: "meetingTime",
     options: {},
   },
 };
@@ -71,15 +71,15 @@ export const EveningTime: Story = {
 export const WithLabels: Story = {
   args: {
     record: {
-      status: 'published',
+      status: "published",
     },
-    name: 'ステータス',
-    columnKey: 'status',
+    name: "ステータス",
+    columnKey: "status",
     options: {
       labels: {
-        draft: '下書き',
-        published: '公開済み',
-        archived: 'アーカイブ済み',
+        draft: "下書き",
+        published: "公開済み",
+        archived: "アーカイブ済み",
       },
     },
   },
@@ -90,8 +90,8 @@ export const FutureDate: Story = {
     record: {
       deadline: 1735689600, // 2025-01-01T00:00:00Z
     },
-    name: '期限',
-    columnKey: 'deadline',
+    name: "期限",
+    columnKey: "deadline",
     options: {},
   },
 };
@@ -101,8 +101,8 @@ export const Midnight: Story = {
     record: {
       backupTime: 1704067200, // 2024-01-01T00:00:00Z (midnight)
     },
-    name: 'バックアップ時間',
-    columnKey: 'backupTime',
+    name: "バックアップ時間",
+    columnKey: "backupTime",
     options: {},
   },
 };

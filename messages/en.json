@@ -33,7 +33,22 @@
     "resetting": "Resetting...",
     "signing_in": "Signing in...",
     "signing_up": "Signing up...",
-    "name_placeholder": "John Doe"
+    "name_placeholder": "John Doe",
+    "invalid_reset_link": "This password reset link is invalid or has expired.",
+    "go_to_forgot_password": "Request New Reset Link",
+    "validation": {
+      "email_required": "Email is required",
+      "email_invalid": "Please enter a valid email address",
+      "password_required": "Password is required",
+      "password_min_length": "Password must be at least 8 characters",
+      "password_max_length": "Password must be at most 256 characters",
+      "password_complexity": "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+      "passwords_do_not_match": "Passwords do not match",
+      "name_required": "Name is required",
+      "name_min_length": "Name must be at least 1 character",
+      "token_required": "Token is required",
+      "token_min_length": "Token must be at least 1 character"
+    }
   },
   "Crud": {
     "create": "Create",

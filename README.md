@@ -67,7 +67,9 @@ src/
 
 Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-## 🐳 Docker Development
+## 🐳 Docker Development (Local Only)
+
+Docker Compose configuration is designed for local development only.
 
 ### Quick Start with Docker
 
@@ -83,7 +85,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
    ```
 
    This will start:
-   - Next.js app (production build) at http://localhost:3000
+   - Next.js app (development mode with hot reload) at http://localhost:3000
    - PostgreSQL database at localhost:5433
    - LocalStack (S3 + SES emulation) at localhost:4566
 
@@ -92,16 +94,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
    # Wait for services to be ready, then run:
    npm run docker:db:setup
    ```
-
-4. **For development with hot reload**
-   ```bash
-   docker compose --profile dev up web-dev
-   
-   # Initialize development database
-   npm run docker:dev:db:setup
-   ```
-
-   Development server will be available at http://localhost:3001
 
 ### Docker Commands
 
@@ -113,8 +105,6 @@ docker compose build
 # Build specific service
 docker compose build web
 
-# Build development image
-docker compose build web-dev
 ```
 
 #### Start Services
@@ -125,45 +115,29 @@ docker compose up -d
 # Start only database and LocalStack
 docker compose up -d postgres localstack
 
-# Start production web app
+# Start web app (development mode with hot reload)
 docker compose up web
-
-# Start development web app (with hot reload)
-docker compose --profile dev up web-dev
 ```
 
 #### Database Operations
 
 ##### Using npm scripts (Recommended)
 ```bash
-# Production environment (web service)
 npm run docker:db:migrate    # Run migrations
 npm run docker:db:push       # Push schema to database
 npm run docker:db:seed       # Run seed data
 npm run docker:db:reset      # Reset database (⚠️ deletes all data)
 npm run docker:db:setup      # Initial setup (push + seed)
 npm run docker:db:studio     # Open Prisma Studio
-
-# Development environment (web-dev service)
-npm run docker:dev:db:migrate    # Run migrations in dev
-npm run docker:dev:db:push       # Push schema to dev database
-npm run docker:dev:db:seed       # Run seed data in dev
-npm run docker:dev:db:reset      # Reset dev database
-npm run docker:dev:db:setup      # Initial dev setup (push + seed)
-npm run docker:dev:db:studio     # Open Prisma Studio in dev
 ```
 
 ##### Usage Examples
 ```bash
-# Initialize production database
+# Initialize database
 docker compose up -d
 npm run docker:db:setup
 
-# Initialize development database (requires --profile dev)
-docker compose --profile dev up -d
-npm run docker:dev:db:setup
-
-# Reset and reinitialize production database
+# Reset and reinitialize database
 npm run docker:db:reset
 npm run docker:db:setup
 
@@ -224,11 +198,12 @@ Key environment variables for Docker:
 - `AWS_ENDPOINT_URL_S3`: LocalStack S3 endpoint for local development
 - `AWS_ENDPOINT_URL_SES`: LocalStack SES endpoint for local development
 
-#### For Production
-Update environment variables for production AWS services:
-- Use real AWS S3 and SES endpoints
-- Configure proper AWS credentials
-- Update database connection for production PostgreSQL
+#### For Production Deployment
+This Docker Compose setup is for local development only. For production deployment:
+- Deploy to cloud platforms (Vercel, AWS, etc.)
+- Use managed database services
+- Configure real AWS S3 and SES endpoints
+- Set proper environment variables for production
 
 ## 🎯 Available Scripts
 
@@ -258,8 +233,7 @@ npm run build-storybook # Build Storybook for production
 
 | Service | Local Port | Docker Port | Description |
 |---------|------------|-------------|-------------|
-| Next.js (prod) | 3000 | 3000 | Production Next.js application |
-| Next.js (dev) | 3001 | 3000 | Development Next.js with hot reload |
+| Next.js | 3000 | 3000 | Development Next.js with hot reload |
 | PostgreSQL | 5433 | 5432 | Database server |
 | LocalStack | 4566 | 4566 | AWS services emulation (S3, SES) |
 

@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import DataBooleanItem from '.';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import DataBooleanItem from ".";
 
 const meta: Meta<typeof DataBooleanItem> = {
-  title: 'Molecules/DataBooleanItem',
+  title: "Molecules/DataBooleanItem",
   component: DataBooleanItem,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -20,8 +20,8 @@ export const TrueValue: Story = {
       isVerified: true,
       hasPermission: true,
     },
-    name: 'アクティブ',
-    columnKey: 'isActive',
+    name: "アクティブ",
+    columnKey: "isActive",
   },
 };
 
@@ -32,8 +32,8 @@ export const FalseValue: Story = {
       isVerified: false,
       hasPermission: false,
     },
-    name: 'アクティブ',
-    columnKey: 'isActive',
+    name: "アクティブ",
+    columnKey: "isActive",
   },
 };
 
@@ -44,8 +44,8 @@ export const Verified: Story = {
       isVerified: true,
       hasPermission: false,
     },
-    name: '認証済み',
-    columnKey: 'isVerified',
+    name: "認証済み",
+    columnKey: "isVerified",
   },
 };
 
@@ -56,8 +56,8 @@ export const NotVerified: Story = {
       isVerified: false,
       hasPermission: false,
     },
-    name: '認証済み',
-    columnKey: 'isVerified',
+    name: "認証済み",
+    columnKey: "isVerified",
   },
 };
 
@@ -68,8 +68,8 @@ export const HasPermission: Story = {
       isVerified: true,
       hasPermission: true,
     },
-    name: '権限あり',
-    columnKey: 'hasPermission',
+    name: "権限あり",
+    columnKey: "hasPermission",
   },
 };
 
@@ -80,8 +80,8 @@ export const NoPermission: Story = {
       isVerified: true,
       hasPermission: false,
     },
-    name: '権限あり',
-    columnKey: 'hasPermission',
+    name: "権限あり",
+    columnKey: "hasPermission",
   },
 };
 
@@ -91,8 +91,8 @@ export const UndefinedValue: Story = {
       isActive: true,
       isVerified: true,
     },
-    name: '権限あり',
-    columnKey: 'hasPermission',
+    name: "権限あり",
+    columnKey: "hasPermission",
   },
 };
 
@@ -101,8 +101,8 @@ export const WithCustomClassName: Story = {
     record: {
       isPremium: true,
     },
-    name: 'プレミアム',
-    columnKey: 'isPremium',
-    className: 'text-yellow-600 font-bold text-lg',
+    name: "プレミアム",
+    columnKey: "isPremium",
+    className: "text-yellow-600 font-bold text-lg",
   },
 };

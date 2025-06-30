@@ -9,6 +9,8 @@ import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { PrismaRepository } from "./prisma_repository";
 import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
 import { auth } from "@/libraries/auth";
+import { PasswordResetRepository } from "./password_reset_repository";
+import { createEmailServiceInstance } from "@/libraries/email";
 
 export abstract class AuthRepository extends PrismaRepository<
   typeof AuthSchema
@@ -29,7 +31,6 @@ export abstract class AuthRepository extends PrismaRepository<
     }
     return this.findById(session.user.id);
   }
-
 
   async postSignIn(request: SignInRequest): Promise<AccessToken> {
     // Find user by email
@@ -103,13 +104,48 @@ export abstract class AuthRepository extends PrismaRepository<
   }
 
   async postForgotPassword(request: ForgotPasswordRequest): Promise<Status> {
-    // Find user by email
-    const users = await this.get(0, 1, undefined, undefined, undefined, [
-      { column: "email", operator: "=", value: request.email },
-    ]);
+    try {
+      // Find user by email
+      const users = await this.get(0, 1, undefined, undefined, undefined, [
+        { column: "email", operator: "=", value: request.email },
+      ]);
 
-    if (users.data.length === 0) {
-      // Don't reveal whether email exists or not
+      if (users.data.length === 0) {
+        // Don't reveal whether email exists or not
+        return StatusSchema.parse({
+          success: true,
+          message:
+            "If an account with that email exists, a password reset link has been sent.",
+          code: 200,
+        });
+      }
+
+      const user = users.data[0];
+      const passwordResetRepo = new PasswordResetRepository();
+
+      // Delete any existing tokens for this user
+      await passwordResetRepo.deleteUserTokens(user.id);
+
+      // Create new reset token
+      const resetToken = await passwordResetRepo.createResetToken(user.id);
+
+      // Send email with reset link
+      const appUrl = process.env.APP_URL || "http://localhost:3000";
+      const resetUrl = `${appUrl}/auth/reset-password?token=${resetToken.token}`;
+
+      const emailService = createEmailServiceInstance();
+      await emailService.sendPasswordResetEmail(user.email, resetUrl);
+
+      return StatusSchema.parse({
+        success: true,
+        message:
+          "If an account with that email exists, a password reset link has been sent.",
+        code: 200,
+      });
+    } catch (error) {
+      console.error("Error in postForgotPassword:", error);
+
+      // Still return success to avoid revealing system errors
       return StatusSchema.parse({
         success: true,
         message:
@@ -117,43 +153,54 @@ export abstract class AuthRepository extends PrismaRepository<
         code: 200,
       });
     }
-
-    // In a real implementation, you would send an email with a reset token
-    // For now, just return success
-    return StatusSchema.parse({
-      success: true,
-      message:
-        "If an account with that email exists, a password reset link has been sent.",
-      code: 200,
-    });
   }
 
   async postResetPassword(request: ResetPasswordRequest): Promise<Status> {
-    // In a real implementation, you would verify the reset token
-    // For now, find user by email and update password
-    const users = await this.get(0, 1, undefined, undefined, undefined, [
-      { column: "email", operator: "=", value: request.email },
-    ]);
+    try {
+      const passwordResetRepo = new PasswordResetRepository();
 
-    if (users.data.length === 0) {
+      // Find and validate the reset token
+      const resetToken = await passwordResetRepo.findValidToken(request.token);
+
+      if (!resetToken) {
+        throw new Error("Invalid or expired reset token");
+      }
+
+      // Find the user
+      const user = await this.findById(resetToken.userId);
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Verify that the email matches (extra security check)
+      if (user.email !== request.email) {
+        throw new Error("Invalid or expired reset token");
+      }
+
+      // Hash new password
+      const hashedPassword = await hashPassword(request.password);
+
+      // Update user password
+      await this.update(user.id, {
+        password: hashedPassword,
+      });
+
+      // Mark the token as used
+      await passwordResetRepo.markTokenAsUsed(resetToken.id);
+
+      // Delete all other tokens for this user
+      await passwordResetRepo.deleteUserTokens(user.id);
+
+      return StatusSchema.parse({
+        success: true,
+        message: "Password has been reset successfully.",
+        code: 200,
+      });
+    } catch (error) {
+      console.error("Error in postResetPassword:", error);
       throw new Error("Invalid reset token");
     }
-
-    const user = users.data[0];
-
-    // Hash new password
-    const hashedPassword = await hashPassword(request.password);
-
-    // Update user password
-    await this.update(user.id, {
-      password: hashedPassword,
-    });
-
-    return StatusSchema.parse({
-      success: true,
-      message: "Password has been reset successfully.",
-      code: 200,
-    });
   }
 
   async updateUserPassword(userId: string, newPassword: string): Promise<void> {

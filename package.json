@@ -17,13 +17,7 @@
     "docker:db:seed": "docker compose exec -T web npx prisma db seed",
     "docker:db:reset": "docker compose exec -T web npx prisma migrate reset --force",
     "docker:db:setup": "npm run docker:db:push && npm run docker:db:seed",
-    "docker:db:studio": "docker compose exec web npx prisma studio",
-    "docker:dev:db:migrate": "docker compose --profile dev exec -T web-dev npx prisma migrate dev",
-    "docker:dev:db:push": "docker compose --profile dev exec -T web-dev npx prisma db push",
-    "docker:dev:db:seed": "docker compose --profile dev exec -T web-dev npx prisma db seed",
-    "docker:dev:db:reset": "docker compose --profile dev exec -T web-dev npx prisma migrate reset --force",
-    "docker:dev:db:setup": "npm run docker:dev:db:push && npm run docker:dev:db:seed",
-    "docker:dev:db:studio": "docker compose --profile dev exec web-dev npx prisma studio"
+    "docker:db:studio": "docker compose exec web npx prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -48,6 +42,7 @@
     "next": "15.3.3",
     "next-auth": "^5.0.0-beta.25",
     "next-intl": "^3.26.3",
+    "@aws-sdk/client-ses": "^3.706.0",
     "react": "19.1.0",
     "react-day-picker": "^9.0.0",
     "react-dom": "19.1.0",

@@ -1,0 +1,214 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# メールプロバイダー追加ガイド
+
+このファイルは、既存のメールサービスに新しいプロバイダーを追加する方法を説明します。
+
+## 現在のアーキテクチャ
+
+メールサービスはProvider パターンで設計されており、以下の構造になっています：
+
+```
+src/libraries/email.ts
+├── EmailService (interface) - メール送信の抽象化
+├── EmailProvider (interface) - プロバイダーの抽象化
+├── SESProvider (class) - AWS SES実装
+└── EmailServiceImpl (class) - メインのサービス実装
+```
+
+## 新しいプロバイダーの追加手順
+
+### 1. プロバイダー設定インターフェースの定義
+
+```typescript
+// 例: Resend プロバイダーの場合
+export interface ResendProviderConfig {
+  apiKey: string;
+  fromEmail?: string; // 省略可能な設定
+}
+```
+
+### 2. プロバイダークラスの実装
+
+```typescript
+export class ResendProvider implements EmailProvider {
+  private config: ResendProviderConfig;
+
+  constructor(config: ResendProviderConfig) {
+    this.config = config;
+  }
+
+  async sendEmail(options: EmailOptions): Promise<EmailResult> {
+    try {
+      // Dynamic import for Edge Runtime compatibility (必要に応じて)
+      const { Resend } = await import("resend");
+      
+      const resend = new Resend(this.config.apiKey);
+      
+      const result = await resend.emails.send({
+        from: options.from,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+      });
+
+      return {
+        success: true,
+        messageId: result.data?.id,
+      };
+    } catch (error) {
+      console.error("Resend email sending failed:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+}
+```
+
+### 3. 設定ファクトリー関数の追加
+
+```typescript
+export function createResendProviderConfig(): ResendProviderConfig {
+  return {
+    apiKey: process.env.RESEND_API_KEY || "",
+    fromEmail: process.env.RESEND_FROM_EMAIL,
+  };
+}
+```
+
+### 4. メインファクトリー関数の更新
+
+```typescript
+export function createEmailServiceInstance(): EmailService {
+  const providerType = process.env.EMAIL_PROVIDER || "ses"; // デフォルトはSES
+  
+  let provider: EmailProvider;
+  let fromEmail: string;
+  
+  switch (providerType) {
+    case "resend":
+      const resendConfig = createResendProviderConfig();
+      provider = new ResendProvider(resendConfig);
+      fromEmail = resendConfig.fromEmail || process.env.SES_FROM_EMAIL || "noreply@localhost";
+      break;
+      
+    case "ses":
+    default:
+      const sesConfig = createSESProviderConfig();
+      provider = new SESProvider(sesConfig);
+      fromEmail = process.env.SES_FROM_EMAIL || 
+        (process.env.NODE_ENV === "production" ? "noreply@example.com" : "noreply@localhost");
+      break;
+  }
+  
+  return new EmailServiceImpl(provider, fromEmail);
+}
+```
+
+### 5. 環境変数の追加
+
+`.env.sample` に新しいプロバイダー用の環境変数を追加：
+
+```bash
+# Email Provider Selection
+EMAIL_PROVIDER=ses # ses, resend, sendgrid, etc.
+
+# Resend Configuration
+RESEND_API_KEY=your-resend-api-key
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+```
+
+### 6. package.json の依存関係追加
+
+```bash
+npm install resend
+# または
+npm install @sendgrid/mail
+```
+
+## プロバイダー実装の注意点
+
+### Edge Runtime 対応
+
+Next.js Edge Runtime で使用する場合：
+
+1. **Dynamic Import を使用**: Node.js 固有のモジュールは dynamic import で読み込む
+2. **HTTP ベースの API を選択**: Node.js ネイティブモジュール（crypto, fs など）を使わないライブラリを選ぶ
+3. **fetch() を活用**: 可能であれば、ライブラリの代わりに fetch() で直接 API を呼び出す
+
+### エラーハンドリング
+
+- 常に `EmailResult` 形式で結果を返す
+- エラーは適切にログ出力し、`success: false` で返す
+- ネットワークエラー、認証エラーなど様々なエラーケースを考慮
+
+### 設定の検証
+
+```typescript
+constructor(config: ResendProviderConfig) {
+  if (!config.apiKey) {
+    throw new Error("Resend API key is required");
+  }
+  this.config = config;
+}
+```
+
+## テスト方法
+
+### 1. 単体テスト
+
+```typescript
+// __tests__/libraries/email.test.ts
+describe("ResendProvider", () => {
+  it("should send email successfully", async () => {
+    const provider = new ResendProvider({
+      apiKey: "test-api-key"
+    });
+    
+    const result = await provider.sendEmail({
+      from: "test@example.com",
+      to: "user@example.com",
+      subject: "Test",
+      html: "<p>Test</p>"
+    });
+    
+    expect(result.success).toBe(true);
+  });
+});
+```
+
+### 2. 統合テスト
+
+1. `.env` ファイルで `EMAIL_PROVIDER=resend` を設定
+2. パスワードリセット機能で実際にメール送信をテスト
+3. ログでメッセージIDが正しく出力されることを確認
+
+## 利用可能なプロバイダーの例
+
+### Edge Runtime 対応
+
+- **Resend**: HTTP API、Edge Runtime 対応
+- **SendGrid Web API**: HTTP API、Edge Runtime 対応  
+- **Postmark**: HTTP API、Edge Runtime 対応
+
+### Node.js Runtime のみ
+
+- **Nodemailer**: SMTP、Node.js 専用
+- **AWS SES (SDK)**: 現在の実装、Node.js 推奨
+
+## 既存コードへの影響
+
+新しいプロバイダーを追加しても、以下は変更不要：
+
+- `EmailService` インターフェース
+- `EmailServiceImpl` クラス
+- 既存の `SESProvider`
+- パスワードリセット機能の実装 (`auth_repository.ts`)
+
+プロバイダーの切り替えは環境変数 `EMAIL_PROVIDER` の設定のみで可能です。

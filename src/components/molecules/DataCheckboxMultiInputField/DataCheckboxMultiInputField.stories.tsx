@@ -1,64 +1,63 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import DataCheckboxMultiInputField from './index';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import DataCheckboxMultiInputField from "./index";
 // Mock function for onChange handlers
 const mockOnChange = (value: string[]) => {
-  console.log('Checkbox changed:', value);
+  console.log("Checkbox changed:", value);
 };
 
 const meta: Meta<typeof DataCheckboxMultiInputField> = {
-  title: 'Molecules/DataCheckboxMultiInputField',
+  title: "Molecules/DataCheckboxMultiInputField",
   component: DataCheckboxMultiInputField,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-
 const skillsOptions = {
   options: [
-    { name: 'JavaScript', value: 'javascript' },
-    { name: 'TypeScript', value: 'typescript' },
-    { name: 'React', value: 'react' },
-    { name: 'Next.js', value: 'nextjs' },
-    { name: 'Node.js', value: 'nodejs' },
-    { name: 'Python', value: 'python' },
-    { name: 'Java', value: 'java' },
-    { name: 'PHP', value: 'php' },
+    { name: "JavaScript", value: "javascript" },
+    { name: "TypeScript", value: "typescript" },
+    { name: "React", value: "react" },
+    { name: "Next.js", value: "nextjs" },
+    { name: "Node.js", value: "nodejs" },
+    { name: "Python", value: "python" },
+    { name: "Java", value: "java" },
+    { name: "PHP", value: "php" },
   ],
 };
 
 const featuresOptions = {
   options: [
-    { name: 'ユーザー管理', value: 'user_management' },
-    { name: '権限制御', value: 'permission_control' },
-    { name: 'データ分析', value: 'data_analytics' },
-    { name: 'レポート生成', value: 'report_generation' },
-    { name: 'API連携', value: 'api_integration' },
-    { name: '通知機能', value: 'notification' },
+    { name: "ユーザー管理", value: "user_management" },
+    { name: "権限制御", value: "permission_control" },
+    { name: "データ分析", value: "data_analytics" },
+    { name: "レポート生成", value: "report_generation" },
+    { name: "API連携", value: "api_integration" },
+    { name: "通知機能", value: "notification" },
   ],
 };
 
 const hobbyOptions = {
   options: [
-    { name: '読書', value: 'reading' },
-    { name: '映画鑑賞', value: 'movies' },
-    { name: '音楽', value: 'music' },
-    { name: 'スポーツ', value: 'sports' },
-    { name: '旅行', value: 'travel' },
-    { name: '料理', value: 'cooking' },
+    { name: "読書", value: "reading" },
+    { name: "映画鑑賞", value: "movies" },
+    { name: "音楽", value: "music" },
+    { name: "スポーツ", value: "sports" },
+    { name: "旅行", value: "travel" },
+    { name: "料理", value: "cooking" },
   ],
 };
 
 export const Skills: Story = {
   args: {
-    name: 'スキル',
-    data_key: 'skills',
+    name: "スキル",
+    data_key: "skills",
     value: [],
-    placeholder: 'スキルを選択してください',
+    placeholder: "スキルを選択してください",
     required: false,
     disabled: false,
     options: skillsOptions,
@@ -68,10 +67,10 @@ export const Skills: Story = {
 
 export const WithSelectedValues: Story = {
   args: {
-    name: 'スキル',
-    data_key: 'skills',
-    value: ['javascript', 'react', 'nextjs'],
-    placeholder: 'スキルを選択してください',
+    name: "スキル",
+    data_key: "skills",
+    value: ["javascript", "react", "nextjs"],
+    placeholder: "スキルを選択してください",
     required: false,
     disabled: false,
     options: skillsOptions,
@@ -81,10 +80,10 @@ export const WithSelectedValues: Story = {
 
 export const Features: Story = {
   args: {
-    name: '使用機能',
-    data_key: 'features',
-    value: ['user_management', 'data_analytics'],
-    placeholder: '機能を選択',
+    name: "使用機能",
+    data_key: "features",
+    value: ["user_management", "data_analytics"],
+    placeholder: "機能を選択",
     required: true,
     disabled: false,
     options: featuresOptions,
@@ -94,10 +93,10 @@ export const Features: Story = {
 
 export const Hobbies: Story = {
   args: {
-    name: '趣味',
-    data_key: 'hobbies',
+    name: "趣味",
+    data_key: "hobbies",
     value: [],
-    placeholder: '趣味を選択（任意）',
+    placeholder: "趣味を選択（任意）",
     required: false,
     disabled: false,
     options: hobbyOptions,
@@ -107,10 +106,10 @@ export const Hobbies: Story = {
 
 export const Disabled: Story = {
   args: {
-    name: 'スキル',
-    data_key: 'skills',
-    value: ['javascript', 'react'],
-    placeholder: 'スキルを選択してください',
+    name: "スキル",
+    data_key: "skills",
+    value: ["javascript", "react"],
+    placeholder: "スキルを選択してください",
     required: false,
     disabled: true,
     options: skillsOptions,
@@ -120,18 +119,18 @@ export const Disabled: Story = {
 
 export const Required: Story = {
   args: {
-    name: '必須スキル',
-    data_key: 'required_skills',
+    name: "必須スキル",
+    data_key: "required_skills",
     value: [],
-    placeholder: '最低1つは選択してください',
+    placeholder: "最低1つは選択してください",
     required: true,
     disabled: false,
     options: {
       options: [
-        { name: 'JavaScript', value: 'javascript' },
-        { name: 'TypeScript', value: 'typescript' },
-        { name: 'React', value: 'react' },
-        { name: 'Vue.js', value: 'vue' },
+        { name: "JavaScript", value: "javascript" },
+        { name: "TypeScript", value: "typescript" },
+        { name: "React", value: "react" },
+        { name: "Vue.js", value: "vue" },
       ],
     },
     onChange: mockOnChange,
@@ -140,17 +139,17 @@ export const Required: Story = {
 
 export const FewOptions: Story = {
   args: {
-    name: '通知設定',
-    data_key: 'notifications',
-    value: ['email'],
-    placeholder: '通知方法を選択',
+    name: "通知設定",
+    data_key: "notifications",
+    value: ["email"],
+    placeholder: "通知方法を選択",
     required: false,
     disabled: false,
     options: {
       options: [
-        { name: 'メール', value: 'email' },
-        { name: 'SMS', value: 'sms' },
-        { name: 'プッシュ通知', value: 'push' },
+        { name: "メール", value: "email" },
+        { name: "SMS", value: "sms" },
+        { name: "プッシュ通知", value: "push" },
       ],
     },
     onChange: mockOnChange,
@@ -159,10 +158,19 @@ export const FewOptions: Story = {
 
 export const AllSelected: Story = {
   args: {
-    name: 'スキル',
-    data_key: 'skills',
-    value: ['javascript', 'typescript', 'react', 'nextjs', 'nodejs', 'python', 'java', 'php'],
-    placeholder: 'スキルを選択してください',
+    name: "スキル",
+    data_key: "skills",
+    value: [
+      "javascript",
+      "typescript",
+      "react",
+      "nextjs",
+      "nodejs",
+      "python",
+      "java",
+      "php",
+    ],
+    placeholder: "スキルを選択してください",
     required: false,
     disabled: false,
     options: skillsOptions,

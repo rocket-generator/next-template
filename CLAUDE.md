@@ -85,3 +85,4 @@ Components follow Atomic Design in `/src/components/`:
 
 Coding rules are defined in `.cursor/rules`.
 Check all the mdc files in `.cursor/rules` for more details before planning your code.
+

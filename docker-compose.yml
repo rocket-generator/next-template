@@ -1,36 +1,6 @@
 version: '3.8'
 
 services:
-  # Next.js Application
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/myapp
-      - AUTH_URL=http://localhost:3000/api/auth
-      - AUTH_SECRET=FwpgXc8ejZgsKUQ5qXh7L7ftCBuhuOYig9GqKkdrXNI=
-      - NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=http://web:3000/api
-      - NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:3000/api
-      # LocalStack S3 Configuration
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_ENDPOINT_URL_S3=http://localstack:4566
-      - AWS_ENDPOINT_URL_SES=http://localstack:4566
-      - S3_BUCKET_NAME=my-app-bucket
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./prisma:/app/prisma
-    networks:
-      - app-network
-
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
@@ -76,28 +46,31 @@ services:
     networks:
       - app-network
 
-  # Development environment (for local development)
-  web-dev:
+  # Next.js Application (Development)
+  web:
     build:
       context: .
       dockerfile: Dockerfile
       target: development
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/myapp
-      - AUTH_URL=http://localhost:3001/api/auth
+      - AUTH_URL=http://localhost:3000/api/auth
       - AUTH_SECRET=FwpgXc8ejZgsKUQ5qXh7L7ftCBuhuOYig9GqKkdrXNI=
-      - NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=http://web-dev:3000/api
-      - NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:3001/api
+      - NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=http://web:3000/api
+      - NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:3000/api
       # LocalStack S3 Configuration
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_ENDPOINT_URL_S3=http://localstack:4566
-      - AWS_ENDPOINT_URL_SES=http://localstack:4566
       - S3_BUCKET_NAME=my-app-bucket
+      # LocalStack SES Configuration (for unemail)
+      - AWS_SES_REGION=us-east-1
+      - SES_FROM_EMAIL=noreply@example.com
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,8 +80,19 @@ services:
       - /app/.next
     networks:
       - app-network
-    profiles:
-      - dev
+
+  # LocalStack SES Email Viewer
+  ses-viewer:
+    build:
+      context: https://github.com/veertech/localstack-aws-ses-email-viewer.git
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - LOCALSTACK_HOST=http://localstack:4566
+      - PORT=3005
+    networks:
+      - app-network
 
 volumes:
   postgres_data:

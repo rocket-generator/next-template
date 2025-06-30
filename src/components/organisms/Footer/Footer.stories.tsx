@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/nextjs';
-import Footer from './index';
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import Footer from "./index";
 
 const meta: Meta<typeof Footer> = {
-  title: 'Organisms/Footer',
+  title: "Organisms/Footer",
   component: Footer,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
