@@ -44,62 +44,16 @@ export class UserRepository extends AuthRepository {
 
   /**
    * ユーザーデータを更新する（User型対応版）
+   * 注意: パスワードのハッシュ化はサービス層で行う
    */
   async updateUserData(userId: string, userData: Partial<User>): Promise<User> {
-    const updateData = { ...userData };
-
-    // If password is provided and not empty, hash it
-    if (updateData.password && updateData.password.trim() !== "") {
-      const { hashPassword } = await import("@/libraries/hash");
-      updateData.password = await hashPassword(updateData.password);
-    } else {
-      // Remove password from update data if it's empty
-      delete updateData.password;
-    }
-
     // Prismaモデルを直接更新してUser型を返す
     const updatedPrismaUser = await getPrismaModel("user").update({
       where: { id: userId },
-      data: updateData,
+      data: userData,
     });
 
     return transformPrismToModel(updatedPrismaUser);
-  }
-
-  /**
-   * プロフィール情報を更新する（設定画面用）
-   */
-  async updateProfile(
-    userId: string,
-    name: string,
-    email: string
-  ): Promise<User> {
-    return this.updateUserData(userId, { name, email });
-  }
-
-  /**
-   * パスワードを変更する（設定画面用）
-   */
-  async changePassword(
-    userId: string,
-    currentPassword: string,
-    newPassword: string
-  ): Promise<User> {
-    const user = await this.getUserById(userId);
-
-    // 現在のパスワードを検証
-    const { verifyPassword } = await import("@/libraries/hash");
-    const isValid = await verifyPassword(currentPassword, user.password);
-
-    if (!isValid) {
-      throw new Error("invalid_current_password");
-    }
-
-    // 新しいパスワードをハッシュ化して更新
-    const { hashPassword } = await import("@/libraries/hash");
-    const hashedNewPassword = await hashPassword(newPassword);
-
-    return this.updateUserData(userId, { password: hashedNewPassword });
   }
 
   /**
