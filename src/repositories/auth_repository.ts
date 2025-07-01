@@ -2,21 +2,10 @@ import { AuthSchema } from "@/models/auth";
 import { z } from "zod";
 import { PrismaRepository } from "./prisma_repository";
 import { auth } from "@/libraries/auth";
-import { SearchCondition } from "./base_repository";
+import { BaseRepositoryInterface } from "./base_repository";
 
-export interface AuthRepositoryInterface {
-  get(
-    offset?: number,
-    limit?: number,
-    order?: string,
-    direction?: string,
-    query?: string,
-    conditions?: SearchCondition[]
-  ): Promise<{ data: z.infer<typeof AuthSchema>[]; count: number }>;
-  findById(id: string): Promise<z.infer<typeof AuthSchema>>;
-  create(data: Omit<z.infer<typeof AuthSchema>, "id">): Promise<z.infer<typeof AuthSchema>>;
-  update(id: string, data: Partial<z.infer<typeof AuthSchema>>): Promise<z.infer<typeof AuthSchema>>;
-  delete(id: string): Promise<void>;
+export interface AuthRepositoryInterface extends BaseRepositoryInterface<typeof AuthSchema> {
+  getMe(): Promise<z.infer<typeof AuthSchema>>;
 }
 
 export abstract class AuthRepository extends PrismaRepository<

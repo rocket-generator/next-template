@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseRepository } from "./base_repository";
+import { BaseRepository, BaseRepositoryInterface } from "./base_repository";
 import { prisma } from "@/libraries/prisma";
 import { SearchCondition } from "./base_repository";
 
@@ -16,7 +16,7 @@ type TransformFunction<T extends z.ZodObject<z.ZodRawShape, "strip">> = (
 
 export class PrismaRepository<
   T extends z.ZodObject<z.ZodRawShape, "strip">
-> extends BaseRepository<T> {
+> extends BaseRepository<T> implements BaseRepositoryInterface<T> {
   protected modelName: string;
   protected searchFields: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,14 +1,5 @@
 import { UserRepository } from "@/repositories/user_repository";
 import { UserSchema, User, transformPrismToModel } from "@/models/user";
-import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
-import { auth } from "@/libraries/auth";
-
-// Mock the hash functions
-jest.mock("@/libraries/hash", () => ({
-  hashPassword: jest.fn(),
-  verifyPassword: jest.fn(),
-  generateToken: jest.fn(),
-}));
 
 // Mock the auth function
 jest.mock("@/libraries/auth", () => ({
@@ -44,21 +35,9 @@ jest.mock("@/repositories/prisma_repository", () => ({
 
 describe("UserRepository", () => {
   let repository: UserRepository;
-  let mockHashPassword: jest.MockedFunction<typeof hashPassword>;
-  let mockVerifyPassword: jest.MockedFunction<typeof verifyPassword>;
-  let mockGenerateToken: jest.MockedFunction<typeof generateToken>;
-  let mockAuth: jest.MockedFunction<typeof auth>;
 
   beforeEach(() => {
     repository = new UserRepository();
-    mockHashPassword = hashPassword as jest.MockedFunction<typeof hashPassword>;
-    mockVerifyPassword = verifyPassword as jest.MockedFunction<
-      typeof verifyPassword
-    >;
-    mockGenerateToken = generateToken as jest.MockedFunction<
-      typeof generateToken
-    >;
-    mockAuth = auth as jest.MockedFunction<typeof auth>;
 
     // Reset all mocks
     jest.clearAllMocks();
@@ -194,25 +173,9 @@ describe("UserRepository", () => {
   });
 
   describe("integration with AuthRepository methods", () => {
-    it("should inherit postSignIn functionality", () => {
-      // UserRepository extends AuthRepository, so it should have postSignIn method
-      expect(typeof repository.postSignIn).toBe("function");
-    });
-
-    it("should inherit postSignUp functionality", () => {
-      // UserRepository extends AuthRepository, so it should have postSignUp method
-      expect(typeof repository.postSignUp).toBe("function");
-    });
-
     it("should inherit getMe functionality", () => {
       // UserRepository extends AuthRepository, so it should have getMe method
       expect(typeof repository.getMe).toBe("function");
-    });
-
-    it("should inherit password management methods", () => {
-      expect(typeof repository.updateUserPassword).toBe("function");
-      expect(typeof repository.createUserWithHashedPassword).toBe("function");
-      expect(typeof repository.updateUserData).toBe("function");
     });
   });
 

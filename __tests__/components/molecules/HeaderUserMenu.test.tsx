@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import * as React from "react";
 import HeaderUserMenu from "@/components/molecules/HeaderUserMenu";
 
 // Mock lucide-react icons
@@ -10,12 +11,27 @@ jest.mock("lucide-react", () => ({
   ChevronDown: () => <div data-testid="chevron-down-icon">Chevron Down</div>,
 }));
 
-// Mock UserModel
+// Mock next/navigation
+const mockPush = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  }),
+}));
+
+// Mock UserModel with all required fields
 const mockUser = {
   id: "user-123",
   name: "John Doe",
   email: "john@example.com",
+  password: "hashed-password",
   permissions: ["read", "write"],
+  avatar_key: undefined,
 };
 
 describe("HeaderUserMenu", () => {
@@ -23,6 +39,7 @@ describe("HeaderUserMenu", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPush.mockClear();
   });
 
   it("should render user menu when user is signed in", () => {
@@ -36,104 +53,106 @@ describe("HeaderUserMenu", () => {
     const { container } = render(<HeaderUserMenu signInUser={null} onSignOut={mockOnSignOut} />);
 
     expect(container.firstChild).not.toBeNull();
-    expect(screen.getByRole("button")).toBeInTheDocument();
+    expect(screen.getByTestId("user-menu-button")).toBeInTheDocument();
   });
 
   it("should toggle menu visibility when button is clicked", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     
     // Menu should be hidden initially
-    expect(screen.queryByText("設定")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("user-menu-dropdown")).not.toBeInTheDocument();
     
     // Click to open menu
     fireEvent.click(menuButton);
-    expect(screen.getByText("設定")).toBeInTheDocument();
-    expect(screen.getByText("ログアウト")).toBeInTheDocument();
+    expect(screen.getByTestId("user-menu-dropdown")).toBeInTheDocument();
+    expect(screen.getByTestId("settings-button")).toBeInTheDocument();
+    expect(screen.getByTestId("logout-button")).toBeInTheDocument();
     
     // Click to close menu
     fireEvent.click(menuButton);
-    expect(screen.queryByText("設定")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("user-menu-dropdown")).not.toBeInTheDocument();
   });
 
   it("should close menu when clicking outside", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     
     // Open menu
     fireEvent.click(menuButton);
-    expect(screen.getByText("設定")).toBeInTheDocument();
+    expect(screen.getByTestId("user-menu-dropdown")).toBeInTheDocument();
     
     // Click outside
     fireEvent.mouseDown(document.body);
-    expect(screen.queryByText("設定")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("user-menu-dropdown")).not.toBeInTheDocument();
   });
 
   it("should not close menu when clicking inside", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     
     // Open menu
     fireEvent.click(menuButton);
-    expect(screen.getByText("設定")).toBeInTheDocument();
+    expect(screen.getByTestId("user-menu-dropdown")).toBeInTheDocument();
     
     // Click inside menu
-    const settingsButton = screen.getByText("設定");
+    const settingsButton = screen.getByTestId("settings-button");
     fireEvent.mouseDown(settingsButton);
     
-    expect(screen.getByText("設定")).toBeInTheDocument();
+    expect(screen.getByTestId("user-menu-dropdown")).toBeInTheDocument();
   });
 
   it("should call onSignOut when sign out is clicked", async () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     fireEvent.click(menuButton);
     
-    const signOutButton = screen.getByText("ログアウト");
+    const signOutButton = screen.getByTestId("logout-button");
     fireEvent.click(signOutButton);
     
     expect(mockOnSignOut).toHaveBeenCalledTimes(1);
   });
 
-  it("should render settings button (currently disabled)", () => {
+  it("should render settings button with correct aria-label", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     fireEvent.click(menuButton);
     
-    const settingsButton = screen.getByText("設定");
+    const settingsButton = screen.getByRole("button", { name: "Settings" });
     expect(settingsButton).toBeInTheDocument();
     expect(screen.getByTestId("settings-icon")).toBeInTheDocument();
   });
 
-  it("should render sign out button with logout icon", () => {
+  it("should render sign out button with correct aria-label and logout icon", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     fireEvent.click(menuButton);
     
-    expect(screen.getByText("ログアウト")).toBeInTheDocument();
+    const signOutButton = screen.getByRole("button", { name: "Sign out" });
+    expect(signOutButton).toBeInTheDocument();
     expect(screen.getByTestId("logout-icon")).toBeInTheDocument();
   });
 
   it("should apply correct CSS classes", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     expect(menuButton).toHaveClass("flex", "items-center", "gap-2", "p-2", "rounded-full", "hover:bg-gray-100");
   });
 
   it("should show dropdown menu with correct styling when open", () => {
-    const { container } = render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
+    render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     fireEvent.click(menuButton);
     
-    const dropdown = container.querySelector(".absolute");
+    const dropdown = screen.getByTestId("user-menu-dropdown");
     expect(dropdown).toHaveClass("absolute", "right-0", "mt-2", "w-48", "bg-white", "rounded-md", "shadow-lg", "py-1", "border");
   });
 
@@ -160,28 +179,12 @@ describe("HeaderUserMenu", () => {
     expect(span).toHaveTextContent("");
   });
 
-  it("should use useRef and useEffect for click outside handling", () => {
-    const useRefSpy = jest.spyOn(require("react"), "useRef");
-    const useEffectSpy = jest.spyOn(require("react"), "useEffect");
-    
-    render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    expect(useRefSpy).toHaveBeenCalled();
-    expect(useEffectSpy).toHaveBeenCalled();
-  });
-
-  it("should manage menu state with useState", () => {
-    const useStateSpy = jest.spyOn(require("react"), "useState");
-    
-    render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
-
-    expect(useStateSpy).toHaveBeenCalled();
-  });
 
   it("should handle rapid menu toggle clicks", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     
     // Rapid clicks
     fireEvent.click(menuButton);
@@ -189,7 +192,7 @@ describe("HeaderUserMenu", () => {
     fireEvent.click(menuButton);
     
     // Menu should be open (odd number of clicks)
-    expect(screen.getByText("設定")).toBeInTheDocument();
+    expect(screen.getByTestId("user-menu-dropdown")).toBeInTheDocument();
   });
 
   it("should cleanup event listener on unmount", () => {
@@ -204,12 +207,57 @@ describe("HeaderUserMenu", () => {
   it("should prevent menu from closing when clicking on menu items", () => {
     render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
 
-    const menuButton = screen.getByRole("button");
+    const menuButton = screen.getByTestId("user-menu-button");
     fireEvent.click(menuButton);
     
-    const settingsItem = screen.getByText("設定").closest("button");
-    fireEvent.mouseDown(settingsItem!);
+    const settingsButton = screen.getByTestId("settings-button");
+    fireEvent.mouseDown(settingsButton);
     
-    expect(screen.getByText("設定")).toBeInTheDocument();
+    expect(screen.getByTestId("user-menu-dropdown")).toBeInTheDocument();
+  });
+
+  it("should navigate to settings when settings button is clicked", () => {
+    render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
+
+    const menuButton = screen.getByTestId("user-menu-button");
+    fireEvent.click(menuButton);
+    
+    const settingsButton = screen.getByTestId("settings-button");
+    fireEvent.click(settingsButton);
+    
+    expect(mockPush).toHaveBeenCalledWith("/settings");
+  });
+
+  it("should have proper accessibility attributes", () => {
+    render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
+
+    const menuButton = screen.getByTestId("user-menu-button");
+    expect(menuButton).toHaveAttribute("aria-label", "User menu");
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+    
+    // Open menu and check aria-expanded
+    fireEvent.click(menuButton);
+    expect(menuButton).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("should test functionality using aria-labels for better accessibility", () => {
+    render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
+
+    // Test main menu button
+    const menuButton = screen.getByRole("button", { name: "User menu" });
+    fireEvent.click(menuButton);
+    
+    // Test settings functionality using aria-label
+    const settingsButton = screen.getByRole("button", { name: "Settings" });
+    fireEvent.click(settingsButton);
+    expect(mockPush).toHaveBeenCalledWith("/settings");
+    
+    // Reopen menu for logout test
+    fireEvent.click(menuButton);
+    
+    // Test logout functionality using aria-label
+    const logoutButton = screen.getByRole("button", { name: "Sign out" });
+    fireEvent.click(logoutButton);
+    expect(mockOnSignOut).toHaveBeenCalled();
   });
 });
