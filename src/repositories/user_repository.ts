@@ -91,7 +91,7 @@ export class UserRepository extends AuthRepository {
     userId: string,
     updateUser: boolean = true
   ): Promise<User | void> {
-    const user = (await this.findById(userId)) as User;
+    const user = await this.getUserById(userId);
 
     if (user.avatar_key) {
       try {
@@ -118,7 +118,7 @@ export class UserRepository extends AuthRepository {
     userId: string,
     expiresIn: number = 3600
   ): Promise<string | null> {
-    const user = (await this.findById(userId)) as User;
+    const user = await this.getUserById(userId);
 
     if (!user.avatar_key) {
       return null;
@@ -142,7 +142,7 @@ export class UserRepository extends AuthRepository {
    * ユーザーのアバター画像データをダウンロードする
    */
   async downloadUserAvatar(userId: string): Promise<Buffer | null> {
-    const user = (await this.findById(userId)) as User;
+    const user = await this.getUserById(userId);
 
     if (!user.avatar_key) {
       return null;
