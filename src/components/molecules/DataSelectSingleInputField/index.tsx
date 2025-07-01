@@ -24,8 +24,13 @@ type Props = {
 export default function DataSelectSingleInputField(props: Props) {
   const options = props.options?.options || [];
   return (
-    <div className="col-span-full space-y-2" data-testid="select-field-container">
-      <Label htmlFor={props.data_key} data-testid="select-label">{props.name}</Label>
+    <div
+      className="col-span-full space-y-2"
+      data-testid="select-field-container"
+    >
+      <Label htmlFor={props.data_key} data-testid="select-label">
+        {props.name}
+      </Label>
       <Select
         value={props.value}
         onValueChange={props.onChange}
@@ -33,12 +38,23 @@ export default function DataSelectSingleInputField(props: Props) {
         required={props.required}
         data-testid="select-root"
       >
-        <SelectTrigger id={props.data_key} className={cn(props.className)} data-testid="select-trigger">
-          <SelectValue placeholder={props.placeholder} data-testid="select-input" />
+        <SelectTrigger
+          id={props.data_key}
+          className={cn(props.className)}
+          data-testid="select-trigger"
+        >
+          <SelectValue
+            placeholder={props.placeholder}
+            data-testid="select-input"
+          />
         </SelectTrigger>
         <SelectContent data-testid="select-content">
           {(options as { name: string; value: string }[]).map((option) => (
-            <SelectItem key={option.value} value={option.value} data-testid={`select-item-${option.value}`}>
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              data-testid={`select-item-${option.value}`}
+            >
               {option.name}
             </SelectItem>
           ))}

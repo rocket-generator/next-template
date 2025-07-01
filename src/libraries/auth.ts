@@ -48,7 +48,10 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const userRepository = new UserRepository();
         const passwordResetRepository = new PasswordResetRepository();
-        const authService = new AuthService(userRepository, passwordResetRepository);
+        const authService = new AuthService(
+          userRepository,
+          passwordResetRepository
+        );
         const request = {
           email: credentials.email,
           password: credentials.password,
@@ -86,7 +89,10 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const userRepository = new UserRepository();
         const passwordResetRepository = new PasswordResetRepository();
-        const authService = new AuthService(userRepository, passwordResetRepository);
+        const authService = new AuthService(
+          userRepository,
+          passwordResetRepository
+        );
         const request = {
           email: credentials.email,
           password: credentials.password,

@@ -10,26 +10,29 @@ import { User } from "@/models/user";
 import { CheckCircle, Home } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { signOutAction } from "./actions";
+import { auth } from "@/libraries/auth";
 
 type Props = {
   children: React.ReactNode;
 };
 
 export default async function SiteLayout({ children }: Props) {
+  const session = await auth();
+  if (!session) {
+    redirect("/auth/signin");
+  }
+
   let me: User | null = null;
   try {
     const repository = new UserRepository();
     me = await repository.getMe();
-    console.log(me);
   } catch (error) {
     console.log(error);
     if (error instanceof AuthError) {
       redirect("/auth/signin");
     }
   }
-  if (!me) {
-    return notFound();
-  }
+
   const t = await getTranslations("Menu.App");
   const menuItems = [
     {

@@ -14,9 +14,10 @@ type TransformFunction<T extends z.ZodObject<z.ZodRawShape, "strip">> = (
   prismaData: any
 ) => z.infer<T>;
 
-export class PrismaRepository<
-  T extends z.ZodObject<z.ZodRawShape, "strip">
-> extends BaseRepository<T> implements BaseRepositoryInterface<T> {
+export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
+  extends BaseRepository<T>
+  implements BaseRepositoryInterface<T>
+{
   protected modelName: string;
   protected searchFields: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -25,9 +25,14 @@ export class AuthService {
 
   async signIn(request: SignInRequest): Promise<AccessToken> {
     // Find user by email
-    const users = await this.authRepository.get(0, 1, undefined, undefined, undefined, [
-      { column: "email", operator: "=", value: request.email },
-    ]);
+    const users = await this.authRepository.get(
+      0,
+      1,
+      undefined,
+      undefined,
+      undefined,
+      [{ column: "email", operator: "=", value: request.email }]
+    );
 
     if (users.data.length === 0) {
       throw new Error("Invalid credentials");
@@ -97,9 +102,14 @@ export class AuthService {
   async forgotPassword(request: ForgotPasswordRequest): Promise<Status> {
     try {
       // Find user by email
-      const users = await this.authRepository.get(0, 1, undefined, undefined, undefined, [
-        { column: "email", operator: "=", value: request.email },
-      ]);
+      const users = await this.authRepository.get(
+        0,
+        1,
+        undefined,
+        undefined,
+        undefined,
+        [{ column: "email", operator: "=", value: request.email }]
+      );
 
       if (users.data.length === 0) {
         // Don't reveal whether email exists or not

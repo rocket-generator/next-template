@@ -17,7 +17,9 @@ export interface SearchCondition {
   operator?: SearchOperator; // Optional, defaults to '='
 }
 
-export interface BaseRepositoryInterface<T extends z.ZodObject<z.ZodRawShape, "strip">> {
+export interface BaseRepositoryInterface<
+  T extends z.ZodObject<z.ZodRawShape, "strip">
+> {
   get(
     offset?: number,
     limit?: number,
@@ -34,7 +36,8 @@ export interface BaseRepositoryInterface<T extends z.ZodObject<z.ZodRawShape, "s
 
 export abstract class BaseRepository<
   T extends z.ZodObject<z.ZodRawShape, "strip">
-> implements BaseRepositoryInterface<T> {
+> implements BaseRepositoryInterface<T>
+{
   protected schema: T;
   protected abstract searchFields: string[];
 

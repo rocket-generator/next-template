@@ -4,13 +4,15 @@ import { PrismaRepository } from "./prisma_repository";
 import { auth } from "@/libraries/auth";
 import { BaseRepositoryInterface } from "./base_repository";
 
-export interface AuthRepositoryInterface extends BaseRepositoryInterface<typeof AuthSchema> {
+export interface AuthRepositoryInterface
+  extends BaseRepositoryInterface<typeof AuthSchema> {
   getMe(): Promise<z.infer<typeof AuthSchema>>;
 }
 
-export abstract class AuthRepository extends PrismaRepository<
-  typeof AuthSchema
-> implements AuthRepositoryInterface {
+export abstract class AuthRepository
+  extends PrismaRepository<typeof AuthSchema>
+  implements AuthRepositoryInterface
+{
   constructor(
     schema: typeof AuthSchema,
     modelName: string,

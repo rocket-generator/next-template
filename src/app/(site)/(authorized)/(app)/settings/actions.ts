@@ -50,7 +50,10 @@ export async function updateProfile(
 
     const userRepository = new UserRepository();
     const passwordResetRepository = new PasswordResetRepository();
-    const authService = new AuthService(userRepository, passwordResetRepository);
+    const authService = new AuthService(
+      userRepository,
+      passwordResetRepository
+    );
     await authService.updateProfile(
       session.user.id,
       validatedInput.data.name,
@@ -92,7 +95,10 @@ export async function changePassword(
 
     const userRepository = new UserRepository();
     const passwordResetRepository = new PasswordResetRepository();
-    const authService = new AuthService(userRepository, passwordResetRepository);
+    const authService = new AuthService(
+      userRepository,
+      passwordResetRepository
+    );
     await authService.changePassword(
       session.user.id,
       validatedInput.data.currentPassword,

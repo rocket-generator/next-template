@@ -1,6 +1,8 @@
 import React from "react";
 import { auth } from "@/libraries/auth";
 import { redirect } from "next/navigation";
+import { User } from "@/models/user";
+import { UserRepository } from "@/repositories/user_repository";
 
 type Props = {
   children: React.ReactNode;
@@ -8,10 +10,16 @@ type Props = {
 
 export default async function SiteLayout({ children }: Props) {
   const session = await auth();
-
-  // ログイン済みの場合はダッシュボードにリダイレクト
   if (session) {
-    redirect("/dashboard");
+    let me: User | null = null;
+    try {
+      const repository = new UserRepository();
+      me = await repository.getMe();
+      console.log(me);
+      redirect("/dashboard");
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (

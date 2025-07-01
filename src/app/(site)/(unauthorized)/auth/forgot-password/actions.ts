@@ -20,7 +20,10 @@ export async function forgotPasswordAction(
 
     const userRepository = new UserRepository();
     const passwordResetRepository = new PasswordResetRepository();
-    const authService = new AuthService(userRepository, passwordResetRepository);
+    const authService = new AuthService(
+      userRepository,
+      passwordResetRepository
+    );
     await authService.forgotPassword(validatedInput.data);
 
     return Success;

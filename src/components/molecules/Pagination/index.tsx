@@ -87,12 +87,22 @@ export default async function Pagination({
           <p className="text-sm text-gray-700" data-testid="pagination-info">
             {count > 0 ? (
               <>
-                <span className="font-medium" data-testid="pagination-start">{start}</span> -{" "}
-                <span className="font-medium" data-testid="pagination-end">{end}</span> /{" "}
-                <span className="font-medium" data-testid="pagination-total">{count}</span>
+                <span className="font-medium" data-testid="pagination-start">
+                  {start}
+                </span>{" "}
+                -{" "}
+                <span className="font-medium" data-testid="pagination-end">
+                  {end}
+                </span>{" "}
+                /{" "}
+                <span className="font-medium" data-testid="pagination-total">
+                  {count}
+                </span>
               </>
             ) : (
-              <span data-testid="no-results-message">{t("no_result_found")}</span>
+              <span data-testid="no-results-message">
+                {t("no_result_found")}
+              </span>
             )}
           </p>
         </div>
