@@ -236,7 +236,8 @@ describe("DataTextItem", () => {
 
     render(<DataTextItem {...props} />);
 
-    expect(screen.getByText("日本語テキスト 🚀 emoji")).toBeInTheDocument();
+    expect(screen.getByTestId("text-item-description")).toBeInTheDocument();
+    expect(screen.getByTestId("text-item-description")).toHaveTextContent("日本語テキスト 🚀 emoji");
   });
 
   it("should handle very long text", () => {

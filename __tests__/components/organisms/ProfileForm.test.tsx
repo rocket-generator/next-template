@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { ProfileForm } from '@/components/organisms/ProfileForm';
+import * as actionsModule from '@/app/(site)/(authorized)/(app)/settings/actions';
 
 const messages = {
   Auth: {
@@ -20,6 +21,7 @@ const messages = {
       name_required: 'Name is required',
       email_required: 'Email is required',
       email_invalid: 'Please enter a valid email address',
+      system_error: 'System error',
     },
   },
 };
@@ -37,7 +39,7 @@ jest.mock('@/app/(site)/(authorized)/(app)/settings/actions', () => ({
   updateProfile: jest.fn(),
 }));
 
-const mockUpdateProfile = require('@/app/(site)/(authorized)/(app)/settings/actions').updateProfile;
+const mockUpdateProfile = actionsModule.updateProfile as jest.MockedFunction<typeof actionsModule.updateProfile>;
 
 describe('ProfileForm', () => {
   const defaultProps = {
@@ -185,7 +187,7 @@ describe('ProfileForm', () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText('system_error')).toBeInTheDocument();
+        expect(screen.getByText('System error')).toBeInTheDocument();
       });
     });
   });

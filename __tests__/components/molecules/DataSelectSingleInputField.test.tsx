@@ -234,8 +234,8 @@ describe("DataSelectSingleInputField", () => {
 
     render(<DataSelectSingleInputField {...props} />);
 
-    expect(screen.getByText("Option with & symbol")).toBeInTheDocument();
-    expect(screen.getByText("日本語オプション")).toBeInTheDocument();
+    expect(screen.getByTestId("select-item-special")).toBeInTheDocument();
+    expect(screen.getByTestId("select-item-japanese")).toBeInTheDocument();
   });
 
   it("should handle options with same names but different values", () => {
