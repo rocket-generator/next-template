@@ -3,6 +3,7 @@
     "Airtable",
     "awslocal",
     "lucide",
+    "presigner",
     "turbopack"
   ]
 }

@@ -84,15 +84,15 @@ export default async function Pagination({
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-700" data-testid="pagination-info">
             {count > 0 ? (
               <>
-                <span className="font-medium">{start}</span> -{" "}
-                <span className="font-medium">{end}</span> /{" "}
-                <span className="font-medium">{count}</span>
+                <span className="font-medium" data-testid="pagination-start">{start}</span> -{" "}
+                <span className="font-medium" data-testid="pagination-end">{end}</span> /{" "}
+                <span className="font-medium" data-testid="pagination-total">{count}</span>
               </>
             ) : (
-              t("no_result_found")
+              <span data-testid="no-results-message">{t("no_result_found")}</span>
             )}
           </p>
         </div>

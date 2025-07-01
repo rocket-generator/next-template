@@ -12,5 +12,5 @@ export default function DataTextItem(props: Props) {
   const value = (props.record[props.columnKey] as string) || "";
   const className =
     props.className || "text-gray-900 whitespace-normal break-words max-w-xs";
-  return <div className={className}>{value}</div>;
+  return <div className={className} data-testid={`text-item-${props.columnKey}`}>{value}</div>;
 }

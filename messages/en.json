@@ -62,7 +62,8 @@
   },
   "Menu": {
     "App": {
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "settings": "Settings"
     },
     "Admin": {
       "dashboard": "Dashboard",
@@ -76,6 +77,33 @@
     "email": "Email",
     "permissions": "Permissions",
     "password": "Password"
+  },
+  "Settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "security": "Security",
+    "avatar": "Avatar",
+    "profile_updated": "Profile updated successfully",
+    "password_updated": "Password updated successfully",
+    "avatar_updated": "Avatar updated successfully",
+    "current_password": "Current Password",
+    "current_password_placeholder": "Enter current password",
+    "new_password_placeholder": "Enter new password",
+    "confirm_new_password": "Confirm New Password",
+    "confirm_new_password_placeholder": "Re-enter new password",
+    "change_password": "Change Password",
+    "upload_avatar": "Upload Image",
+    "remove_avatar": "Remove Image",
+    "avatar_upload_description": "Upload a JPEG or PNG image up to 2MB",
+    "validation": {
+      "current_password_required": "Current password is required",
+      "new_password_required": "New password is required",
+      "confirm_password_required": "Password confirmation is required",
+      "new_passwords_do_not_match": "New passwords do not match",
+      "invalid_current_password": "Current password is incorrect",
+      "avatar_too_large": "File size too large (max 2MB)",
+      "avatar_invalid_format": "Please upload a JPEG or PNG image"
+    }
   },
   "/* [MODEL_MESSAGES] */": "",
   "Components": {

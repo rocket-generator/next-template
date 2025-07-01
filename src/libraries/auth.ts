@@ -1,4 +1,6 @@
 import { UserRepository } from "@/repositories/user_repository";
+import { PasswordResetRepository } from "@/repositories/password_reset_repository";
+import { AuthService } from "@/services/auth_service";
 import { SignInRequest } from "@/requests/signin_request";
 import { SignUpRequest } from "@/requests/signup_request";
 import type { NextAuthConfig } from "next-auth";
@@ -44,13 +46,15 @@ export const authConfig: NextAuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const repository = new UserRepository();
+        const userRepository = new UserRepository();
+        const passwordResetRepository = new PasswordResetRepository();
+        const authService = new AuthService(userRepository, passwordResetRepository);
         const request = {
           email: credentials.email,
           password: credentials.password,
         } as SignInRequest;
         try {
-          const response = await repository.postSignIn(request);
+          const response = await authService.signIn(request);
           if (response.access_token) {
             return {
               id: response.id,
@@ -80,14 +84,16 @@ export const authConfig: NextAuthConfig = {
         confirm_password: { label: "Confirm Password", type: "password" },
       },
       async authorize(credentials) {
-        const repository = new UserRepository();
+        const userRepository = new UserRepository();
+        const passwordResetRepository = new PasswordResetRepository();
+        const authService = new AuthService(userRepository, passwordResetRepository);
         const request = {
           email: credentials.email,
           password: credentials.password,
           name: credentials.name,
         } as SignUpRequest;
         try {
-          const response = await repository.postSignUp(request);
+          const response = await authService.signUp(request);
           console.log(response);
           if (response.access_token) {
             return {

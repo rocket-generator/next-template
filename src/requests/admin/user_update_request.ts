@@ -42,11 +42,18 @@ export const permissionsSchema = z
   )
   .default([]);
 
+export const avatarKeySchema = z
+  .string({
+    invalid_type_error: "Avatar key must be a string",
+  })
+  .optional();
+
 export const UserUpdateRequestSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   name: nameSchema,
   permissions: permissionsSchema,
+  avatar_key: avatarKeySchema,
 });
 
 export type UserUpdateRequest = z.infer<typeof UserUpdateRequestSchema>;

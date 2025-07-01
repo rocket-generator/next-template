@@ -1,0 +1,729 @@
+---
+description: 
+globs: *.tsx
+alwaysApply: false
+---
+# コンポーネントテスト作成ガイドライン
+
+## 概要
+
+本プロジェクトでは、すべてのUIコンポーネントに対して必須でテストを作成します。このガイドラインでは、国際化（i18n）に対応し、アクセシビリティを考慮したテストの作成方法を詳細に説明します。
+
+## 基本原則
+
+### 1. テスト作成の義務化
+
+- **新規コンポーネント作成時**: 必ずテストファイルを同時に作成すること
+- **既存コンポーネント改修時**: 対応するテストも必ず更新すること
+- **削除時**: コンポーネントを削除する際は、対応するテストも削除すること
+
+### 2. 国際化（i18n）対応の原則
+
+- **日本語テキストを直接使用禁止**: `screen.getByText("設定")` のような記述は禁止
+- **表示テキストに依存しない**: 言語変更に影響されないテスト設計
+- **data-testid、aria-label、roleを活用**: 言語に依存しない識別子を使用
+
+### 3. アクセシビリティファースト
+
+- **セマンティックHTML**: 適切なHTML要素とロールを使用
+- **aria属性の活用**: aria-label、aria-expanded等を適切に設定
+- **キーボードナビゲーション**: フォーカス管理とキーボード操作を考慮
+
+## テスト識別子の使用方法
+
+### 1. data-testid属性
+
+最も確実で言語に依存しない要素識別方法です。
+
+#### コンポーネント側の実装
+
+```tsx
+// ✅ 良い例
+export default function UserMenu() {
+  return (
+    <div data-testid="user-menu-container">
+      <button data-testid="user-menu-button">
+        <User className="w-5 h-5" />
+        <span>{user.name}</span>
+      </button>
+      {isOpen && (
+        <div data-testid="user-menu-dropdown">
+          <button data-testid="settings-button">
+            <Settings className="w-4 h-4" />
+            {t("settings")}
+          </button>
+          <button data-testid="logout-button">
+            <LogOut className="w-4 h-4" />
+            {t("logout")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+#### テスト側での使用
+
+```tsx
+describe("UserMenu", () => {
+  it("should toggle menu when button is clicked", () => {
+    render(<UserMenu />);
+    
+    const menuButton = screen.getByTestId("user-menu-button");
+    fireEvent.click(menuButton);
+    
+    expect(screen.getByTestId("user-menu-dropdown")).toBeInTheDocument();
+  });
+});
+```
+
+#### data-testid命名規則
+
+- **ケバブケース**: `user-menu-button`（単語をハイフンで区切り）
+- **階層構造**: `parent-child-element`の形式
+- **意味のある名前**: 機能や役割を表現する名前を使用
+
+```tsx
+// 命名例
+data-testid="pagination-info"           // 情報表示
+data-testid="pagination-start"          // 開始番号
+data-testid="pagination-end"            // 終了番号
+data-testid="pagination-total"          // 合計数
+data-testid="no-results-message"        // 結果なしメッセージ
+data-testid="search-form-container"     // 検索フォーム
+data-testid="search-input-field"        // 検索入力フィールド
+data-testid="search-submit-button"      // 検索実行ボタン
+```
+
+### 2. aria-label属性
+
+アクセシビリティとテストの両方に有効です。
+
+#### コンポーネント側の実装
+
+```tsx
+export default function HeaderUserMenu() {
+  return (
+    <button
+      data-testid="user-menu-button"
+      aria-label="User menu"
+      aria-expanded={isMenuOpen}
+    >
+      <Settings data-testid="settings-icon" />
+      {user.name}
+    </button>
+  );
+}
+```
+
+#### テスト側での使用
+
+```tsx
+it("should have proper accessibility attributes", () => {
+  render(<HeaderUserMenu />);
+  
+  // aria-labelを使用したテスト
+  const menuButton = screen.getByRole("button", { name: "User menu" });
+  expect(menuButton).toHaveAttribute("aria-expanded", "false");
+  
+  fireEvent.click(menuButton);
+  expect(menuButton).toHaveAttribute("aria-expanded", "true");
+});
+```
+
+### 3. アイコンのdata-testid
+
+視覚的要素のテストに重要です。
+
+#### アイコンのモック設定
+
+```tsx
+// lucide-reactアイコンのモック
+jest.mock("lucide-react", () => ({
+  User: () => <div data-testid="user-icon">User Icon</div>,
+  Settings: () => <div data-testid="settings-icon">Settings Icon</div>,
+  LogOut: () => <div data-testid="logout-icon">Logout Icon</div>,
+  ChevronDown: () => <div data-testid="chevron-down-icon">Chevron Down</div>,
+}));
+```
+
+#### アイコンテスト
+
+```tsx
+it("should render correct icons", () => {
+  render(<UserMenu />);
+  
+  expect(screen.getByTestId("user-icon")).toBeInTheDocument();
+  
+  fireEvent.click(screen.getByTestId("user-menu-button"));
+  
+  expect(screen.getByTestId("settings-icon")).toBeInTheDocument();
+  expect(screen.getByTestId("logout-icon")).toBeInTheDocument();
+});
+```
+
+### 4. getByRoleによるアクセシビリティテスト
+
+セマンティックHTMLとアクセシビリティの検証に使用します。
+
+```tsx
+it("should test functionality using semantic roles", () => {
+  render(<UserMenu />);
+  
+  // roleベースの要素取得
+  const menuButton = screen.getByRole("button", { name: "User menu" });
+  const navigation = screen.getByRole("navigation", { name: "Pagination" });
+  const heading = screen.getByRole("heading", { level: 1 });
+  
+  // インタラクションテスト
+  fireEvent.click(menuButton);
+  
+  const settingsButton = screen.getByRole("button", { name: "Settings" });
+  expect(settingsButton).toBeInTheDocument();
+});
+```
+
+## 実装パターンとベストプラクティス
+
+### 1. コンポーネントの構造化
+
+```tsx
+// ✅ 推奨パターン
+export default function DataTable({ data }: Props) {
+  return (
+    <div data-testid="data-table-container">
+      <div data-testid="data-table-header">
+        <h2 data-testid="data-table-title">{title}</h2>
+        <button 
+          data-testid="data-table-refresh-button"
+          aria-label="Refresh data"
+        >
+          <RefreshIcon data-testid="refresh-icon" />
+        </button>
+      </div>
+      
+      <table data-testid="data-table" role="table">
+        <thead data-testid="data-table-head">
+          <tr>
+            {columns.map((column) => (
+              <th 
+                key={column.key}
+                data-testid={`data-table-header-${column.key}`}
+              >
+                {column.title}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody data-testid="data-table-body">
+          {data.map((row) => (
+            <tr 
+              key={row.id}
+              data-testid={`data-table-row-${row.id}`}
+            >
+              {/* セル内容 */}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+```
+
+### 2. 動的testidの使用
+
+```tsx
+// リスト要素やデータドリブンコンポーネント
+{items.map((item) => (
+  <div 
+    key={item.id}
+    data-testid={`item-${item.id}`}
+    aria-label={`Item ${item.name}`}
+  >
+    <button data-testid={`item-${item.id}-edit-button`}>
+      Edit
+    </button>
+    <button data-testid={`item-${item.id}-delete-button`}>
+      Delete  
+    </button>
+  </div>
+))}
+```
+
+### 3. 条件分岐のテスト対応
+
+```tsx
+export default function StatusIndicator({ status }: Props) {
+  return (
+    <div data-testid="status-indicator">
+      {status === "loading" && (
+        <div data-testid="loading-indicator" aria-label="Loading">
+          <Spinner data-testid="loading-spinner" />
+        </div>
+      )}
+      {status === "error" && (
+        <div data-testid="error-indicator" role="alert">
+          <AlertIcon data-testid="error-icon" />
+          <span data-testid="error-message">Error occurred</span>
+        </div>
+      )}
+      {status === "success" && (
+        <div data-testid="success-indicator" role="status">
+          <CheckIcon data-testid="success-icon" />
+          <span data-testid="success-message">Success</span>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+## テストファイルのベストプラクティス
+
+### 1. テストファイルの基本構造
+
+```tsx
+import { render, screen, fireEvent } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import * as React from "react";
+import ComponentName from "@/components/path/ComponentName";
+
+// モックの設定
+jest.mock("lucide-react", () => ({
+  IconName: () => <div data-testid="icon-name">Icon</div>,
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  }),
+}));
+
+describe("ComponentName", () => {
+  const defaultProps = {
+    // デフォルトprops
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("Rendering", () => {
+    it("should render component with required elements", () => {
+      render(<ComponentName {...defaultProps} />);
+      
+      expect(screen.getByTestId("component-container")).toBeInTheDocument();
+    });
+  });
+
+  describe("Interactions", () => {
+    it("should handle button click", () => {
+      const mockCallback = jest.fn();
+      render(<ComponentName {...defaultProps} onAction={mockCallback} />);
+      
+      fireEvent.click(screen.getByTestId("action-button"));
+      expect(mockCallback).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Accessibility", () => {
+    it("should have proper ARIA attributes", () => {
+      render(<ComponentName {...defaultProps} />);
+      
+      const button = screen.getByRole("button", { name: "Action" });
+      expect(button).toHaveAttribute("aria-label", "Action");
+    });
+  });
+
+  describe("States", () => {
+    it("should handle loading state", () => {
+      render(<ComponentName {...defaultProps} loading={true} />);
+      
+      expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### 2. 必須モック一覧
+
+#### Next.jsコンポーネント
+
+```tsx
+// next/link
+jest.mock("next/link", () => {
+  function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
+    return <a href={href}>{children}</a>;
+  }
+  return MockLink;
+});
+
+// next/image
+jest.mock("next/image", () => ({
+  __esModule: true,
+  default: (props: any) => {
+    const { priority, quality, placeholder, blurDataURL, ...restProps } = props;
+    return <img {...restProps} />;
+  },
+}));
+
+// next/navigation
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  }),
+  usePathname: () => "/current/path",
+  useSearchParams: () => new URLSearchParams(),
+}));
+```
+
+#### 国際化（next-intl）
+
+```tsx
+// next-intl/server
+const mockTranslation = jest.fn((key: string) => {
+  const translations: Record<string, string> = {
+    "button.save": "Save",
+    "button.cancel": "Cancel",
+    "message.success": "Success",
+    "message.error": "Error",
+  };
+  return translations[key] || key;
+});
+
+jest.mock("next-intl/server", () => ({
+  getTranslations: jest.fn(() => Promise.resolve(mockTranslation)),
+}));
+
+// next-intl (client)
+jest.mock("next-intl", () => ({
+  useTranslations: () => mockTranslation,
+  useFormatter: () => ({
+    dateTime: (date: Date) => date.toLocaleDateString(),
+    number: (num: number) => num.toLocaleString(),
+  }),
+}));
+```
+
+#### アイコンライブラリ
+
+```tsx
+// lucide-react
+jest.mock("lucide-react", () => ({
+  User: () => <div data-testid="user-icon">User</div>,
+  Settings: () => <div data-testid="settings-icon">Settings</div>,
+  LogOut: () => <div data-testid="logout-icon">LogOut</div>,
+  Search: () => <div data-testid="search-icon">Search</div>,
+  Plus: () => <div data-testid="plus-icon">Plus</div>,
+  Edit: () => <div data-testid="edit-icon">Edit</div>,
+  Trash: () => <div data-testid="trash-icon">Trash</div>,
+  ChevronLeft: () => <div data-testid="chevron-left">←</div>,
+  ChevronRight: () => <div data-testid="chevron-right">→</div>,
+  ChevronUp: () => <div data-testid="chevron-up">↑</div>,
+  ChevronDown: () => <div data-testid="chevron-down">↓</div>,
+}));
+```
+
+### 3. 複雑なコンポーネントのテスト
+
+#### フォームコンポーネント
+
+```tsx
+describe("ContactForm", () => {
+  it("should validate form inputs", async () => {
+    const mockSubmit = jest.fn();
+    render(<ContactForm onSubmit={mockSubmit} />);
+    
+    // 必須フィールドのテスト
+    const submitButton = screen.getByTestId("form-submit-button");
+    fireEvent.click(submitButton);
+    
+    expect(screen.getByTestId("name-error-message")).toBeInTheDocument();
+    expect(screen.getByTestId("email-error-message")).toBeInTheDocument();
+    
+    // 正常な入力のテスト
+    fireEvent.change(screen.getByTestId("name-input"), {
+      target: { value: "John Doe" }
+    });
+    fireEvent.change(screen.getByTestId("email-input"), {
+      target: { value: "john@example.com" }
+    });
+    
+    fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(mockSubmit).toHaveBeenCalledWith({
+        name: "John Doe",
+        email: "john@example.com"
+      });
+    });
+  });
+});
+```
+
+#### データテーブルコンポーネント
+
+```tsx
+describe("DataTable", () => {
+  const mockData = [
+    { id: "1", name: "Item 1", status: "active" },
+    { id: "2", name: "Item 2", status: "inactive" },
+  ];
+
+  it("should render table with data", () => {
+    render(<DataTable data={mockData} />);
+    
+    expect(screen.getByTestId("data-table")).toBeInTheDocument();
+    expect(screen.getByTestId("data-table-row-1")).toBeInTheDocument();
+    expect(screen.getByTestId("data-table-row-2")).toBeInTheDocument();
+  });
+
+  it("should handle row actions", () => {
+    const mockEdit = jest.fn();
+    const mockDelete = jest.fn();
+    
+    render(
+      <DataTable 
+        data={mockData} 
+        onEdit={mockEdit}
+        onDelete={mockDelete}
+      />
+    );
+    
+    fireEvent.click(screen.getByTestId("data-table-row-1-edit-button"));
+    expect(mockEdit).toHaveBeenCalledWith("1");
+    
+    fireEvent.click(screen.getByTestId("data-table-row-1-delete-button"));
+    expect(mockDelete).toHaveBeenCalledWith("1");
+  });
+});
+```
+
+## アクセシビリティテストのガイドライン
+
+### 1. 基本的なアクセシビリティチェック
+
+```tsx
+describe("Accessibility", () => {
+  it("should have proper heading hierarchy", () => {
+    render(<PageComponent />);
+    
+    const headings = screen.getAllByRole("heading");
+    expect(headings[0]).toHaveAttribute("aria-level", "1"); // h1
+    expect(headings[1]).toHaveAttribute("aria-level", "2"); // h2
+  });
+
+  it("should have alt text for all images", () => {
+    render(<ImageGallery />);
+    
+    const images = screen.getAllByRole("img");
+    images.forEach((image) => {
+      expect(image).toHaveAttribute("alt");
+      expect(image.getAttribute("alt")).not.toBe("");
+    });
+  });
+
+  it("should have proper form labels", () => {
+    render(<LoginForm />);
+    
+    expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+  });
+
+  it("should support keyboard navigation", () => {
+    render(<DropdownMenu />);
+    
+    const menuButton = screen.getByRole("button", { name: "Menu" });
+    
+    // Enterキーでメニューを開く
+    fireEvent.keyDown(menuButton, { key: "Enter" });
+    expect(screen.getByTestId("dropdown-menu")).toBeInTheDocument();
+    
+    // Escapeキーでメニューを閉じる
+    fireEvent.keyDown(menuButton, { key: "Escape" });
+    expect(screen.queryByTestId("dropdown-menu")).not.toBeInTheDocument();
+  });
+});
+```
+
+### 2. ARIA属性のテスト
+
+```tsx
+it("should have proper ARIA attributes", () => {
+  render(<TabPanel />);
+  
+  const tablist = screen.getByRole("tablist");
+  expect(tablist).toHaveAttribute("aria-label", "Navigation tabs");
+  
+  const tabs = screen.getAllByRole("tab");
+  tabs.forEach((tab, index) => {
+    expect(tab).toHaveAttribute("aria-selected");
+    expect(tab).toHaveAttribute("aria-controls");
+  });
+  
+  const tabpanels = screen.getAllByRole("tabpanel");
+  tabpanels.forEach((panel) => {
+    expect(panel).toHaveAttribute("aria-labelledby");
+  });
+});
+```
+
+## よくある間違いと対策
+
+### 1. ❌ 避けるべきパターン
+
+```tsx
+// ❌ 日本語テキストに依存
+expect(screen.getByText("設定")).toBeInTheDocument();
+expect(screen.getByText("ログアウト")).toBeInTheDocument();
+
+// ❌ 曖昧なセレクタ
+expect(screen.getByText("Submit")).toBeInTheDocument();
+expect(container.querySelector("button")).toBeInTheDocument();
+
+// ❌ 実装詳細への依存
+expect(component.state.isOpen).toBe(true);
+expect(wrapper.find('.menu-item')).toHaveLength(3);
+
+// ❌ 不適切なwait
+await new Promise(resolve => setTimeout(resolve, 1000));
+```
+
+### 2. ✅ 推奨パターン
+
+```tsx
+// ✅ data-testidを使用
+expect(screen.getByTestId("settings-button")).toBeInTheDocument();
+expect(screen.getByTestId("logout-button")).toBeInTheDocument();
+
+// ✅ 意味のあるロールとラベル
+expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+expect(screen.getByRole("navigation", { name: "Main menu" })).toBeInTheDocument();
+
+// ✅ ユーザーの動作に基づいたテスト
+fireEvent.click(screen.getByTestId("menu-button"));
+expect(screen.getByTestId("dropdown-menu")).toBeInTheDocument();
+
+// ✅ 適切な非同期処理
+await waitFor(() => {
+  expect(screen.getByTestId("success-message")).toBeInTheDocument();
+});
+```
+
+## 非同期処理とモーダルテスト
+
+### 1. 非同期データローディング
+
+```tsx
+it("should handle async data loading", async () => {
+  const mockFetch = jest.fn().mockResolvedValue([
+    { id: 1, name: "Item 1" }
+  ]);
+  
+  render(<AsyncDataComponent fetchData={mockFetch} />);
+  
+  // ローディング状態の確認
+  expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
+  
+  // データロード完了の待機
+  await waitFor(() => {
+    expect(screen.getByTestId("data-item-1")).toBeInTheDocument();
+  });
+  
+  expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument();
+});
+```
+
+### 2. モーダルダイアログ
+
+```tsx
+it("should handle modal dialog", async () => {
+  render(<ModalComponent />);
+  
+  // モーダルを開く
+  fireEvent.click(screen.getByTestId("open-modal-button"));
+  
+  await waitFor(() => {
+    expect(screen.getByTestId("modal-dialog")).toBeInTheDocument();
+  });
+  
+  expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
+  
+  // モーダルを閉じる
+  fireEvent.click(screen.getByTestId("modal-close-button"));
+  
+  await waitFor(() => {
+    expect(screen.queryByTestId("modal-dialog")).not.toBeInTheDocument();
+  });
+});
+```
+
+## テストカバレッジの目標
+
+### 1. 必須テストケース
+
+すべてのコンポーネントで以下をテストする：
+
+- **基本レンダリング**: コンポーネントが正常に表示される
+- **Props受け渡し**: 異なるPropsでの動作確認
+- **イベントハンドリング**: クリック、入力などのインタラクション
+- **状態変化**: ローディング、エラー、成功状態
+- **アクセシビリティ**: ARIA属性、キーボードナビゲーション
+- **エッジケース**: 空データ、エラー条件、境界値
+
+### 2. カバレッジ目標
+
+- **コンポーネント**: 90%以上
+- **重要な機能**: 100%
+- **エラーハンドリング**: 85%以上
+
+## チェックリスト
+
+コンポーネント作成時は以下を確認：
+
+### コンポーネント実装
+
+- [ ] すべてのインタラクティブ要素にdata-testidが設定されている
+- [ ] ボタンやリンクに適切なaria-labelが設定されている
+- [ ] アイコンにdata-testidが設定されている
+- [ ] セマンティックHTMLが使用されている
+- [ ] ARIA属性が適切に設定されている
+
+### テスト実装
+
+- [ ] テストファイルが作成されている
+- [ ] 必要なモックが設定されている
+- [ ] 基本レンダリングテストがある
+- [ ] インタラクションテストがある
+- [ ] アクセシビリティテストがある
+- [ ] エラー状態のテストがある
+- [ ] data-testidを使用してテストしている
+- [ ] 日本語テキストに依存していない
+- [ ] getByRoleでアクセシビリティを確認している
+
+### 国際化対応
+
+- [ ] 表示テキストがハードコードされていない
+- [ ] テストが言語に依存していない
+- [ ] 翻訳キーが適切に使用されている
+
+## 参考リソース
+
+- [React Testing Library Documentation](mdc:https:/testing-library.com/docs/react-testing-library/intro)
+- [Testing Library Queries](mdc:https:/testing-library.com/docs/queries/about)
+- [Jest Documentation](mdc:https:/jestjs.io/docs/getting-started)
+- [Web Accessibility Guidelines](mdc:https:/www.w3.org/WAI/WCAG21/quickref)
+
+このガイドラインに従って、保守性が高く、言語に依存せず、アクセシビリティに配慮したコンポーネントテストを作成してください。

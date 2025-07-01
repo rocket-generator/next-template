@@ -20,6 +20,9 @@
     "docker:db:studio": "docker compose exec web npx prisma studio"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.839.0",
+    "@aws-sdk/client-ses": "^3.706.0",
+    "@aws-sdk/s3-request-presigner": "^3.839.0",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^6.8.2",
     "@radix-ui/react-alert-dialog": "^1.1.5",
@@ -42,7 +45,6 @@
     "next": "15.3.3",
     "next-auth": "^5.0.0-beta.25",
     "next-intl": "^3.26.3",
-    "@aws-sdk/client-ses": "^3.706.0",
     "react": "19.1.0",
     "react-day-picker": "^9.0.0",
     "react-dom": "19.1.0",
