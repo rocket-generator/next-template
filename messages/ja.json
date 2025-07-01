@@ -62,7 +62,8 @@
   },
   "Menu": {
     "App": {
-      "dashboard": "ダッシュボード"
+      "dashboard": "ダッシュボード",
+      "settings": "設定"
     },
     "Admin": {
       "dashboard": "ダッシュボード",
@@ -76,6 +77,33 @@
     "email": "メールアドレス",
     "permissions": "権限",
     "password": "パスワード"
+  },
+  "Settings": {
+    "title": "設定",
+    "profile": "プロフィール",
+    "security": "セキュリティ",
+    "avatar": "アバター画像",
+    "profile_updated": "プロフィールが更新されました",
+    "password_updated": "パスワードが更新されました",
+    "avatar_updated": "アバター画像が更新されました",
+    "current_password": "現在のパスワード",
+    "current_password_placeholder": "現在のパスワードを入力",
+    "new_password_placeholder": "新しいパスワードを入力",
+    "confirm_new_password": "新しいパスワード（確認）",
+    "confirm_new_password_placeholder": "新しいパスワードを再入力",
+    "change_password": "パスワードを変更",
+    "upload_avatar": "画像をアップロード",
+    "remove_avatar": "画像を削除",
+    "avatar_upload_description": "JPEGまたはPNG形式で2MB以下の画像をアップロードしてください",
+    "validation": {
+      "current_password_required": "現在のパスワードは必須です",
+      "new_password_required": "新しいパスワードは必須です",
+      "confirm_password_required": "パスワード確認は必須です",
+      "new_passwords_do_not_match": "新しいパスワードが一致しません",
+      "invalid_current_password": "現在のパスワードが正しくありません",
+      "avatar_too_large": "ファイルサイズが大きすぎます（2MB以下）",
+      "avatar_invalid_format": "JPEGまたはPNG形式の画像をアップロードしてください"
+    }
   },
   "/* [MODEL_MESSAGES] */": "",
   "Components": {

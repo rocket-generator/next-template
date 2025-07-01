@@ -67,6 +67,42 @@ export class UserRepository extends AuthRepository {
   }
 
   /**
+   * プロフィール情報を更新する（設定画面用）
+   */
+  async updateProfile(
+    userId: string,
+    name: string,
+    email: string
+  ): Promise<User> {
+    return this.updateUserData(userId, { name, email });
+  }
+
+  /**
+   * パスワードを変更する（設定画面用）
+   */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<User> {
+    const user = await this.getUserById(userId);
+
+    // 現在のパスワードを検証
+    const { verifyPassword } = await import("@/libraries/hash");
+    const isValid = await verifyPassword(currentPassword, user.password);
+
+    if (!isValid) {
+      throw new Error("invalid_current_password");
+    }
+
+    // 新しいパスワードをハッシュ化して更新
+    const { hashPassword } = await import("@/libraries/hash");
+    const hashedNewPassword = await hashPassword(newPassword);
+
+    return this.updateUserData(userId, { password: hashedNewPassword });
+  }
+
+  /**
    * アバター画像をアップロードしてユーザーのavatar_keyを更新する
    */
   async uploadUserAvatar(
