@@ -195,8 +195,14 @@ cp .env.docker .env
 Key environment variables for Docker:
 - `DATABASE_URL`: PostgreSQL connection (automatically configured)
 - `AUTH_URL`: NextAuth.js URL
-- `AWS_ENDPOINT_URL_S3`: LocalStack S3 endpoint for local development
-- `AWS_ENDPOINT_URL_SES`: LocalStack SES endpoint for local development
+- `AWS_S3_REGION`: AWS S3 region (us-east-1 for LocalStack)
+- `AWS_ACCESS_KEY_ID`: AWS access key (test for LocalStack)
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key (test for LocalStack)
+- `AWS_S3_BUCKET`: S3 bucket name (my-app-bucket for LocalStack)
+- `LOCALSTACK_ENDPOINT`: LocalStack endpoint for server-side S3 and SES operations
+- `LOCALSTACK_PUBLIC_ENDPOINT`: LocalStack endpoint for browser access to uploaded files (defaults to localhost:4566)
+- `AWS_SES_REGION`: AWS SES region (us-east-1 for LocalStack)
+- `SES_FROM_EMAIL`: Default sender email address
 
 #### For Production Deployment
 This Docker Compose setup is for local development only. For production deployment:

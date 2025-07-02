@@ -74,6 +74,7 @@ export interface S3ProviderConfig {
   secretAccessKey: string;
   bucket: string;
   endpoint?: string; // For LocalStack
+  publicEndpoint?: string; // For browser access to LocalStack
   forcePathStyle?: boolean; // For LocalStack compatibility
 }
 
@@ -297,12 +298,15 @@ export class S3Provider implements StorageProvider {
   private generateFileUrl(key: string): string {
     if (this.config.endpoint) {
       // LocalStack or custom endpoint
+      // Use publicEndpoint for browser access if available, otherwise fallback to endpoint
+      const browserEndpoint = this.config.publicEndpoint || this.config.endpoint;
+      
       if (this.config.forcePathStyle) {
         // Path-style URL for LocalStack: http://localhost:4566/bucket-name/key
-        return `${this.config.endpoint}/${this.config.bucket}/${key}`;
+        return `${browserEndpoint}/${this.config.bucket}/${key}`;
       } else {
         // Virtual-hosted style with custom endpoint
-        const endpointUrl = new URL(this.config.endpoint);
+        const endpointUrl = new URL(browserEndpoint);
         return `${endpointUrl.protocol}//${this.config.bucket}.${endpointUrl.host}/${key}`;
       }
     } else {
@@ -312,146 +316,155 @@ export class S3Provider implements StorageProvider {
   }
 }
 
-// Local Storage Provider for Development
-export class LocalStorageProvider implements StorageProvider {
-  private basePath: string;
+// Local Storage Provider for Development (Node.js Runtime only)
+let LocalStorageProvider: new (basePath?: string) => StorageProvider;
 
-  constructor(basePath: string = "./uploads") {
-    this.basePath = basePath;
-  }
+// Node.js環境でのみLocalStorageProviderを定義
+if (typeof process !== "undefined" && 
+    typeof process.versions !== "undefined" && 
+    typeof process.versions.node !== "undefined" &&
+    process.env.NEXT_RUNTIME !== "edge") {
+  
+  LocalStorageProvider = class implements StorageProvider {
+    private basePath: string;
 
-  async upload(options: UploadOptions): Promise<UploadResult> {
-    try {
-      const { promises: fs } = await import("fs");
-      const path = await import("path");
-
-      const filePath = path.join(this.basePath, options.key);
-      const dirPath = path.dirname(filePath);
-
-      // Create directory if it doesn't exist
-      await fs.mkdir(dirPath, { recursive: true });
-
-      // Write file
-      await fs.writeFile(filePath, options.data);
-
-      return {
-        success: true,
-        key: options.key,
-        url: `file://${filePath}`,
-      };
-    } catch (error) {
-      console.error("Local storage upload failed:", error);
-      return {
-        success: false,
-        key: options.key,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
+    constructor(basePath: string = "./uploads") {
+      this.basePath = basePath;
     }
-  }
 
-  async download(key: string): Promise<DownloadResult> {
-    try {
-      const { promises: fs } = await import("fs");
-      const path = await import("path");
+    async upload(options: UploadOptions): Promise<UploadResult> {
+      try {
+        const { promises: fs } = await import("fs");
+        const path = await import("path");
 
-      const filePath = path.join(this.basePath, key);
-      const data = await fs.readFile(filePath);
-      const stats = await fs.stat(filePath);
+        const filePath = path.join(this.basePath, options.key);
+        const dirPath = path.dirname(filePath);
 
-      return {
-        success: true,
-        data,
-        contentLength: stats.size,
-        lastModified: stats.mtime,
-      };
-    } catch (error) {
-      console.error("Local storage download failed:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  }
+        // Create directory if it doesn't exist
+        await fs.mkdir(dirPath, { recursive: true });
 
-  async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
-    // For local storage, return a simple file path URL
-    // In a real implementation, you might want to implement a token-based system
-    const path = await import("path");
-    const filePath = path.join(this.basePath, key);
-    return `file://${filePath}?expires=${Date.now() + expiresIn * 1000}`;
-  }
+        // Write file
+        await fs.writeFile(filePath, options.data);
 
-  async delete(key: string): Promise<void> {
-    try {
-      const { promises: fs } = await import("fs");
-      const path = await import("path");
-
-      const filePath = path.join(this.basePath, key);
-      await fs.unlink(filePath);
-    } catch (error) {
-      console.error("Local storage delete failed:", error);
-      throw new Error(
-        `Failed to delete file: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
-  }
-
-  async list(prefix?: string, maxKeys: number = 1000): Promise<ListResult> {
-    try {
-      const { promises: fs } = await import("fs");
-      const path = await import("path");
-
-      const searchPath = prefix
-        ? path.join(this.basePath, prefix)
-        : this.basePath;
-
-      const files: StorageFile[] = [];
-
-      async function walk(dir: string, currentPrefix: string = "") {
-        try {
-          const entries = await fs.readdir(dir, { withFileTypes: true });
-
-          for (const entry of entries) {
-            if (files.length >= maxKeys) break;
-
-            const fullPath = path.join(dir, entry.name);
-            const relativePath = path.join(currentPrefix, entry.name);
-
-            if (entry.isDirectory()) {
-              await walk(fullPath, relativePath);
-            } else {
-              const stats = await fs.stat(fullPath);
-              files.push({
-                key: relativePath,
-                size: stats.size,
-                lastModified: stats.mtime,
-              });
-            }
-          }
-        } catch {
-          // Directory might not exist, continue
-        }
+        return {
+          success: true,
+          key: options.key,
+          url: `file://${filePath}`,
+        };
+      } catch (error) {
+        console.error("Local storage upload failed:", error);
+        return {
+          success: false,
+          key: options.key,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
       }
-
-      await walk(searchPath);
-
-      return {
-        success: true,
-        files,
-        hasMore: false, // Simple implementation doesn't support pagination
-      };
-    } catch (error) {
-      console.error("Local storage list failed:", error);
-      return {
-        success: false,
-        files: [],
-        hasMore: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
     }
-  }
+
+    async download(key: string): Promise<DownloadResult> {
+      try {
+        const { promises: fs } = await import("fs");
+        const path = await import("path");
+
+        const filePath = path.join(this.basePath, key);
+        const data = await fs.readFile(filePath);
+        const stats = await fs.stat(filePath);
+
+        return {
+          success: true,
+          data,
+          contentLength: stats.size,
+          lastModified: stats.mtime,
+        };
+      } catch (error) {
+        console.error("Local storage download failed:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    }
+
+    async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+      // For local storage, return a simple file path URL
+      // In a real implementation, you might want to implement a token-based system
+      const path = await import("path");
+      const filePath = path.join(this.basePath, key);
+      return `file://${filePath}?expires=${Date.now() + expiresIn * 1000}`;
+    }
+
+    async delete(key: string): Promise<void> {
+      try {
+        const { promises: fs } = await import("fs");
+        const path = await import("path");
+
+        const filePath = path.join(this.basePath, key);
+        await fs.unlink(filePath);
+      } catch (error) {
+        console.error("Local storage delete failed:", error);
+        throw new Error(
+          `Failed to delete file: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+      }
+    }
+
+    async list(prefix?: string, maxKeys: number = 1000): Promise<ListResult> {
+      try {
+        const { promises: fs } = await import("fs");
+        const path = await import("path");
+
+        const searchPath = prefix
+          ? path.join(this.basePath, prefix)
+          : this.basePath;
+
+        const files: StorageFile[] = [];
+
+        async function walk(dir: string, currentPrefix: string = "") {
+          try {
+            const entries = await fs.readdir(dir, { withFileTypes: true });
+
+            for (const entry of entries) {
+              if (files.length >= maxKeys) break;
+
+              const fullPath = path.join(dir, entry.name);
+              const relativePath = path.join(currentPrefix, entry.name);
+
+              if (entry.isDirectory()) {
+                await walk(fullPath, relativePath);
+              } else {
+                const stats = await fs.stat(fullPath);
+                files.push({
+                  key: relativePath,
+                  size: stats.size,
+                  lastModified: stats.mtime,
+                });
+              }
+            }
+          } catch {
+            // Directory might not exist, continue
+          }
+        }
+
+        await walk(searchPath);
+
+        return {
+          success: true,
+          files,
+          hasMore: false, // Simple implementation doesn't support pagination
+        };
+      } catch (error) {
+        console.error("Local storage list failed:", error);
+        return {
+          success: false,
+          files: [],
+          hasMore: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    }
+  };
 }
 
 // Main Storage Service Implementation
@@ -554,6 +567,7 @@ export function createS3ProviderConfig(): S3ProviderConfig {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
       bucket: process.env.AWS_S3_BUCKET || "test-bucket",
       endpoint: process.env.LOCALSTACK_ENDPOINT || "http://localhost:4566",
+      publicEndpoint: process.env.LOCALSTACK_PUBLIC_ENDPOINT || "http://localhost:4566",
       forcePathStyle: true,
     };
   }
@@ -561,13 +575,27 @@ export function createS3ProviderConfig(): S3ProviderConfig {
 
 // Storage Service Factory
 export function createStorageServiceInstance(): StorageService {
-  // Edge Runtime環境やNode.js環境以外では常にS3を使用
-  const isNodeRuntime =
+  // Edge Runtime環境の検出を改善
+  const isEdgeRuntime = 
+    process.env.NEXT_RUNTIME === "edge" ||
+    typeof process === "undefined" ||
+    typeof process.versions === "undefined" ||
+    typeof process.versions.node === "undefined";
+
+  // Node.js Runtime環境の検出
+  const isNodeRuntime = !isEdgeRuntime && 
     typeof process !== "undefined" &&
     typeof process.versions !== "undefined" &&
     typeof process.versions.node !== "undefined";
 
-  // デフォルトでS3を使用し、Node.js環境でのみローカルストレージの選択を許可
+  // Edge Runtime環境では常にS3を使用
+  if (isEdgeRuntime) {
+    console.log("Edge Runtime detected, using S3 provider");
+    const s3Config = createS3ProviderConfig();
+    return new StorageServiceImpl(new S3Provider(s3Config));
+  }
+
+  // Node.js環境でのみローカルストレージの選択を許可
   const storageType = isNodeRuntime
     ? process.env.STORAGE_PROVIDER || "s3"
     : "s3";
@@ -576,7 +604,7 @@ export function createStorageServiceInstance(): StorageService {
 
   switch (storageType) {
     case "local":
-      if (!isNodeRuntime) {
+      if (!isNodeRuntime || !LocalStorageProvider) {
         console.warn(
           "LocalStorageProvider is not supported in non-Node.js runtime, falling back to S3"
         );
