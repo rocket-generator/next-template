@@ -39,19 +39,15 @@ export const ProfileForm = ({
     });
 
     if (result.success) {
-      onSuccess?.(tSettings(result.message as keyof IntlMessages["Settings"]));
+      onSuccess?.(tSettings(result.message || "profile_updated"));
     } else {
       if (result.field) {
         setErrors({
-          [result.field]: tSettings(
-            `validation.${result.error}` as keyof IntlMessages["Settings"]["validation"]
-          ),
+          [result.field]: tSettings(`validation.${result.error}`),
         });
       } else {
         setErrors({
-          general: tSettings(
-            `validation.${result.error}` as keyof IntlMessages["Settings"]["validation"]
-          ),
+          general: tSettings(`validation.${result.error}`),
         });
       }
     }

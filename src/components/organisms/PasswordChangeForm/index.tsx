@@ -39,19 +39,15 @@ export const PasswordChangeForm = ({ onSuccess }: PasswordChangeFormProps) => {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      onSuccess?.(tSettings(result.message as keyof IntlMessages["Settings"]));
+      onSuccess?.(tSettings(result.message || "password_updated"));
     } else {
       if (result.field) {
         setErrors({
-          [result.field]: tSettings(
-            `validation.${result.error}` as keyof IntlMessages["Settings"]["validation"]
-          ),
+          [result.field]: tSettings(`validation.${result.error}`),
         });
       } else {
         setErrors({
-          general: tSettings(
-            `validation.${result.error}` as keyof IntlMessages["Settings"]["validation"]
-          ),
+          general: tSettings(`validation.${result.error}`),
         });
       }
     }
