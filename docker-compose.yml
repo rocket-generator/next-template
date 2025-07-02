@@ -37,7 +37,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
       timeout: 5s
       retries: 10

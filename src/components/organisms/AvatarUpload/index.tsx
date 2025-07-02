@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Button } from "@/components/atoms/button";
 import { Avatar } from "@/components/atoms/avatar";
 import {
@@ -79,9 +80,11 @@ export const AvatarUpload = ({
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20">
           {avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
               alt={userName}
+              width={80}
+              height={80}
               className="h-full w-full object-cover"
             />
           ) : (

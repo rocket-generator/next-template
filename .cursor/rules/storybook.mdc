@@ -50,7 +50,7 @@ src/
 ### 2. Story構成の基本テンプレート
 
 ```typescript
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/nextjs';
 import { ComponentName } from './ComponentName';
 
 const meta = {
@@ -251,6 +251,6 @@ npm run test-storybook
 
 ## 参考資料
 
-- [Storybook公式ドキュメント](https://storybook.js.org/docs)
-- [Component Story Format (CSF)](https://storybook.js.org/docs/api/csf)
-- [Storybook for React](https://storybook.js.org/docs/get-started/react-vite)
+- [Storybook公式ドキュメント](mdc:https:/storybook.js.org/docs)
+- [Component Story Format (CSF)](mdc:https:/storybook.js.org/docs/api/csf)
+- [Storybook for React](mdc:https:/storybook.js.org/docs/get-started/react-vite)

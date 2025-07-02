@@ -1,6 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { action } from "@storybook/addon-actions";
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import { PasswordChangeForm } from "./index";
+
+const action = (name: string) => (...args: unknown[]) => {
+  console.log(`Action: ${name}`, ...args);
+};
 
 const meta = {
   title: "organisms/PasswordChangeForm",
