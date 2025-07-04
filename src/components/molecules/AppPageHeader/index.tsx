@@ -27,7 +27,7 @@ export default function AdminPageHeader({
   return (
     <div className="sm:flex sm:items-center pb-6">
       <div className="sm:flex-auto">
-        <nav className="flex mb-2" aria-label="Breadcrumb">
+        <nav className="flex mb-4" aria-label="Breadcrumb">
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
             {breadcrumbLinks.map((link, index) => (
               <li key={index}>

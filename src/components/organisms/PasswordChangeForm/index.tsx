@@ -1,12 +1,19 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { changePassword } from "@/app/(site)/(authorized)/(app)/settings/actions";
 import type { PasswordChangeResult } from "@/app/(site)/(authorized)/(app)/settings/actions";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  PasswordChangeRequest,
+  createPasswordChangeRequestSchema,
+} from "@/requests/password_change_request";
+import { cn } from "@/libraries/css";
 
 interface PasswordChangeFormProps {
   onSuccess?: (message: string) => void;
@@ -17,60 +24,67 @@ export const PasswordChangeForm = ({ onSuccess }: PasswordChangeFormProps) => {
   const tAuth = useTranslations("Auth");
   const tCrud = useTranslations("Crud");
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 国際化されたバリデーションスキーマを作成
+  const passwordChangeSchema = useMemo(
+    () => createPasswordChangeRequestSchema(tAuth),
+    [tAuth]
+  );
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    reset,
+    setError,
+  } = useForm<PasswordChangeRequest>({
+    resolver: zodResolver(passwordChangeSchema),
+    mode: "onChange",
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const handleFormSubmit = async (formData: PasswordChangeRequest) => {
     setIsLoading(true);
-    setErrors({});
+    setServerError(null);
 
-    const result: PasswordChangeResult = await changePassword({
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    });
+    const result: PasswordChangeResult = await changePassword(formData);
 
     if (result.success) {
       // フォームをリセット
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      reset();
       onSuccess?.(tSettings(result.message || "password_updated"));
     } else {
       if (result.field) {
-        setErrors({
-          [result.field]: tSettings(`validation.${result.error}`),
+        setError(result.field as keyof PasswordChangeRequest, {
+          message: tSettings(`validation.${result.error}`),
         });
       } else {
-        setErrors({
-          general: tSettings(`validation.${result.error}`),
-        });
+        setServerError(tSettings(`validation.${result.error}`));
       }
     }
 
     setIsLoading(false);
   };
 
-  const isFormValid = currentPassword && newPassword && confirmPassword;
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="currentPassword">{tSettings("current_password")}</Label>
         <Input
           id="currentPassword"
           type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          {...register("currentPassword")}
           placeholder={tSettings("current_password_placeholder")}
-          className={errors.currentPassword ? "border-red-500" : ""}
+          className={cn(errors.currentPassword && "border-red-500")}
         />
         {errors.currentPassword && (
-          <p className="text-sm text-red-500">{errors.currentPassword}</p>
+          <p className="text-sm text-red-500">{errors.currentPassword.message}</p>
         )}
       </div>
 
@@ -79,14 +93,16 @@ export const PasswordChangeForm = ({ onSuccess }: PasswordChangeFormProps) => {
         <Input
           id="newPassword"
           type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          {...register("newPassword")}
           placeholder={tSettings("new_password_placeholder")}
-          className={errors.newPassword ? "border-red-500" : ""}
+          className={cn(errors.newPassword && "border-red-500")}
         />
         {errors.newPassword && (
-          <p className="text-sm text-red-500">{errors.newPassword}</p>
+          <p className="text-sm text-red-500">{errors.newPassword.message}</p>
         )}
+        <p className="text-xs text-gray-500">
+          {tAuth("validation.password_complexity")}
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -96,24 +112,23 @@ export const PasswordChangeForm = ({ onSuccess }: PasswordChangeFormProps) => {
         <Input
           id="confirmPassword"
           type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          {...register("confirmPassword")}
           placeholder={tSettings("confirm_new_password_placeholder")}
-          className={errors.confirmPassword ? "border-red-500" : ""}
+          className={cn(errors.confirmPassword && "border-red-500")}
         />
         {errors.confirmPassword && (
-          <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+          <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
         )}
       </div>
 
-      {errors.general && (
-        <p className="text-sm text-red-500">{errors.general}</p>
+      {serverError && (
+        <p className="text-sm text-red-500">{serverError}</p>
       )}
 
       <div className="flex gap-3">
         <Button
           type="submit"
-          disabled={!isFormValid || isLoading}
+          disabled={!isValid || isLoading}
           className="flex-1"
         >
           {isLoading ? tCrud("saving") : tSettings("change_password")}

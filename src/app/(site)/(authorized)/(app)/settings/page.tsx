@@ -29,13 +29,13 @@ export default async function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <AppPageHeader
         title={tSettings("title")}
         breadcrumbLinks={breadcrumbLinks}
       />
 
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 pb-8">
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">{tSettings("profile")}</TabsTrigger>

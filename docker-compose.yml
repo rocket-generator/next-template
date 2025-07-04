@@ -79,12 +79,12 @@ services:
       - app-network
 
   # LocalStack S3 & SES Viewer
-  local-stack-viewer:
+  ls-viewer:
     build:
-      context: https://github.com/takaaki-mizuno/local-stack-viewer.git
+      context: https://github.com/takaaki-mizuno/ls-viewer.git
       dockerfile: Dockerfile
     ports:
-      - "3100:3000"
+      - "3200:3000"
     environment:
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - AWS_ACCESS_KEY_ID=test
