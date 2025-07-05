@@ -1,7 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+description: 認証関係の作業を行う際に参照する
+alwaysApply: false
 ---
 # 認証システムのDB設計ガイド
 

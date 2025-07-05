@@ -1,5 +1,6 @@
 ---
-alwaysApply: true
+description: 管理画面を作成する（ /admin/ 以下のページ ) 時に参照する
+alwaysApply: false
 ---
 # 管理画面構築ガイド
 

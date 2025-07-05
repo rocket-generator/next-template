@@ -1,7 +1,6 @@
 ---
-description: This is a specification of this service. Need to refer every time. Apply this rule to the entire repository
-globs: *
-alwaysApply: true
+globs: *.ts,*.tsx
+alwaysApply: false
 ---
 # TypeScript Development Guidelines
 

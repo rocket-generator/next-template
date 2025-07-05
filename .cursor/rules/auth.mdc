@@ -1,7 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+description: 認証関係の作業をする際に参照する
+alwaysApply: false
 ---
 # NextAuth.js + Prisma 認証システム実装ガイド
 

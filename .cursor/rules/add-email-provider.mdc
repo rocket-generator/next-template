@@ -1,7 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+description: メール送信で、新しい送信プロバイダを追加する時に参照する
+alwaysApply: false
 ---
 # メールプロバイダー追加ガイド
 
