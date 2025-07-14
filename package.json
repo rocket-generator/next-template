@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "type-check": "tsc --noEmit",
@@ -55,6 +56,7 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.0.0",
+    "@playwright/test": "^1.53.2",
     "@storybook/addon-a11y": "^9.0.12",
     "@storybook/addon-actions": "^9.0.8",
     "@storybook/addon-docs": "^9.0.12",

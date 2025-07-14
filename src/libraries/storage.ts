@@ -317,7 +317,7 @@ export class S3Provider implements StorageProvider {
 }
 
 // Local Storage Provider for Development (Node.js Runtime only)
-let LocalStorageProvider: new (basePath?: string) => StorageProvider;
+export let LocalStorageProvider: new (basePath?: string) => StorageProvider;
 
 // Node.js環境でのみLocalStorageProviderを定義
 if (typeof process !== "undefined" && 

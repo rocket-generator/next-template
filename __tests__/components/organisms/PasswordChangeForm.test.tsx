@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
+import { z } from "zod";
 import { PasswordChangeForm } from "@/components/organisms/PasswordChangeForm";
 import type { PasswordChangeResult } from "@/app/(site)/(authorized)/(app)/settings/actions";
 
@@ -18,10 +19,22 @@ const mockTranslations = {
     validation: {
       invalid_current_password: "Current password is incorrect",
       system_error: "System error occurred",
+      current_password_required: "Current password is required",
+      new_password_required: "New password is required",
+      confirm_password_required: "Confirm password is required",
+      new_passwords_do_not_match: "New passwords do not match",
     },
   },
   Auth: {
     new_password: "New Password",
+    validation: {
+      current_password_required: "Current password is required",
+      password_min_length: "Password must be at least 8 characters",
+      password_max_length: "Password must be 256 characters or less",
+      password_complexity: "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+      confirm_password_required: "Confirm password is required",
+      new_passwords_do_not_match: "New passwords do not match",
+    },
   },
   Crud: {
     saving: "Saving...",
@@ -32,8 +45,16 @@ jest.mock("next-intl", () => ({
   useTranslations: jest.fn((namespace: string) => {
     return (key: string) => {
       // Handle nested namespace.key structure
-      if (namespace === "Settings" && key.startsWith("validation.")) {
-        return mockTranslations.Settings.validation[key.replace("validation.", "") as keyof typeof mockTranslations.Settings.validation] || key;
+      if (key.startsWith("validation.")) {
+        const validationKey = key.replace("validation.", "");
+        const namespaceObj = mockTranslations[namespace as keyof typeof mockTranslations];
+        if (namespaceObj && typeof namespaceObj === "object" && "validation" in namespaceObj) {
+          const validationObj = (namespaceObj as unknown as Record<string, Record<string, string>>).validation;
+          if (validationObj && typeof validationObj === "object") {
+            return validationObj[validationKey] || key;
+          }
+        }
+        return key;
       }
       
       const namespaceObj = mockTranslations[namespace as keyof typeof mockTranslations];
@@ -44,6 +65,28 @@ jest.mock("next-intl", () => ({
       
       return key;
     };
+  }),
+}));
+
+// Mock the password change request schema
+jest.mock("@/requests/password_change_request", () => ({
+  createPasswordChangeRequestSchema: jest.fn(() => {
+    return z
+      .object({
+        currentPassword: z.string().min(1, "Current password is required"),
+        newPassword: z
+          .string()
+          .min(8, "Password must be at least 8 characters")
+          .max(256, "Password must be 256 characters or less")
+          .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/, {
+            message: "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+          }),
+        confirmPassword: z.string().min(1, "Confirm password is required"),
+      })
+      .refine((data: { newPassword: string; confirmPassword: string }) => data.newPassword === data.confirmPassword, {
+        message: "New passwords do not match",
+        path: ["confirmPassword"],
+      });
   }),
 }));
 

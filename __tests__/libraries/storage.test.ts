@@ -45,6 +45,18 @@ describe("Storage Library", () => {
   const testData = Buffer.from("test content");
   const testContentType = "text/plain";
 
+  // Mock console.error to avoid noise during error case testing
+  let originalConsoleError: typeof console.error;
+
+  beforeAll(() => {
+    originalConsoleError = console.error;
+    console.error = jest.fn();
+  });
+
+  afterAll(() => {
+    console.error = originalConsoleError;
+  });
+
   describe("S3Provider", () => {
     let provider: S3Provider;
     let mockS3Client: jest.Mocked<any>;
