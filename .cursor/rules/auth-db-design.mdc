@@ -115,7 +115,7 @@ model User {
   // 拡張フィールド - プロフィール
   bio         String?  @db.Text
   avatarUrl   String?  @map("avatar_url") @db.Text
-  phoneNumber String?  @map("phone_number") @db.VarChar(20)
+  phoneNumber String?  @map("phone_number") @db.Text
   
   // 拡張フィールド - アカウント管理
   isActive      Boolean  @default(true) @map("is_active")
@@ -144,8 +144,8 @@ model User {
   // 基本フィールド...
   
   // OAuth対応
-  provider    String?  @default("credentials") @db.VarChar(50)
-  providerId  String?  @map("provider_id") @db.VarChar(255)
+  provider    String?  @default("credentials") @db.Text
+  providerId  String?  @map("provider_id") @db.Text
   
   // 複数プロバイダー対応の場合
   accounts Account[]
