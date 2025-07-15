@@ -57,7 +57,7 @@ export class UserRepository extends AuthRepository {
   }
 
   /**
-   * アバター画像をアップロードしてユーザーのavatar_keyを更新する
+   * アバター画像をアップロードしてユーザーのavatarKeyを更新する
    */
   async uploadUserAvatar(
     userId: string,
@@ -80,8 +80,8 @@ export class UserRepository extends AuthRepository {
       throw new Error(`Failed to upload avatar: ${uploadResult.error}`);
     }
 
-    // ユーザーのavatar_keyを更新
-    return this.updateUserData(userId, { avatar_key: avatarKey });
+    // ユーザーのavatarKeyを更新
+    return this.updateUserData(userId, { avatarKey: avatarKey });
   }
 
   /**
@@ -93,16 +93,16 @@ export class UserRepository extends AuthRepository {
   ): Promise<User | void> {
     const user = await this.getUserById(userId);
 
-    if (user.avatar_key) {
+    if (user.avatarKey) {
       try {
-        await this.storageService.deleteFile(user.avatar_key);
+        await this.storageService.deleteFile(user.avatarKey);
       } catch (error) {
-        console.warn(`Failed to delete avatar file ${user.avatar_key}:`, error);
+        console.warn(`Failed to delete avatar file ${user.avatarKey}:`, error);
         // ファイル削除に失敗してもユーザー更新は続行
       }
 
       if (updateUser) {
-        return this.updateUserData(userId, { avatar_key: undefined });
+        return this.updateUserData(userId, { avatarKey: undefined });
       }
     }
 
@@ -120,18 +120,18 @@ export class UserRepository extends AuthRepository {
   ): Promise<string | null> {
     const user = await this.getUserById(userId);
 
-    if (!user.avatar_key) {
+    if (!user.avatarKey) {
       return null;
     }
 
     try {
       return await this.storageService.generateSignedUrl(
-        user.avatar_key,
+        user.avatarKey,
         expiresIn
       );
     } catch (error) {
       console.error(
-        `Failed to generate signed URL for avatar ${user.avatar_key}:`,
+        `Failed to generate signed URL for avatar ${user.avatarKey}:`,
         error
       );
       return null;
@@ -144,13 +144,13 @@ export class UserRepository extends AuthRepository {
   async downloadUserAvatar(userId: string): Promise<Buffer | null> {
     const user = await this.getUserById(userId);
 
-    if (!user.avatar_key) {
+    if (!user.avatarKey) {
       return null;
     }
 
     try {
       const downloadResult = await this.storageService.downloadFile(
-        user.avatar_key
+        user.avatarKey
       );
 
       if (downloadResult.success && downloadResult.data) {
@@ -159,7 +159,7 @@ export class UserRepository extends AuthRepository {
 
       return null;
     } catch (error) {
-      console.error(`Failed to download avatar ${user.avatar_key}:`, error);
+      console.error(`Failed to download avatar ${user.avatarKey}:`, error);
       return null;
     }
   }

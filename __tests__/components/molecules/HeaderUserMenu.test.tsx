@@ -31,7 +31,7 @@ const mockUser = {
   email: "john@example.com",
   password: "hashed-password",
   permissions: ["read", "write"],
-  avatar_key: undefined,
+  avatarKey: undefined,
 };
 
 describe("HeaderUserMenu", () => {

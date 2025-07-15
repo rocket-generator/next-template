@@ -53,7 +53,7 @@ export const UserUpdateRequestSchema = z.object({
   password: passwordSchema,
   name: nameSchema,
   permissions: permissionsSchema,
-  avatar_key: avatarKeySchema,
+  avatarKey: avatarKeySchema,
 });
 
 export type UserUpdateRequest = z.infer<typeof UserUpdateRequestSchema>;

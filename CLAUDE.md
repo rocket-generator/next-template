@@ -30,7 +30,7 @@ npx prisma format      # Format schema.prisma file
 
 ## Architecture Overview
 
-This is a Next.js 15.3.3 template with TypeScript, using App Router and a multi-layered architecture:
+This is a Next.js 15.3.3 web system template with TypeScript, using App Router and a multi-layered architecture:
 
 ### Directory Structure
 - **`/src/app`** - Next.js App Router pages and layouts

@@ -53,7 +53,7 @@ export const UserCreateRequestSchema = z.object({
   password: passwordSchema,
   name: nameSchema,
   permissions: permissionsSchema,
-  avatar_key: avatarKeySchema,
+  avatarKey: avatarKeySchema,
 });
 
 export type UserCreateRequest = z.infer<typeof UserCreateRequestSchema>;

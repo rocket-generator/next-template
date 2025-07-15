@@ -3,7 +3,7 @@ import { User as PrismaModel } from "@/generated/prisma";
 import { AuthSchema } from "./auth";
 
 export const UserSchema = AuthSchema.extend({
-  avatar_key: z.string().optional(),
+  avatarKey: z.string().optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;
@@ -12,7 +12,7 @@ export function transformPrismToModel(data: unknown): User {
   // PrismaモデルからUserモデルへの安全な変換
   const prismaData = data as PrismaModel;
 
-  // AuthSchemaの必須フィールドとavatar_keyを含む変換データを作成
+  // AuthSchemaの必須フィールドとavatarKeyを含む変換データを作成
   const transformedData = {
     id: prismaData.id,
     email: prismaData.email,
@@ -21,7 +21,7 @@ export function transformPrismToModel(data: unknown): User {
     permissions: Array.isArray(prismaData.permissions)
       ? (prismaData.permissions as string[])
       : [],
-    avatar_key: prismaData.avatar_key || undefined,
+    avatarKey: prismaData.avatarKey || undefined,
   };
 
   return UserSchema.parse(transformedData);

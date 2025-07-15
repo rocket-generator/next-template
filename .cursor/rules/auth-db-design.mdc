@@ -101,6 +101,8 @@ export type User = z.infer<typeof UserSchema>;
 
 ### 2. Prismaスキーマの拡張
 
+カラムの名前や用途はあくまで例です。
+
 ```prisma
 model User {
   // 必須フィールド（Authモデル）
@@ -118,11 +120,6 @@ model User {
   // 拡張フィールド - アカウント管理
   isActive      Boolean  @default(true) @map("is_active")
   emailVerified Boolean  @default(false) @map("email_verified")
-  lastLoginAt   DateTime? @map("last_login_at")
-  
-  // 拡張フィールド - 権限管理
-  department String? @db.VarChar(100)
-  role       String  @default("user") @db.VarChar(20)
   
   // タイムスタンプ
   createdAt DateTime @default(now()) @map("created_at")
