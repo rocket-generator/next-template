@@ -10,7 +10,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
       - ./prisma/schema.prisma:/docker-entrypoint-initdb.d/schema.prisma:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -34,6 +34,7 @@ services:
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
     volumes:
+      - ./localstack-data:/var/lib/localstack 
       - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh
     healthcheck:
@@ -98,11 +99,6 @@ services:
         condition: service_healthy
     networks:
       - app-network
-
-
-volumes:
-  postgres_data:
-  localstack_data:
 
 networks:
   app-network:

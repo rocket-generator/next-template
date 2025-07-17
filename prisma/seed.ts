@@ -1,29 +1,29 @@
-import { PrismaClient } from '../src/generated/prisma';
-import { hashPassword } from '../src/libraries/hash';
+import { PrismaClient } from "../src/generated/prisma";
+import { hashPassword } from "../src/libraries/hash";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Start seeding...');
+  console.log("Start seeding...");
 
   // Delete existing users
   await prisma.user.deleteMany();
-  console.log('Deleted existing users');
+  console.log("Deleted existing users");
 
   // Create users with different roles
   const users = [
     {
-      email: 'admin@example.com',
-      password: 'password',
-      name: '管理者ユーザー',
-      permissions: ['admin'],
+      email: "admin@example.com",
+      password: "password",
+      name: "管理者ユーザー",
+      permissions: ["admin"],
       isActive: true,
       emailVerified: true,
     },
     {
-      email: 'user@example.com',
-      password: 'password',
-      name: '一般ユーザー',
+      email: "user@example.com",
+      password: "password",
+      name: "一般ユーザー",
       permissions: [],
       isActive: true,
       emailVerified: true,
@@ -38,12 +38,18 @@ async function main() {
         password: hashedPassword,
         name: userData.name,
         permissions: userData.permissions,
+        isActive: userData.isActive,
+        emailVerified: userData.emailVerified,
       },
     });
-    console.log(`Created user: ${user.email} with permissions: ${JSON.stringify(userData.permissions)}`);
+    console.log(
+      `Created user: ${user.email} with permissions: ${JSON.stringify(
+        userData.permissions
+      )}`
+    );
   }
 
-  console.log('Seeding finished.');
+  console.log("Seeding finished.");
 }
 
 main()

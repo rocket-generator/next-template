@@ -57,6 +57,7 @@ export class AuthService {
     }
 
     // Check email verification if enabled
+    console.log(user);
     if (this.isEmailVerificationEnabled() && !user.emailVerified) {
       throw new Error(
         "Email not verified. Please check your email and verify your account."
