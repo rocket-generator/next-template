@@ -7,6 +7,7 @@ import {
 import { InvalidInput, Success } from "@/constants/auth";
 import { UserRepository } from "@/repositories/user_repository";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
+import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
 import { AuthService } from "@/services/auth_service";
 
 export async function resetPasswordAction(
@@ -20,9 +21,11 @@ export async function resetPasswordAction(
 
     const userRepository = new UserRepository();
     const passwordResetRepository = new PasswordResetRepository();
+    const emailVerificationRepository = new EmailVerificationRepository();
     const authService = new AuthService(
       userRepository,
-      passwordResetRepository
+      passwordResetRepository,
+      emailVerificationRepository
     );
     await authService.resetPassword(validatedInput.data);
 

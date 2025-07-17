@@ -73,6 +73,9 @@ describe("UserRepository", () => {
         password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"],
+        avatarKey: undefined,
+        isActive: true,
+        emailVerified: false,
       });
     });
 
@@ -137,6 +140,9 @@ describe("UserRepository", () => {
         password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"],
+        avatarKey: undefined,
+        isActive: true,
+        emailVerified: true,
       };
 
       const result = UserSchema.parse(validUser);

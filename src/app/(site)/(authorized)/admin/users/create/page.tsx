@@ -16,6 +16,8 @@ export default async function Page() {
     email: "",
     password: "",
     permissions: [],
+    isActive: true,
+    emailVerified: false,
   };
 
   const structure = [

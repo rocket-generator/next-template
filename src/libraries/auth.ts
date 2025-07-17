@@ -1,5 +1,6 @@
 import { UserRepository } from "@/repositories/user_repository";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
+import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
 import { AuthService } from "@/services/auth_service";
 import { SignInRequest } from "@/requests/signin_request";
 import { SignUpRequest } from "@/requests/signup_request";
@@ -48,9 +49,11 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const userRepository = new UserRepository();
         const passwordResetRepository = new PasswordResetRepository();
+        const emailVerificationRepository = new EmailVerificationRepository();
         const authService = new AuthService(
           userRepository,
-          passwordResetRepository
+          passwordResetRepository,
+          emailVerificationRepository
         );
         const request = {
           email: credentials.email,
@@ -89,9 +92,11 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const userRepository = new UserRepository();
         const passwordResetRepository = new PasswordResetRepository();
+        const emailVerificationRepository = new EmailVerificationRepository();
         const authService = new AuthService(
           userRepository,
-          passwordResetRepository
+          passwordResetRepository,
+          emailVerificationRepository
         );
         const request = {
           email: credentials.email,

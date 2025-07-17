@@ -299,8 +299,9 @@ export class S3Provider implements StorageProvider {
     if (this.config.endpoint) {
       // LocalStack or custom endpoint
       // Use publicEndpoint for browser access if available, otherwise fallback to endpoint
-      const browserEndpoint = this.config.publicEndpoint || this.config.endpoint;
-      
+      const browserEndpoint =
+        this.config.publicEndpoint || this.config.endpoint;
+
       if (this.config.forcePathStyle) {
         // Path-style URL for LocalStack: http://localhost:4566/bucket-name/key
         return `${browserEndpoint}/${this.config.bucket}/${key}`;
@@ -320,11 +321,12 @@ export class S3Provider implements StorageProvider {
 export let LocalStorageProvider: new (basePath?: string) => StorageProvider;
 
 // Node.js環境でのみLocalStorageProviderを定義
-if (typeof process !== "undefined" && 
-    typeof process.versions !== "undefined" && 
-    typeof process.versions.node !== "undefined" &&
-    process.env.NEXT_RUNTIME !== "edge") {
-  
+if (
+  typeof process !== "undefined" &&
+  typeof process.versions !== "undefined" &&
+  typeof process.versions.node !== "undefined" &&
+  process.env.NEXT_RUNTIME !== "edge"
+) {
   LocalStorageProvider = class implements StorageProvider {
     private basePath: string;
 
@@ -567,7 +569,8 @@ export function createS3ProviderConfig(): S3ProviderConfig {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
       bucket: process.env.AWS_S3_BUCKET || "test-bucket",
       endpoint: process.env.LOCALSTACK_ENDPOINT || "http://localhost:4566",
-      publicEndpoint: process.env.LOCALSTACK_PUBLIC_ENDPOINT || "http://localhost:4566",
+      publicEndpoint:
+        process.env.LOCALSTACK_PUBLIC_ENDPOINT || "http://localhost:4566",
       forcePathStyle: true,
     };
   }
@@ -576,14 +579,15 @@ export function createS3ProviderConfig(): S3ProviderConfig {
 // Storage Service Factory
 export function createStorageServiceInstance(): StorageService {
   // Edge Runtime環境の検出を改善
-  const isEdgeRuntime = 
+  const isEdgeRuntime =
     process.env.NEXT_RUNTIME === "edge" ||
     typeof process === "undefined" ||
     typeof process.versions === "undefined" ||
     typeof process.versions.node === "undefined";
 
   // Node.js Runtime環境の検出
-  const isNodeRuntime = !isEdgeRuntime && 
+  const isNodeRuntime =
+    !isEdgeRuntime &&
     typeof process !== "undefined" &&
     typeof process.versions !== "undefined" &&
     typeof process.versions.node !== "undefined";

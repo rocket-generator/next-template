@@ -17,12 +17,16 @@ async function main() {
       password: 'password',
       name: '管理者ユーザー',
       permissions: ['admin'],
+      isActive: true,
+      emailVerified: true,
     },
     {
       email: 'user@example.com',
       password: 'password',
       name: '一般ユーザー',
       permissions: [],
+      isActive: true,
+      emailVerified: true,
     },
   ];
 

@@ -8,6 +8,7 @@ const PUBLIC_PAGES = [
   "/auth/signup",
   "/auth/forgot-password",
   "/auth/reset-password",
+  "/auth/verify-email",
 ];
 
 export default auth((request: { nextUrl: URL; auth: unknown; url: string }) => {

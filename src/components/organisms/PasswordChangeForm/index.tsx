@@ -84,7 +84,9 @@ export const PasswordChangeForm = ({ onSuccess }: PasswordChangeFormProps) => {
           className={cn(errors.currentPassword && "border-red-500")}
         />
         {errors.currentPassword && (
-          <p className="text-sm text-red-500">{errors.currentPassword.message}</p>
+          <p className="text-sm text-red-500">
+            {errors.currentPassword.message}
+          </p>
         )}
       </div>
 
@@ -117,13 +119,13 @@ export const PasswordChangeForm = ({ onSuccess }: PasswordChangeFormProps) => {
           className={cn(errors.confirmPassword && "border-red-500")}
         />
         {errors.confirmPassword && (
-          <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+          <p className="text-sm text-red-500">
+            {errors.confirmPassword.message}
+          </p>
         )}
       </div>
 
-      {serverError && (
-        <p className="text-sm text-red-500">{serverError}</p>
-      )}
+      {serverError && <p className="text-sm text-red-500">{serverError}</p>}
 
       <div className="flex gap-3">
         <Button
