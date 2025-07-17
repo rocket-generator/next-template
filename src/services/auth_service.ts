@@ -18,6 +18,7 @@ import {
 } from "@/libraries/reset_token";
 import { PasswordReset } from "@/models/password_reset";
 import { EmailVerification } from "@/models/email_verification";
+import { getTranslations } from "next-intl/server";
 
 export class AuthService {
   constructor(
