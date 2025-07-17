@@ -15,22 +15,10 @@ export class EmailVerificationRepository extends PrismaRepository<
   }
 
   async deleteUserTokens(userId: string): Promise<void> {
-    try {
-      const userTokens = await this.get(
-        0,
-        100,
-        undefined,
-        undefined,
-        undefined,
-        [{ column: "userId", operator: "=", value: userId }]
-      );
-
-      for (const token of userTokens.data) {
-        await this.delete(token.id);
-      }
-    } catch (error) {
-      console.error("Error deleting user tokens:", error);
-    }
+    const { getPrismaModel } = await import("./prisma_repository");
+    await getPrismaModel(this.modelName).deleteMany({
+      where: { userId },
+    });
   }
 
   async findByToken(token: string): Promise<EmailVerification | null> {
