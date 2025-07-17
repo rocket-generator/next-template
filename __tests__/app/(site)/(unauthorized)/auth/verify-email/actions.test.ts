@@ -1,157 +1,199 @@
 import { verifyEmailAction, resendVerificationEmailAction } from '@/app/(site)/(unauthorized)/auth/verify-email/actions';
 import { AuthService } from '@/services/auth_service';
 import { UserRepository } from '@/repositories/user_repository';
+import { PasswordResetRepository } from '@/repositories/password_reset_repository';
+import { EmailVerificationRepository } from '@/repositories/email_verification_repository';
 
-// Mock AuthService
+// Mock AuthService and repositories
 jest.mock('@/services/auth_service');
 jest.mock('@/repositories/user_repository');
 jest.mock('@/repositories/password_reset_repository');
 jest.mock('@/repositories/email_verification_repository');
 
+// Mock next-intl
+jest.mock('next-intl/server', () => ({
+  getTranslations: jest.fn(),
+}));
+
 describe('verify-email actions', () => {
   let mockAuthService: jest.Mocked<AuthService>;
+  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockPasswordResetRepository: jest.Mocked<PasswordResetRepository>;
+  let mockEmailVerificationRepository: jest.Mocked<EmailVerificationRepository>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
     mockAuthService = {
-      verifyEmailToken: jest.fn(),
-      sendVerificationEmail: jest.fn(),
+      verifyEmail: jest.fn(),
+      resendVerificationEmail: jest.fn(),
     } as any;
 
+    mockUserRepository = {} as any;
+    mockPasswordResetRepository = {} as any;
+    mockEmailVerificationRepository = {} as any;
+
     (AuthService as jest.MockedClass<typeof AuthService>).mockImplementation(() => mockAuthService);
+    (UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(() => mockUserRepository);
+    (PasswordResetRepository as jest.MockedClass<typeof PasswordResetRepository>).mockImplementation(() => mockPasswordResetRepository);
+    (EmailVerificationRepository as jest.MockedClass<typeof EmailVerificationRepository>).mockImplementation(() => mockEmailVerificationRepository);
   });
 
   describe('verifyEmailAction', () => {
     it('should return success when token verification succeeds', async () => {
       const token = 'valid-token';
-      mockAuthService.verifyEmailToken.mockResolvedValue(true);
+      mockAuthService.verifyEmail.mockResolvedValue({
+        success: true,
+        message: 'メールアドレスの認証が完了しました。',
+        code: 200,
+      });
 
       const result = await verifyEmailAction(token);
 
       expect(result).toEqual({
         success: true,
-        message: 'メールアドレスの認証が完了しました。サインインページにリダイレクトします。',
+        message: 'メールアドレスの認証が完了しました。',
+        code: 200,
       });
-      expect(mockAuthService.verifyEmailToken).toHaveBeenCalledWith(token);
+      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith(token);
     });
 
     it('should return error when token verification fails', async () => {
       const token = 'invalid-token';
-      mockAuthService.verifyEmailToken.mockResolvedValue(false);
+      mockAuthService.verifyEmail.mockResolvedValue({
+        success: false,
+        message: '認証トークンが無効または期限切れです。',
+        code: 400,
+      });
 
       const result = await verifyEmailAction(token);
 
       expect(result).toEqual({
         success: false,
         message: '認証トークンが無効または期限切れです。',
+        code: 400,
       });
-      expect(mockAuthService.verifyEmailToken).toHaveBeenCalledWith(token);
+      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith(token);
     });
 
     it('should return error when service throws exception', async () => {
       const token = 'error-token';
-      mockAuthService.verifyEmailToken.mockRejectedValue(new Error('Database error'));
+      mockAuthService.verifyEmail.mockRejectedValue(new Error('Database error'));
 
       const result = await verifyEmailAction(token);
 
       expect(result).toEqual({
         success: false,
         message: '認証処理中にエラーが発生しました。',
+        code: 500,
       });
-      expect(mockAuthService.verifyEmailToken).toHaveBeenCalledWith(token);
+      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith(token);
     });
 
     it('should handle empty token', async () => {
       const token = '';
+      mockAuthService.verifyEmail.mockResolvedValue({
+        success: false,
+        message: '認証トークンが無効または期限切れです。',
+        code: 400,
+      });
 
       const result = await verifyEmailAction(token);
 
       expect(result).toEqual({
         success: false,
         message: '認証トークンが無効または期限切れです。',
+        code: 400,
       });
-      expect(mockAuthService.verifyEmailToken).toHaveBeenCalledWith(token);
+      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith(token);
     });
   });
 
   describe('resendVerificationEmailAction', () => {
-    beforeEach(() => {
-      const mockUserRepository = {
-        findByEmail: jest.fn(),
-      } as any;
-      
-      (UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(() => mockUserRepository);
-    });
-
     it('should return success when resend succeeds', async () => {
       const email = 'test@example.com';
-      const mockUser = { id: 'user-1', email, name: 'Test User' };
-      
-      const mockUserRepository = new UserRepository() as jest.Mocked<UserRepository>;
-      mockUserRepository.findByEmail.mockResolvedValue(mockUser);
-      mockAuthService.sendVerificationEmail.mockResolvedValue();
+      mockAuthService.resendVerificationEmail.mockResolvedValue({
+        success: true,
+        message: '認証メールを再送信しました。メールをご確認ください。',
+        code: 200,
+      });
 
       const result = await resendVerificationEmailAction(email);
 
       expect(result).toEqual({
         success: true,
         message: '認証メールを再送信しました。メールをご確認ください。',
+        code: 200,
       });
+      expect(mockAuthService.resendVerificationEmail).toHaveBeenCalledWith(email);
     });
 
     it('should return error when user not found', async () => {
       const email = 'nonexistent@example.com';
-      
-      const mockUserRepository = new UserRepository() as jest.Mocked<UserRepository>;
-      mockUserRepository.findByEmail.mockResolvedValue(null);
+      mockAuthService.resendVerificationEmail.mockResolvedValue({
+        success: true,
+        message: '認証メールを送信しました。',
+        code: 200,
+      });
 
       const result = await resendVerificationEmailAction(email);
 
       expect(result).toEqual({
-        success: false,
-        message: '指定されたメールアドレスは登録されていません。',
+        success: true,
+        message: '認証メールを送信しました。',
+        code: 200,
       });
-      
-      expect(mockAuthService.sendVerificationEmail).not.toHaveBeenCalled();
+      expect(mockAuthService.resendVerificationEmail).toHaveBeenCalledWith(email);
     });
 
     it('should return error when service throws exception', async () => {
       const email = 'test@example.com';
-      const mockUser = { id: 'user-1', email, name: 'Test User' };
-      
-      const mockUserRepository = new UserRepository() as jest.Mocked<UserRepository>;
-      mockUserRepository.findByEmail.mockResolvedValue(mockUser);
-      mockAuthService.sendVerificationEmail.mockRejectedValue(new Error('Email service error'));
+      mockAuthService.resendVerificationEmail.mockRejectedValue(new Error('Email service error'));
 
       const result = await resendVerificationEmailAction(email);
 
       expect(result).toEqual({
         success: false,
-        message: 'メールの再送信に失敗しました。',
+        message: '認証メールの再送信中にエラーが発生しました。',
+        code: 500,
       });
+      expect(mockAuthService.resendVerificationEmail).toHaveBeenCalledWith(email);
     });
 
     it('should handle invalid email format', async () => {
       const email = 'invalid-email';
+      mockAuthService.resendVerificationEmail.mockResolvedValue({
+        success: true,
+        message: '認証メールを送信しました。',
+        code: 200,
+      });
 
       const result = await resendVerificationEmailAction(email);
 
       expect(result).toEqual({
-        success: false,
-        message: '指定されたメールアドレスは登録されていません。',
+        success: true,
+        message: '認証メールを送信しました。',
+        code: 200,
       });
+      expect(mockAuthService.resendVerificationEmail).toHaveBeenCalledWith(email);
     });
 
     it('should handle empty email', async () => {
       const email = '';
+      mockAuthService.resendVerificationEmail.mockResolvedValue({
+        success: true,
+        message: '認証メールを送信しました。',
+        code: 200,
+      });
 
       const result = await resendVerificationEmailAction(email);
 
       expect(result).toEqual({
-        success: false,
-        message: '指定されたメールアドレスは登録されていません。',
+        success: true,
+        message: '認証メールを送信しました。',
+        code: 200,
       });
+      expect(mockAuthService.resendVerificationEmail).toHaveBeenCalledWith(email);
     });
   });
 }); 

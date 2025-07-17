@@ -175,9 +175,9 @@ export class AuthService {
    * メールアドレスを認証
    */
   async verifyEmail(token: string): Promise<Status> {
+    const t = await getTranslations("Auth");
     try {
       if (!this.isEmailVerificationEnabled()) {
-        const t = await getTranslations("Auth");
         return StatusSchema.parse({
           success: false,
           message: t("email_verification_not_enabled"),
@@ -188,8 +188,7 @@ export class AuthService {
       // トークンを検索
       const verificationToken = await this.findValidVerificationToken(token);
 
-      if (!verificationToken) {
-        const t = await getTranslations("Auth");
+      if (!verificationToken) {        
         return StatusSchema.parse({
           success: false,
           message: t("invalid_or_expired_token"),
@@ -207,7 +206,6 @@ export class AuthService {
         verificationToken.userId
       );
 
-      const t = await getTranslations("Auth");
       return StatusSchema.parse({
         success: true,
         message: t("email_verified_successfully"),
@@ -215,7 +213,6 @@ export class AuthService {
       });
     } catch (error) {
       console.error("Error verifying email:", error);
-      const t = await getTranslations("Auth");
       return StatusSchema.parse({
         success: false,
         message: t("email_verification_failed"),
@@ -286,9 +283,9 @@ export class AuthService {
    * 認証メールを再送信
    */
   async resendVerificationEmail(email: string): Promise<Status> {
+    const t = await getTranslations("Auth");
     try {
-      if (!this.isEmailVerificationEnabled()) {
-        const t = await getTranslations("Auth");
+      if (!this.isEmailVerificationEnabled()) {        
         return StatusSchema.parse({
           success: false,
           message: t("email_verification_not_enabled"),
@@ -308,7 +305,6 @@ export class AuthService {
 
       if (users.data.length === 0) {
         // セキュリティのため、メールアドレスの存在を明かさない
-        const t = await getTranslations("Auth");
         return StatusSchema.parse({
           success: true,
           message: t("verification_email_sent"),
@@ -319,7 +315,6 @@ export class AuthService {
       const user = users.data[0];
 
       if (user.emailVerified) {
-        const t = await getTranslations("Auth");
         return StatusSchema.parse({
           success: false,
           message: t("email_already_verified"),
@@ -330,7 +325,6 @@ export class AuthService {
       // 認証メールを送信
       await this.sendVerificationEmail(user.id, user.email);
 
-      const t = await getTranslations("Auth");
       return StatusSchema.parse({
         success: true,
         message: t("verification_email_sent"),
@@ -338,7 +332,6 @@ export class AuthService {
       });
     } catch (error) {
       console.error("Error resending verification email:", error);
-      const t = await getTranslations("Auth");
       return StatusSchema.parse({
         success: true,
         message: t("verification_email_sent"),

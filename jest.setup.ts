@@ -4,6 +4,27 @@ import '@testing-library/jest-dom'
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
 
+// Mock next-auth to avoid ESM issues
+jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    auth: jest.fn(),
+    handlers: { GET: jest.fn(), POST: jest.fn() },
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+  })),
+}));
+
+jest.mock('next-auth/providers/credentials', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    id: 'credentials',
+    name: 'credentials',
+    type: 'credentials',
+    authorize: jest.fn(),
+  })),
+}));
+
 // Set up global crypto with webcrypto
 global.crypto = webcrypto as Crypto;
 
