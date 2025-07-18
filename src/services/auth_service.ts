@@ -77,7 +77,7 @@ export class AuthService {
     });
   }
 
-  async signUp(request: SignUpRequest): Promise<AccessToken> {
+  async signUp(request: SignUpRequest): Promise<AccessToken | null> {
     // Check if user already exists
     const existingUsers = await this.authRepository.get(
       0,
@@ -109,9 +109,11 @@ export class AuthService {
     // Send verification email if enabled
     if (this.isEmailVerificationEnabled()) {
       await this.sendVerificationEmail(newUser.id, newUser.email);
+      // Return null to indicate email verification is required
+      return null;
     }
 
-    // Generate access token
+    // Generate access token only if email verification is disabled
     const accessToken = await generateToken();
 
     return AccessTokenSchema.parse({
@@ -189,7 +191,7 @@ export class AuthService {
       // トークンを検索
       const verificationToken = await this.findValidVerificationToken(token);
 
-      if (!verificationToken) {        
+      if (!verificationToken) {
         return StatusSchema.parse({
           success: false,
           message: t("invalid_or_expired_token"),
@@ -286,7 +288,7 @@ export class AuthService {
   async resendVerificationEmail(email: string): Promise<Status> {
     const t = await getTranslations("Auth");
     try {
-      if (!this.isEmailVerificationEnabled()) {        
+      if (!this.isEmailVerificationEnabled()) {
         return StatusSchema.parse({
           success: false,
           message: t("email_verification_not_enabled"),

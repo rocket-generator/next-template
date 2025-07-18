@@ -8,4 +8,12 @@ export const AccessTokenSchema = z.object({
   permissions: z.array(z.string()),
 });
 
+export const EmailVerificationRequiredSchema = z.object({
+  emailVerificationRequired: z.literal(true),
+  message: z.string(),
+});
+
 export type AccessToken = z.infer<typeof AccessTokenSchema>;
+export type EmailVerificationRequired = z.infer<
+  typeof EmailVerificationRequiredSchema
+>;

@@ -47,10 +47,6 @@ export default function EmailVerificationForm({
         if (result.success) {
           setStatus("success");
           setMessage(result.message);
-          // 3秒後にサインインページにリダイレクト
-          setTimeout(() => {
-            router.push("/auth/signin");
-          }, 3000);
         } else {
           setStatus("error");
           setMessage(result.message);
@@ -127,9 +123,17 @@ export default function EmailVerificationForm({
             </svg>
           </div>
           <p className="mt-4 text-sm text-gray-600">{message}</p>
-          <p className="mt-2 text-xs text-gray-500">
-            {t("redirecting_to_signin")}
+          <p className="mt-4 text-sm text-gray-600">
+            {t("verification_success_message")}
           </p>
+          <div className="mt-6">
+            <Link
+              href="/auth/signin"
+              className={cn(buttonVariants({ variant: "default" }), "w-full")}
+            >
+              {t("go_to_signin")}
+            </Link>
+          </div>
         </div>
       </div>
     );
