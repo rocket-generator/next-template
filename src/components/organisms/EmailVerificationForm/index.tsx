@@ -59,6 +59,17 @@ export default function EmailVerificationForm({
       });
   }, [searchParams, router, onVerifyEmail, t]);
 
+  // 成功時に自動リダイレクト
+  useEffect(() => {
+    if (status === "success") {
+      const timer = setTimeout(() => {
+        router.push("/auth/signin");
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status, router]);
+
   const handleResendEmail = async () => {
     if (!email) {
       setMessage(t("validation.email_required"));

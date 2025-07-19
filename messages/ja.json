@@ -65,6 +65,8 @@
     "didnt_receive_email": "メールが届きませんでしたか？",
     "resend_verification_email": "認証メールを再送信",
     "resend_verification_description": "認証メールの再送信のためにメールアドレスを入力してください",
+    "verification_email_resent_description": "認証メールを再送信しました。メールをご確認ください。",
+    "verification_email_resent_success": "ご登録いただいたメールアドレスに認証メールを再送信しました。メール内のリンクをクリックしてアカウントの認証を完了してください。",
     "validation": {
       "email_required": "メールアドレスは必須です",
       "email_invalid": "有効なメールアドレスを入力してください",

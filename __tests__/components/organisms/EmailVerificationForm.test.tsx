@@ -39,6 +39,9 @@ const messages = {
     verification_email_sent: 'Verification email sent successfully',
     verification_email_send_error: 'Failed to resend verification email',
     email_sent: 'Email sent successfully',
+    go_to_signin: 'Go to Sign In',
+    already_have_account: 'Already have an account?',
+    signin: 'Sign In',
     validation: {
       email_required: 'Email is required',
     },

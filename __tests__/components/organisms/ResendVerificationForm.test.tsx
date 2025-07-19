@@ -17,6 +17,11 @@ const messages = {
     signin: 'Sign In',
     back_to_signin: 'Back to Sign In',
     verification_email_sent_description: 'We have sent a verification email to your address. Please check your inbox.',
+    email_verification_pending: 'Email Verification Required',
+    verification_email_resent_description: 'Your verification email has been resent. Please check your email to continue.',
+    verification_email_resent_success: 'We\'ve resent the verification email to your registered email address. Please click the link in the email to complete your account verification.',
+    check_your_email: 'Check Your Email',
+    didnt_receive_email: 'Didn\'t receive the email?',
     validation: {
       email_required: 'Email is required',
     },
@@ -83,8 +88,8 @@ describe('ResendVerificationForm', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Email Verification' })).toBeInTheDocument();
-      expect(screen.getAllByText('Email sent successfully')).toHaveLength(2);
+      expect(screen.getByRole('heading', { name: 'Email Verification Required' })).toBeInTheDocument();
+      expect(screen.getByText('We\'ve resent the verification email to your registered email address. Please click the link in the email to complete your account verification.')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Back to Sign In' })).toBeInTheDocument();
     });
   });
@@ -164,7 +169,7 @@ describe('ResendVerificationForm', () => {
     resolvePromise!({ success: true, message: 'Email sent' });
 
     await waitFor(() => {
-      expect(screen.getByText('Email sent successfully')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Email Verification Required' })).toBeInTheDocument();
     });
   });
 
@@ -184,6 +189,39 @@ describe('ResendVerificationForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Failed to resend verification email')).toBeInTheDocument();
+    });
+  });
+
+  it('should allow resending after success by clicking resend button', async () => {
+    const user = userEvent.setup();
+    const mockOnResendEmail = jest.fn(() => 
+      Promise.resolve({ success: true, message: 'Email sent successfully' })
+    );
+
+    renderWithIntl(
+      <ResendVerificationForm onResendEmail={mockOnResendEmail} />
+    );
+
+    // First submission
+    const emailInput = screen.getByRole('textbox', { name: 'Email' });
+    const submitButton = screen.getByRole('button', { name: 'Resend Verification Email' });
+
+    await user.type(emailInput, 'test@example.com');
+    await user.click(submitButton);
+
+    // Wait for success screen
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Email Verification Required' })).toBeInTheDocument();
+    });
+
+    // Click resend button on success screen
+    const resendButton = screen.getByRole('button', { name: 'Resend Verification Email' });
+    await user.click(resendButton);
+
+    // Should return to form
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: 'Email' })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('');
     });
   });
 });

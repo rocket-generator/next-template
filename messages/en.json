@@ -65,6 +65,8 @@
     "didnt_receive_email": "Didn't receive the email?",
     "resend_verification_email": "Resend verification email",
     "resend_verification_description": "Enter your email address to receive a new verification email",
+    "verification_email_resent_description": "Your verification email has been resent. Please check your email to continue.",
+    "verification_email_resent_success": "We've resent the verification email to your registered email address. Please click the link in the email to complete your account verification.",
     "validation": {
       "email_required": "Email is required",
       "email_invalid": "Please enter a valid email address",

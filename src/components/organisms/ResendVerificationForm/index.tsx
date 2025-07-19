@@ -56,15 +56,19 @@ export default function ResendVerificationForm({
     return (
       <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">{t("email_verification")}</h1>
-          <p className="mt-2 text-gray-600">{t("email_sent")}</p>
+          <h1 className="text-2xl font-bold">
+            {t("email_verification_pending")}
+          </h1>
+          <p className="mt-2 text-gray-600">
+            {t("verification_email_resent_description")}
+          </p>
         </div>
 
         <div className="space-y-6">
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
               <svg
-                className="w-8 h-8 text-green-600"
+                className="w-8 h-8 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -73,21 +77,42 @@ export default function ResendVerificationForm({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M4.5 12.75l6 6 9-13.5"
+                  d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
             </div>
 
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {t("check_your_email")}
+            </h3>
+
             <p className="text-sm text-gray-600 mb-6">
-              {message || t("verification_email_sent_description")}
+              {t("verification_email_resent_success")}
             </p>
 
-            <Link
-              href="/auth/signin"
-              className="font-medium text-blue-600 hover:underline"
-            >
-              {t("back_to_signin")}
-            </Link>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t("didnt_receive_email")}</p>
+
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    setStatus("idle");
+                    setMessage("");
+                    setEmail("");
+                  }}
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  {t("resend_verification_email")}
+                </button>
+
+                <Link
+                  href="/auth/signin"
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  {t("back_to_signin")}
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
