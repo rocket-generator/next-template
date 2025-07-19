@@ -37,6 +37,8 @@ const mockUser: User = {
   password: "password",
   name: "田中太郎",
   permissions: ["read", "write"],
+  isActive: true,
+  emailVerified: true,
 };
 
 const mockAdminUser: User = {
@@ -45,6 +47,8 @@ const mockAdminUser: User = {
   password: "password",
   name: "管理者",
   permissions: ["read", "write", "admin", "delete"],
+  isActive: true,
+  emailVerified: true,
 };
 
 const mockUserWithLongName: User = {
@@ -53,6 +57,8 @@ const mockUserWithLongName: User = {
   password: "password",
   name: "とても長い名前のユーザー山田花子田中",
   permissions: ["read"],
+  isActive: true,
+  emailVerified: false,
 };
 
 const mockManagerUser: User = {
@@ -61,6 +67,8 @@ const mockManagerUser: User = {
   password: "password",
   name: "山田マネージャー",
   permissions: ["read", "write", "manage"],
+  isActive: true,
+  emailVerified: true,
 };
 
 export const WithUser: Story = {

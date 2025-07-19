@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
 import { ProfileForm } from "./index";
 
-const action = (name: string) => (...args: unknown[]) => {
-  console.log(`Action: ${name}`, ...args);
-};
+const action =
+  (name: string) =>
+  (...args: unknown[]) => {
+    console.log(`Action: ${name}`, ...args);
+  };
 
 const meta = {
   title: "organisms/ProfileForm",

@@ -37,7 +37,7 @@ export async function signInAction(
           return InvalidCredentials;
       }
     }
-
+    console.error("Unexpected error:", error);
     // 予期せぬエラーの場合も InvalidCredentials を返す
     return InvalidCredentials;
   }

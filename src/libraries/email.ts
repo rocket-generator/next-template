@@ -1,6 +1,7 @@
 // Email Service Interface
 export interface EmailService {
   sendPasswordResetEmail(to: string, resetUrl: string): Promise<void>;
+  sendVerificationEmail(to: string, verificationUrl: string): Promise<void>;
 }
 
 // Email Provider Interface (for future extensibility)
@@ -146,6 +147,29 @@ export class EmailServiceImpl implements EmailService {
     );
   }
 
+  async sendVerificationEmail(
+    to: string,
+    verificationUrl: string
+  ): Promise<void> {
+    const emailOptions: EmailOptions = {
+      from: this.fromEmail,
+      to,
+      subject: "メールアドレス認証のご案内",
+      html: this.generateVerificationEmailHTML(verificationUrl),
+    };
+
+    const result = await this.provider.sendEmail(emailOptions);
+
+    if (!result.success) {
+      console.error("Failed to send verification email:", result.error);
+      throw new Error("Failed to send verification email");
+    }
+
+    console.log(
+      `Verification email sent to ${to}, messageId: ${result.messageId}`
+    );
+  }
+
   private generatePasswordResetEmailHTML(resetUrl: string): string {
     return `
       <!DOCTYPE html>
@@ -166,6 +190,38 @@ export class EmailServiceImpl implements EmailService {
             </a>
           </div>
           <p>このリンクは24時間有効です。</p>
+          <p>もしこのメールに心当たりがない場合は、無視してください。</p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="font-size: 12px; color: #666;">
+            このメールは自動送信されています。返信はできません。
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  private generateVerificationEmailHTML(verificationUrl: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>メールアドレス認証</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2>メールアドレス認証のご案内</h2>
+          <p>アカウント登録いただき、ありがとうございます。</p>
+          <p>以下のリンクをクリックして、メールアドレスの認証を完了してください：</p>
+          <div style="margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+              メールアドレスを認証
+            </a>
+          </div>
+          <p>このリンクは24時間有効です。</p>
+          <p>認証が完了すると、すべての機能をご利用いただけます。</p>
           <p>もしこのメールに心当たりがない場合は、無視してください。</p>
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
           <p style="font-size: 12px; color: #666;">

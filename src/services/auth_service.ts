@@ -8,6 +8,7 @@ import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { AuthSchema } from "@/models/auth";
 import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
+import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
 import { AuthRepositoryInterface } from "@/repositories/auth_repository";
 import { createEmailServiceInstance } from "@/libraries/email";
 import {
@@ -16,12 +17,19 @@ import {
   isTokenExpired,
 } from "@/libraries/reset_token";
 import { PasswordReset } from "@/models/password_reset";
+import { EmailVerification } from "@/models/email_verification";
+import { getTranslations } from "next-intl/server";
 
 export class AuthService {
   constructor(
     private authRepository: AuthRepositoryInterface,
-    private passwordResetRepository: PasswordResetRepository
+    private passwordResetRepository: PasswordResetRepository,
+    private emailVerificationRepository: EmailVerificationRepository
   ) {}
+
+  private isEmailVerificationEnabled(): boolean {
+    return process.env.ENABLE_EMAIL_VERIFICATION === "true";
+  }
 
   async signIn(request: SignInRequest): Promise<AccessToken> {
     // Find user by email
@@ -49,6 +57,14 @@ export class AuthService {
       throw new Error("Invalid credentials");
     }
 
+    // Check email verification if enabled
+    console.log(user);
+    if (this.isEmailVerificationEnabled() && !user.emailVerified) {
+      throw new Error(
+        "Email not verified. Please check your email and verify your account."
+      );
+    }
+
     // Generate access token
     const accessToken = await generateToken();
 
@@ -61,7 +77,7 @@ export class AuthService {
     });
   }
 
-  async signUp(request: SignUpRequest): Promise<AccessToken> {
+  async signUp(request: SignUpRequest): Promise<AccessToken | null> {
     // Check if user already exists
     const existingUsers = await this.authRepository.get(
       0,
@@ -80,14 +96,24 @@ export class AuthService {
     const hashedPassword = await hashPassword(request.password);
 
     // Create user
+    const emailVerified = !this.isEmailVerificationEnabled(); // If email verification is disabled, mark as verified
     const newUser = await this.authRepository.create({
       email: request.email,
       password: hashedPassword,
       name: request.name,
       permissions: [],
+      isActive: true,
+      emailVerified: emailVerified,
     });
 
-    // Generate access token
+    // Send verification email if enabled
+    if (this.isEmailVerificationEnabled()) {
+      await this.sendVerificationEmail(newUser.id, newUser.email);
+      // Return null to indicate email verification is required
+      return null;
+    }
+
+    // Generate access token only if email verification is disabled
     const accessToken = await generateToken();
 
     return AccessTokenSchema.parse({
@@ -97,6 +123,251 @@ export class AuthService {
       expires_in: 3600,
       permissions: newUser.permissions,
     });
+  }
+
+  /**
+   * メール認証トークンを作成
+   */
+  async createVerificationToken(userId: string): Promise<EmailVerification> {
+    const token = await generateResetToken(); // 同じトークン生成関数を使用
+    const expiresAt = createTokenExpiry(); // 同じ有効期限設定を使用
+    const now = new Date();
+
+    const verificationData = {
+      userId,
+      token,
+      expiresAt,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    return this.emailVerificationRepository.create(verificationData);
+  }
+
+  /**
+   * 認証メールを送信
+   */
+  async sendVerificationEmail(userId: string, email: string): Promise<void> {
+    try {
+      if (!this.isEmailVerificationEnabled()) {
+        return; // メール認証が無効な場合は何もしない
+      }
+
+      // 既存のトークンを削除
+      await this.emailVerificationRepository.deleteUserTokens(userId);
+
+      // 新しい認証トークンを作成
+      const verificationToken = await this.createVerificationToken(userId);
+
+      // 認証URLを生成
+      const appUrl = process.env.APP_URL || "http://localhost:3000";
+      const verificationUrl = `${appUrl}/auth/verify-email?token=${verificationToken.token}`;
+
+      // メール送信
+      const emailService = createEmailServiceInstance();
+      await emailService.sendVerificationEmail(email, verificationUrl);
+
+      console.log(`Verification email sent to ${email}`);
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      throw new Error("Failed to send verification email");
+    }
+  }
+
+  /**
+   * メールアドレスを認証
+   */
+  async verifyEmail(token: string): Promise<Status> {
+    const t = await getTranslations("Auth");
+    try {
+      if (!this.isEmailVerificationEnabled()) {
+        return StatusSchema.parse({
+          success: false,
+          message: t("email_verification_not_enabled"),
+          code: 400,
+        });
+      }
+
+      // トークンを検索
+      const verificationToken = await this.findValidVerificationToken(token);
+
+      if (!verificationToken) {
+        return StatusSchema.parse({
+          success: false,
+          message: t("invalid_or_expired_token"),
+          code: 400,
+        });
+      }
+
+      // ユーザーを認証済みに更新
+      await this.authRepository.update(verificationToken.userId, {
+        emailVerified: true,
+      });
+
+      // 使用済みトークンを削除
+      await this.emailVerificationRepository.deleteUserTokens(
+        verificationToken.userId
+      );
+
+      return StatusSchema.parse({
+        success: true,
+        message: t("email_verified_successfully"),
+        code: 200,
+      });
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      return StatusSchema.parse({
+        success: false,
+        message: t("email_verification_failed"),
+        code: 500,
+      });
+    }
+  }
+
+  /**
+   * メールアドレスのトークンを認証（真偽値を返す）
+   */
+  async verifyEmailToken(token: string): Promise<boolean> {
+    try {
+      if (!this.isEmailVerificationEnabled()) {
+        return false;
+      }
+
+      // トークンを検索
+      const verificationToken = await this.findValidVerificationToken(token);
+
+      if (!verificationToken) {
+        return false;
+      }
+
+      // ユーザーを認証済みに更新
+      await this.authRepository.update(verificationToken.userId, {
+        emailVerified: true,
+      });
+
+      // 使用済みトークンを削除
+      await this.emailVerificationRepository.deleteUserTokens(
+        verificationToken.userId
+      );
+
+      return true;
+    } catch (error) {
+      console.error("Error verifying email token:", error);
+      return false;
+    }
+  }
+
+  /**
+   * 有効な認証トークンを検索
+   */
+  async findValidVerificationToken(
+    token: string
+  ): Promise<EmailVerification | null> {
+    try {
+      const verificationToken =
+        await this.emailVerificationRepository.findByToken(token);
+
+      if (!verificationToken) {
+        return null;
+      }
+
+      if (isTokenExpired(verificationToken.expiresAt)) {
+        return null;
+      }
+
+      return verificationToken;
+    } catch (error) {
+      console.error("Error finding valid verification token:", error);
+      return null;
+    }
+  }
+
+  /**
+   * 認証メールを再送信
+   */
+  async resendVerificationEmail(email: string): Promise<Status> {
+    const t = await getTranslations("Auth");
+    try {
+      if (!this.isEmailVerificationEnabled()) {
+        return StatusSchema.parse({
+          success: false,
+          message: t("email_verification_not_enabled"),
+          code: 400,
+        });
+      }
+
+      // ユーザーを検索
+      const users = await this.authRepository.get(
+        0,
+        1,
+        undefined,
+        undefined,
+        undefined,
+        [{ column: "email", operator: "=", value: email }]
+      );
+
+      if (users.data.length === 0) {
+        // セキュリティのため、メールアドレスの存在を明かさない
+        return StatusSchema.parse({
+          success: true,
+          message: t("verification_email_sent"),
+          code: 200,
+        });
+      }
+
+      const user = users.data[0];
+
+      if (user.emailVerified) {
+        return StatusSchema.parse({
+          success: false,
+          message: t("email_already_verified"),
+          code: 400,
+        });
+      }
+
+      // 認証メールを送信
+      await this.sendVerificationEmail(user.id, user.email);
+
+      return StatusSchema.parse({
+        success: true,
+        message: t("verification_email_sent"),
+        code: 200,
+      });
+    } catch (error) {
+      console.error("Error resending verification email:", error);
+      return StatusSchema.parse({
+        success: true,
+        message: t("verification_email_sent"),
+        code: 200,
+      });
+    }
+  }
+
+  /**
+   * 期限切れ認証トークンのクリーンアップ
+   */
+  async cleanupExpiredVerificationTokens(): Promise<void> {
+    try {
+      const now = new Date();
+      const expiredTokens = await this.emailVerificationRepository.get(
+        0,
+        1000,
+        undefined,
+        undefined,
+        undefined,
+        [{ column: "expiresAt", operator: "<", value: now }]
+      );
+
+      for (const token of expiredTokens.data) {
+        await this.emailVerificationRepository.delete(token.id);
+      }
+
+      console.log(
+        `Cleaned up ${expiredTokens.data.length} expired email verification tokens`
+      );
+    } catch (error) {
+      console.error("Error cleaning up expired verification tokens:", error);
+    }
   }
 
   async forgotPassword(request: ForgotPasswordRequest): Promise<Status> {

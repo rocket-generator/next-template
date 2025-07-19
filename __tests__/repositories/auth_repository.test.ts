@@ -1,7 +1,6 @@
 import { AuthRepository } from "@/repositories/auth_repository";
 import { AuthSchema, Auth } from "@/models/auth";
 import { auth } from "@/libraries/auth";
-import { z } from "zod";
 
 // Mock the auth function
 jest.mock("@/libraries/auth", () => ({

@@ -1,6 +1,7 @@
 import { AuthService } from "@/services/auth_service";
 import { AuthRepositoryInterface } from "@/repositories/auth_repository";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
+import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
 import { SignInRequest } from "@/requests/signin_request";
 import { SignUpRequest } from "@/requests/signup_request";
 import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
@@ -21,6 +22,7 @@ jest.mock("@/libraries/hash", () => ({
 jest.mock("@/libraries/email", () => ({
   createEmailServiceInstance: jest.fn(() => ({
     sendPasswordResetEmail: jest.fn(),
+    sendVerificationEmail: jest.fn(),
   })),
 }));
 
@@ -31,13 +33,32 @@ jest.mock("@/libraries/reset_token", () => ({
   isTokenExpired: jest.fn(),
 }));
 
+// Mock email verification repository imports
+import { EmailVerification } from "@/models/email_verification";
+import { generateResetToken, createTokenExpiry, isTokenExpired } from "@/libraries/reset_token";
+
 describe("AuthService", () => {
   let authService: AuthService;
   let mockAuthRepository: jest.Mocked<AuthRepositoryInterface>;
   let mockPasswordResetRepository: jest.Mocked<PasswordResetRepository>;
+  let mockEmailVerificationRepository: jest.Mocked<EmailVerificationRepository>;
   let mockHashPassword: jest.MockedFunction<typeof hashPassword>;
   let mockVerifyPassword: jest.MockedFunction<typeof verifyPassword>;
   let mockGenerateToken: jest.MockedFunction<typeof generateToken>;
+  let mockGenerateResetToken: jest.MockedFunction<typeof generateResetToken>;
+  let mockCreateTokenExpiry: jest.MockedFunction<typeof createTokenExpiry>;
+  let mockIsTokenExpired: jest.MockedFunction<typeof isTokenExpired>;
+
+  // Mock environment variables
+  const originalEnv = process.env;
+
+  beforeAll(() => {
+    process.env = { ...originalEnv, ENABLE_EMAIL_VERIFICATION: 'true' };
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
 
   beforeEach(() => {
     // Create mock repositories
@@ -59,12 +80,25 @@ describe("AuthService", () => {
       deleteUserTokens: jest.fn(),
     } as jest.Mocked<PasswordResetRepository>;
 
-    authService = new AuthService(mockAuthRepository, mockPasswordResetRepository);
+    mockEmailVerificationRepository = {
+      get: jest.fn(),
+      findById: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      deleteUserTokens: jest.fn(),
+      findByToken: jest.fn(),
+    } as jest.Mocked<EmailVerificationRepository>;
+
+    authService = new AuthService(mockAuthRepository, mockPasswordResetRepository, mockEmailVerificationRepository);
 
     // Setup mocks
     mockHashPassword = hashPassword as jest.MockedFunction<typeof hashPassword>;
     mockVerifyPassword = verifyPassword as jest.MockedFunction<typeof verifyPassword>;
     mockGenerateToken = generateToken as jest.MockedFunction<typeof generateToken>;
+    mockGenerateResetToken = generateResetToken as jest.MockedFunction<typeof generateResetToken>;
+    mockCreateTokenExpiry = createTokenExpiry as jest.MockedFunction<typeof createTokenExpiry>;
+    mockIsTokenExpired = isTokenExpired as jest.MockedFunction<typeof isTokenExpired>;
 
     // Reset all mocks
     jest.clearAllMocks();
@@ -78,6 +112,8 @@ describe("AuthService", () => {
         password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"],
+        emailVerified: true,
+        isActive: true,
       };
 
       const request: SignInRequest = {
@@ -139,6 +175,8 @@ describe("AuthService", () => {
         password: "hashedPassword",
         name: "Test User",
         permissions: ["read"],
+        emailVerified: true,
+        isActive: true,
       };
 
       const request: SignInRequest = {
@@ -163,6 +201,16 @@ describe("AuthService", () => {
   });
 
   describe("signUp", () => {
+    beforeEach(() => {
+      // Disable email verification for basic signUp tests
+      process.env.ENABLE_EMAIL_VERIFICATION = 'false';
+    });
+
+    afterEach(() => {
+      // Reset to true for other tests
+      process.env.ENABLE_EMAIL_VERIFICATION = 'true';
+    });
+
     it("should create new user successfully", async () => {
       const request: SignUpRequest = {
         email: "new@example.com",
@@ -177,6 +225,8 @@ describe("AuthService", () => {
         password: "hashedNewPassword",
         name: "New User",
         permissions: [],
+        emailVerified: false,
+        isActive: true,
       };
 
       mockAuthRepository.get.mockResolvedValue({
@@ -195,6 +245,8 @@ describe("AuthService", () => {
         password: "hashedNewPassword",
         name: "New User",
         permissions: [],
+        emailVerified: true,
+        isActive: true,
       });
       expect(mockGenerateToken).toHaveBeenCalled();
       expect(result).toEqual({
@@ -213,6 +265,8 @@ describe("AuthService", () => {
         password: "hashedPassword",
         name: "Existing User",
         permissions: [],
+        emailVerified: true,
+        isActive: true,
       };
 
       const request: SignUpRequest = {
@@ -573,6 +627,130 @@ describe("AuthService", () => {
       );
       expect(mockHashPassword).not.toHaveBeenCalled();
       expect(mockAuthRepository.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("sendVerificationEmail", () => {
+    it("should send verification email for user", async () => {
+      const userId = "user-1";
+      const user: Auth = {
+        id: userId,
+        email: "test@example.com",
+        password: "hashedPassword",
+        name: "Test User",
+        permissions: [],
+        emailVerified: false,
+        isActive: true,
+      };
+
+      const mockExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const mockVerificationRecord: EmailVerification = {
+        id: "verification-1",
+        userId,
+        token: "verification-token",
+        expiresAt: mockExpiresAt,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockGenerateResetToken.mockResolvedValue("verification-token");
+      mockCreateTokenExpiry.mockReturnValue(mockExpiresAt);
+      mockEmailVerificationRepository.deleteUserTokens.mockResolvedValue();
+      mockEmailVerificationRepository.create.mockResolvedValue(mockVerificationRecord);
+
+      await authService.sendVerificationEmail(userId, user.email);
+
+      expect(mockGenerateResetToken).toHaveBeenCalled();
+      expect(mockCreateTokenExpiry).toHaveBeenCalled();
+      expect(mockEmailVerificationRepository.deleteUserTokens).toHaveBeenCalledWith(userId);
+      expect(mockEmailVerificationRepository.create).toHaveBeenCalledWith({
+        userId,
+        token: "verification-token",
+        expiresAt: mockExpiresAt,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+    });
+
+    it("should throw error if verification token creation fails", async () => {
+      const userId = "user-1";
+      const email = "test@example.com";
+
+      mockEmailVerificationRepository.deleteUserTokens.mockResolvedValue();
+      mockGenerateResetToken.mockRejectedValue(new Error("Token generation failed"));
+
+      await expect(authService.sendVerificationEmail(userId, email)).rejects.toThrow(
+        "Failed to send verification email"
+      );
+
+      expect(mockEmailVerificationRepository.deleteUserTokens).toHaveBeenCalledWith(userId);
+      expect(mockEmailVerificationRepository.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("verifyEmailToken", () => {
+    it("should verify email token and activate user", async () => {
+      const token = "verification-token";
+      const userId = "user-1";
+      const verificationRecord: EmailVerification = {
+        id: "verification-1",
+        userId,
+        token,
+        expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockEmailVerificationRepository.findByToken.mockResolvedValue(verificationRecord);
+      mockIsTokenExpired.mockReturnValue(false);
+      mockAuthRepository.update.mockResolvedValue({} as any);
+      mockEmailVerificationRepository.deleteUserTokens.mockResolvedValue();
+
+      const result = await authService.verifyEmailToken(token);
+
+      expect(result).toBe(true);
+      expect(mockEmailVerificationRepository.findByToken).toHaveBeenCalledWith(token);
+      expect(mockAuthRepository.update).toHaveBeenCalledWith(userId, {
+        emailVerified: true,
+      });
+      expect(mockEmailVerificationRepository.deleteUserTokens).toHaveBeenCalledWith(userId);
+    });
+
+    it("should return false for invalid token", async () => {
+      const token = "invalid-token";
+
+      mockEmailVerificationRepository.findByToken.mockResolvedValue(null);
+
+      const result = await authService.verifyEmailToken(token);
+
+      expect(result).toBe(false);
+      expect(mockEmailVerificationRepository.findByToken).toHaveBeenCalledWith(token);
+      expect(mockAuthRepository.update).not.toHaveBeenCalled();
+      expect(mockEmailVerificationRepository.deleteUserTokens).not.toHaveBeenCalled();
+    });
+
+    it("should return false for expired token", async () => {
+      const token = "expired-token";
+      const userId = "user-1";
+      const verificationRecord: EmailVerification = {
+        id: "verification-1",
+        userId,
+        token,
+        expiresAt: new Date(Date.now() - 3600000), // 1 hour ago
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockEmailVerificationRepository.findByToken.mockResolvedValue(verificationRecord);
+      mockIsTokenExpired.mockReturnValue(true);
+
+      const result = await authService.verifyEmailToken(token);
+
+      expect(result).toBe(false);
+      expect(mockEmailVerificationRepository.findByToken).toHaveBeenCalledWith(token);
+      expect(mockIsTokenExpired).toHaveBeenCalledWith(verificationRecord.expiresAt);
+      expect(mockAuthRepository.update).not.toHaveBeenCalled();
+      expect(mockEmailVerificationRepository.deleteUserTokens).not.toHaveBeenCalled();
     });
   });
 }); 
