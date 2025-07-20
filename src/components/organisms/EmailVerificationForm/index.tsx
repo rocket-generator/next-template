@@ -98,7 +98,10 @@ export default function EmailVerificationForm({
 
   if (status === "loading") {
     return (
-      <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
+      <div
+        data-testid="email-verification-loading"
+        className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md"
+      >
         <div className="text-center">
           <h1 className="text-2xl font-bold">{t("email_verification")}</h1>
           <p className="mt-2 text-gray-600">{t("verifying_email")}</p>
@@ -112,7 +115,10 @@ export default function EmailVerificationForm({
 
   if (status === "success") {
     return (
-      <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
+      <div
+        data-testid="email-verification-success"
+        className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md"
+      >
         <div className="text-center">
           <h1 className="text-2xl font-bold">{t("email_verification")}</h1>
           <p className="mt-2 text-gray-600">{t("verification_complete")}</p>
@@ -139,6 +145,7 @@ export default function EmailVerificationForm({
           </p>
           <div className="mt-6">
             <Link
+              data-testid="signin-link"
               href="/auth/signin"
               className={cn(buttonVariants({ variant: "default" }), "w-full")}
             >
@@ -153,7 +160,10 @@ export default function EmailVerificationForm({
   // リセンド成功状態
   if (status === "resend_success") {
     return (
-      <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
+      <div
+        data-testid="email-verification-resend-success"
+        className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md"
+      >
         <div className="text-center">
           <h1 className="text-2xl font-bold">{t("email_verification")}</h1>
           <p className="mt-2 text-gray-600">{t("email_sent")}</p>
@@ -177,6 +187,7 @@ export default function EmailVerificationForm({
           <p className="mt-4 text-sm text-gray-600">{message}</p>
           <div className="mt-6">
             <Link
+              data-testid="signin-link"
               href="/auth/signin"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
@@ -190,13 +201,19 @@ export default function EmailVerificationForm({
 
   // エラー状態またはリセンド中の状態
   return (
-    <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
+    <div
+      data-testid="email-verification-error"
+      className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md"
+    >
       <div className="text-center">
         <h1 className="text-2xl font-bold">{t("email_verification")}</h1>
         <p className="mt-2 text-gray-600">{t("verification_error")}</p>
       </div>
       {message && (
-        <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded">
+        <div
+          data-testid="error-message"
+          className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded"
+        >
           {message}
         </div>
       )}
@@ -213,6 +230,7 @@ export default function EmailVerificationForm({
               id="email"
               name="email"
               type="email"
+              data-testid="resend-email-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1"
@@ -222,6 +240,7 @@ export default function EmailVerificationForm({
         </div>
 
         <Button
+          data-testid="resend-email-button"
           onClick={handleResendEmail}
           disabled={status === "resending"}
           className="w-full"
@@ -241,6 +260,7 @@ export default function EmailVerificationForm({
         <p className="text-sm text-gray-600">
           {t("already_have_account")}{" "}
           <Link
+            data-testid="signin-link"
             href="/auth/signin"
             className="font-medium text-gray-700 hover:underline"
           >

@@ -9,6 +9,8 @@ const PUBLIC_PAGES = [
   "/auth/forgot-password",
   "/auth/reset-password",
   "/auth/verify-email",
+  "/auth/verify-email/resend",
+  "/auth/verify-email/pending",
 ];
 
 export default auth((request: { nextUrl: URL; auth: unknown; url: string }) => {

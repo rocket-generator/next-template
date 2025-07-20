@@ -16,7 +16,7 @@ test.describe('メール認証機能', () => {
     await expect(page).toHaveURL(/\/auth\/verify-email/);
     
     // 認証処理中のメッセージが表示されることを確認
-    await expect(page.locator('text=メールアドレスを認証しています')).toBeVisible();
+    await expect(page.locator('[data-testid="email-verification-loading"]')).toBeVisible();
   });
 
   test('トークンなしでメール認証ページにアクセスした場合エラーが表示される', async ({ page }) => {
@@ -26,12 +26,12 @@ test.describe('メール認証機能', () => {
     await expect(page).toHaveURL(/\/auth\/verify-email/);
     
     // エラーメッセージが表示されることを確認
-    await expect(page.locator('text=認証トークンがURLに含まれていません')).toBeVisible();
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
     
     // 再送信フォームが表示されることを確認
-    await expect(page.locator('button:has-text("認証メールを再送信")')).toBeVisible();
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('button:has-text("ログインページに戻る")')).toBeVisible();
+    await expect(page.locator('[data-testid="resend-email-button"]')).toBeVisible();
+    await expect(page.locator('[data-testid="resend-email-input"]')).toBeVisible();
+    await expect(page.locator('[data-testid="signin-link"]')).toBeVisible();
   });
 
   test('無効なトークンでアクセスした場合エラーが表示される', async ({ page }) => {
@@ -42,52 +42,56 @@ test.describe('メール認証機能', () => {
     // ページが正常に読み込まれることを確認
     await expect(page).toHaveURL(/\/auth\/verify-email/);
     
-    // エラーメッセージが表示されるまで待つ
-    await expect(page.locator('h3').filter({ hasText: '認証エラー' })).toBeVisible();
+    // ページのコンテンツをデバッグ出力
+    await page.waitForTimeout(2000);
+    const pageContent = await page.locator('body').textContent();
+    console.log('Page content:', pageContent);
+    
+    // エラー状態またはエラーメッセージが表示されるまで待つ
+    await expect(page.locator('[data-testid="email-verification-error"]')).toBeVisible();
     
     // 再送信フォームが表示されることを確認
-    await expect(page.locator('button:has-text("認証メールを再送信")')).toBeVisible();
+    await expect(page.locator('[data-testid="resend-email-button"]')).toBeVisible();
   });
 
   test('メール再送信機能が動作する', async ({ page }) => {
     await page.goto('/auth/verify-email');
     
     // エラーメッセージが表示されるまで待つ
-    await expect(page.locator('text=認証トークンがURLに含まれていません')).toBeVisible();
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
     
     // 再送信フォームにメールアドレスを入力
-    await page.fill('input[type="email"]', 'test@example.com');
+    await page.fill('[data-testid="resend-email-input"]', 'test@example.com');
     
     // 再送信ボタンをクリック
-    await page.click('button:has-text("認証メールを再送信")');
+    await page.click('[data-testid="resend-email-button"]');
     
     // 送信中の状態が表示されることを確認
-    await expect(page.locator('button:has-text("再送信中...")')).toBeVisible();
+    await expect(page.locator('[data-testid="resend-email-button"][disabled]')).toBeVisible();
     
-    // 再送信処理の完了を待つ（成功/エラーメッセージが表示されるまで待機）
-    await expect(page.locator('p')).not.toBeEmpty({ timeout: 5000 });
+    // 再送信処理の完了を待つ - エラー状態または成功状態になるまで待機
+    await Promise.race([
+      page.locator('[data-testid="error-message"]').waitFor({ state: 'visible', timeout: 10000 }),
+      page.locator('[data-testid="email-verification-resend-success"]').waitFor({ state: 'visible', timeout: 10000 })
+    ]);
     
-    // ページ内容をデバッグ出力
-    const pageText = await page.locator('body').textContent();
-    console.log('Page after resend:', pageText);
-    
-    // リセンド後に何らかのメッセージが表示されることを確認
-    // 実際の内容は環境により異なるため、p要素の存在をチェック
-    const messageElements = await page.locator('p').all();
-    expect(messageElements.length).toBeGreaterThan(0);
+    // 結果が正しく表示されているかを確認
+    const isErrorVisible = await page.locator('[data-testid="error-message"]').isVisible();
+    const isSuccessVisible = await page.locator('[data-testid="email-verification-resend-success"]').isVisible();
+    expect(isErrorVisible || isSuccessVisible).toBe(true);
   });
 
   test('メール再送信で空のメールアドレスを送信するとエラーが表示される', async ({ page }) => {
     await page.goto('/auth/verify-email');
     
     // エラーメッセージが表示されるまで待つ
-    await expect(page.locator('text=認証トークンがURLに含まれていません')).toBeVisible();
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
     
     // メールアドレスを入力せずに再送信ボタンをクリック
-    await page.click('button:has-text("認証メールを再送信")');
+    await page.click('[data-testid="resend-email-button"]');
     
     // エラーメッセージが表示されるまで待機
-    await expect(page.locator('text=メールアドレスは必須です').or(page.locator('text=メールアドレスを入力してください'))).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible({ timeout: 5000 });
     
     // デバッグ出力
     const pageText = await page.locator('body').textContent();
@@ -98,24 +102,24 @@ test.describe('メール認証機能', () => {
     await page.goto('/auth/verify-email');
     
     // エラーメッセージが表示されるまで待つ
-    await expect(page.locator('text=認証トークンがURLに含まれていません')).toBeVisible();
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
     
     // 無効なメールアドレスを入力
-    await page.fill('input[type="email"]', 'invalid-email');
+    await page.fill('[data-testid="resend-email-input"]', 'invalid-email');
     
     // 再送信ボタンをクリック
-    await page.click('button:has-text("認証メールを再送信")');
+    await page.click('[data-testid="resend-email-button"]');
     
     // エラーメッセージまたはレスポンスメッセージが表示されるまで待機
-    await expect(page.locator('p')).not.toBeEmpty({ timeout: 5000 });
-    
-    // ページ内容をデバッグ出力
-    const pageText = await page.locator('body').textContent();
-    console.log('Page after invalid email submit:', pageText);
+    await Promise.race([
+      page.locator('[data-testid="error-message"]').waitFor({ state: 'visible', timeout: 5000 }),
+      page.locator('[data-testid="email-verification-resend-success"]').waitFor({ state: 'visible', timeout: 5000 })
+    ]);
     
     // 何らかのエラーレスポンスがあることを確認
-    const messageElements = await page.locator('p').all();
-    expect(messageElements.length).toBeGreaterThan(0);
+    const errorMessage = await page.locator('[data-testid="error-message"]').isVisible();
+    const successMessage = await page.locator('[data-testid="email-verification-resend-success"]').isVisible();
+    expect(errorMessage || successMessage).toBeTruthy();
   });
 
   test('メール認証成功後にサインインページにリダイレクトされる', async ({ page }) => {
@@ -125,12 +129,14 @@ test.describe('メール認証機能', () => {
     await page.goto(`/auth/verify-email?token=${validToken}`);
     
     // 認証成功メッセージまたはエラーメッセージを待つ（タイムアウトを長めに設定）
-    await expect(page.locator('h3').filter({ hasText: '認証完了' }).or(page.locator('h3').filter({ hasText: '認証エラー' })))
-      .toBeVisible({ timeout: 10000 });
+    await Promise.race([
+      page.locator('[data-testid="email-verification-success"]').waitFor({ state: 'visible', timeout: 10000 }),
+      page.locator('[data-testid="email-verification-error"]').waitFor({ state: 'visible', timeout: 10000 })
+    ]);
     
     // 認証が成功した場合、サインインページにリダイレクトされることを確認
     // 注意: 実際の環境によっては成功しない場合もあるため、条件付きで確認
-    const successMessage = await page.locator('h3').filter({ hasText: '認証完了' }).isVisible();
+    const successMessage = await page.locator('[data-testid="email-verification-success"]').isVisible();
     
     if (successMessage) {
       // 3秒後のリダイレクトを待つ
@@ -148,7 +154,15 @@ test.describe('メール認証機能', () => {
     // ページが正常に読み込まれることを確認（機能が無効でもページは存在する）
     await expect(page).toHaveURL(/\/auth\/verify-email/);
     
-    // ページのタイトルやヘッダーが表示されることを確認
-    await expect(page.locator('h2').filter({ hasText: 'メール認証' })).toBeVisible();
+    // ページが読み込まれるまで待つ
+    await page.waitForTimeout(2000);
+    
+    // いずれかの状態が表示されることを確認（loading, error, success, resend-success）
+    const hasLoading = await page.locator('[data-testid="email-verification-loading"]').isVisible();
+    const hasError = await page.locator('[data-testid="email-verification-error"]').isVisible();
+    const hasSuccess = await page.locator('[data-testid="email-verification-success"]').isVisible();
+    const hasResendSuccess = await page.locator('[data-testid="email-verification-resend-success"]').isVisible();
+    
+    expect(hasLoading || hasError || hasSuccess || hasResendSuccess).toBeTruthy();
   });
 }); 

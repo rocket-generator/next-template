@@ -19,9 +19,9 @@ test.describe('認証機能', () => {
     await expect(page).toHaveURL(/\/auth\/signin/);
     
     // ログインフォームの要素が存在することを確認
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
+    await expect(page.locator('[data-testid="email-input"]')).toBeVisible();
+    await expect(page.locator('[data-testid="password-input"]')).toBeVisible();
+    await expect(page.locator('[data-testid="signin-submit-button"]')).toBeVisible();
   });
 
   test('admin@example.com / password でログインできる', async ({ page }) => {
@@ -32,11 +32,11 @@ test.describe('認証機能', () => {
     await expect(page).toHaveURL(/\/auth\/signin/);
     
     // メールアドレスとパスワードを入力
-    await page.fill('input[type="email"]', 'admin@example.com');
-    await page.fill('input[type="password"]', 'password');
+    await page.fill('[data-testid="email-input"]', 'admin@example.com');
+    await page.fill('[data-testid="password-input"]', 'password');
     
     // ログインボタンをクリック
-    await page.click('button[type="submit"]');
+    await page.click('[data-testid="signin-submit-button"]');
     
     // ログイン後のリダイレクトを待つ（/auth/signinから離れるまで待つ）
     await page.waitForURL((url) => !url.pathname.includes('/auth/signin'), { 

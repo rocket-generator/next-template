@@ -28,7 +28,16 @@ export default function ResendVerificationForm({
     e.preventDefault();
 
     if (!email) {
+      setStatus("error");
       setMessage(t("validation.email_required"));
+      return;
+    }
+
+    // 簡単なメールバリデーション
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setStatus("error");
+      setMessage(t("validation.email_invalid"));
       return;
     }
 
@@ -54,7 +63,10 @@ export default function ResendVerificationForm({
 
   if (status === "success") {
     return (
-      <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
+      <div
+        data-testid="resend-verification-success"
+        className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md"
+      >
         <div className="text-center">
           <h1 className="text-2xl font-bold">
             {t("email_verification_pending")}
@@ -91,7 +103,9 @@ export default function ResendVerificationForm({
             </p>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">{t("didnt_receive_email")}</p>
+              <p className="text-sm text-gray-600">
+                {t("didnt_receive_email")}
+              </p>
 
               <div className="flex justify-center space-x-4">
                 <button
@@ -106,6 +120,7 @@ export default function ResendVerificationForm({
                 </button>
 
                 <Link
+                  data-testid="signin-link"
                   href="/auth/signin"
                   className="font-medium text-gray-700 hover:underline"
                 >
@@ -120,16 +135,27 @@ export default function ResendVerificationForm({
   }
 
   return (
-    <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
+    <div
+      data-testid="resend-verification-form"
+      className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md"
+    >
       <div className="text-center">
-        <h1 className="text-2xl font-bold">{t("resend_verification_email")}</h1>
+        <h1
+          data-testid="resend-verification-title"
+          className="text-2xl font-bold"
+        >
+          {t("resend_verification_email")}
+        </h1>
         <p className="mt-2 text-gray-600">
           {t("resend_verification_description")}
         </p>
       </div>
 
       {status === "error" && message && (
-        <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded">
+        <div
+          data-testid="error-message"
+          className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded"
+        >
           {message}
         </div>
       )}
@@ -145,18 +171,19 @@ export default function ResendVerificationForm({
             </Label>
             <Input
               id="email"
-              type="email"
+              type="text"
+              data-testid="email-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1"
               placeholder="your@email.com"
-              required
             />
           </div>
         </div>
 
         <Button
           type="submit"
+          data-testid="resend-submit-button"
           className="w-full"
           disabled={status === "sending"}
         >
@@ -175,6 +202,7 @@ export default function ResendVerificationForm({
         <p className="text-sm text-gray-600">
           {t("already_have_account")}{" "}
           <Link
+            data-testid="signin-link"
             href="/auth/signin"
             className="font-medium text-blue-600 hover:underline"
           >

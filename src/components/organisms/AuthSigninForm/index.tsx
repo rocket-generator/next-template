@@ -81,6 +81,7 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
             <Input
               id="email"
               type="email"
+              data-testid="email-input"
               autoComplete="email"
               required
               className={cn(
@@ -106,6 +107,7 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
             <Input
               id="password"
               type="password"
+              data-testid="password-input"
               autoComplete="current-password"
               required
               className={cn(
@@ -131,7 +133,12 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          data-testid="signin-submit-button"
+          className="w-full"
+          disabled={isLoading}
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
