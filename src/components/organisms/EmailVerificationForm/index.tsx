@@ -104,7 +104,7 @@ export default function EmailVerificationForm({
           <p className="mt-2 text-gray-600">{t("verifying_email")}</p>
         </div>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto"></div>
         </div>
       </div>
     );
@@ -118,9 +118,9 @@ export default function EmailVerificationForm({
           <p className="mt-2 text-gray-600">{t("verification_complete")}</p>
         </div>
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
             <svg
-              className="h-6 w-6 text-green-600"
+              className="h-6 w-6 text-gray-700"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="1.5"
@@ -159,9 +159,9 @@ export default function EmailVerificationForm({
           <p className="mt-2 text-gray-600">{t("email_sent")}</p>
         </div>
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
             <svg
-              className="h-6 w-6 text-green-600"
+              className="h-6 w-6 text-gray-700"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="1.5"
@@ -242,7 +242,7 @@ export default function EmailVerificationForm({
           {t("already_have_account")}{" "}
           <Link
             href="/auth/signin"
-            className="font-medium text-blue-600 hover:underline"
+            className="font-medium text-gray-700 hover:underline"
           >
             {t("signin")}
           </Link>

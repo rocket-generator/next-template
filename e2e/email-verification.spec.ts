@@ -64,8 +64,8 @@ test.describe('メール認証機能', () => {
     // 送信中の状態が表示されることを確認
     await expect(page.locator('button:has-text("再送信中...")')).toBeVisible();
     
-    // リセンド処理が完了するまで待つ
-    await page.waitForTimeout(2000);
+    // 再送信処理の完了を待つ（成功/エラーメッセージが表示されるまで待機）
+    await expect(page.locator('p')).not.toBeEmpty({ timeout: 5000 });
     
     // ページ内容をデバッグ出力
     const pageText = await page.locator('body').textContent();
@@ -86,13 +86,12 @@ test.describe('メール認証機能', () => {
     // メールアドレスを入力せずに再送信ボタンをクリック
     await page.click('button:has-text("認証メールを再送信")');
     
-    // エラーメッセージが表示されることを確認（デバッグ出力付き）
-    await page.waitForTimeout(1000);
+    // エラーメッセージが表示されるまで待機
+    await expect(page.locator('text=メールアドレスは必須です').or(page.locator('text=メールアドレスを入力してください'))).toBeVisible({ timeout: 5000 });
+    
+    // デバッグ出力
     const pageText = await page.locator('body').textContent();
     console.log('Page after empty email submit:', pageText);
-    
-    // メールアドレス関連のエラーメッセージが表示されることを確認
-    await expect(page.locator('text=メールアドレスは必須です').or(page.locator('text=メールアドレスを入力してください'))).toBeVisible();
   });
 
   test('メール再送信で無効なメールアドレスを送信するとエラーが表示される', async ({ page }) => {
@@ -107,8 +106,8 @@ test.describe('メール認証機能', () => {
     // 再送信ボタンをクリック
     await page.click('button:has-text("認証メールを再送信")');
     
-    // リセンド処理完了まで待機
-    await page.waitForTimeout(2000);
+    // エラーメッセージまたはレスポンスメッセージが表示されるまで待機
+    await expect(page.locator('p')).not.toBeEmpty({ timeout: 5000 });
     
     // ページ内容をデバッグ出力
     const pageText = await page.locator('body').textContent();

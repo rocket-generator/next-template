@@ -17,9 +17,9 @@ export default function EmailVerificationPendingPage() {
 
       <div className="space-y-6">
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
             <svg
-              className="w-8 h-8 text-blue-600"
+              className="w-8 h-8 text-gray-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -47,14 +47,14 @@ export default function EmailVerificationPendingPage() {
             <div className="flex justify-center space-x-4">
               <Link
                 href="/auth/verify-email/resend"
-                className="font-medium text-blue-600 hover:underline"
+                className="font-medium text-gray-700 hover:underline"
               >
                 {t("resend_verification_email")}
               </Link>
 
               <Link
                 href="/auth/signin"
-                className="font-medium text-blue-600 hover:underline"
+                className="font-medium text-gray-700 hover:underline"
               >
                 {t("back_to_signin")}
               </Link>
