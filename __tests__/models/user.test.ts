@@ -10,6 +10,9 @@ describe("User Model", () => {
         password: "hashedPassword123",
         name: "Test User",
         permissions: ["read", "write"],
+        avatarKey: undefined,
+        isActive: true,
+        emailVerified: true,
       };
 
       const result = UserSchema.parse(validUser);
@@ -24,6 +27,9 @@ describe("User Model", () => {
         password: "hashedPassword456",
         name: "Another User",
         permissions: ["admin"],
+        avatarKey: undefined,
+        isActive: true,
+        emailVerified: false,
       };
 
       const result = UserSchema.parse(validUser);

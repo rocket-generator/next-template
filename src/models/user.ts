@@ -21,6 +21,8 @@ export function transformPrismToModel(data: unknown): User {
     permissions: Array.isArray(prismaData.permissions)
       ? (prismaData.permissions as string[])
       : [],
+    isActive: prismaData.isActive ?? true,
+    emailVerified: prismaData.emailVerified ?? false,
     avatarKey: prismaData.avatarKey || undefined,
   };
 

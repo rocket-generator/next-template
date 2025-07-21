@@ -138,8 +138,8 @@ describe("PasswordChangeForm", () => {
     const submitButton = screen.getByRole("button", { name: "Change Password" });
 
     await user.type(currentPasswordInput, "currentpass");
-    await user.type(newPasswordInput, "newpass123");
-    await user.type(confirmPasswordInput, "newpass123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     expect(submitButton).not.toBeDisabled();
   });
@@ -152,11 +152,11 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password") as HTMLInputElement;
 
     await user.type(currentPasswordInput, "current123");
-    await user.type(newPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
     await user.type(confirmPasswordInput, "confirm123");
 
     expect(currentPasswordInput.value).toBe("current123");
-    expect(newPasswordInput.value).toBe("new123");
+    expect(newPasswordInput.value).toBe("NewPass123!");
     expect(confirmPasswordInput.value).toBe("confirm123");
   });
 
@@ -170,8 +170,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "current123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     await user.click(submitButton);
@@ -193,8 +193,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "current123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     await user.click(submitButton);
@@ -202,8 +202,8 @@ describe("PasswordChangeForm", () => {
     await waitFor(() => {
       expect(mockChangePassword).toHaveBeenCalledWith({
         currentPassword: "current123",
-        newPassword: "new123",
-        confirmPassword: "new123",
+        newPassword: "NewPass123!",
+        confirmPassword: "NewPass123!",
       });
     });
   });
@@ -219,8 +219,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password") as HTMLInputElement;
 
     await user.type(currentPasswordInput, "current123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     await user.click(submitButton);
@@ -248,8 +248,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "wrong123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     await user.click(submitButton);
@@ -273,8 +273,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "current123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     await user.click(submitButton);
@@ -299,8 +299,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "wrong123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     await user.click(submitButton);
@@ -326,8 +326,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "wrong123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     await user.click(submitButton);
@@ -363,8 +363,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "current123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     
@@ -385,8 +385,8 @@ describe("PasswordChangeForm", () => {
     const confirmPasswordInput = screen.getByLabelText("Confirm New Password");
 
     await user.type(currentPasswordInput, "current123");
-    await user.type(newPasswordInput, "new123");
-    await user.type(confirmPasswordInput, "new123");
+    await user.type(newPasswordInput, "NewPass123!");
+    await user.type(confirmPasswordInput, "NewPass123!");
 
     const submitButton = screen.getByRole("button", { name: "Change Password" });
     

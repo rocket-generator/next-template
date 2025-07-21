@@ -2,7 +2,7 @@ import AuthSignupForm from "@/components/organisms/AuthSignupForm";
 import { redirect } from "next/navigation";
 import { signUpAction } from "./actions";
 import { SignUpRequest } from "@/requests/signup_request";
-import { Success } from "@/constants/auth";
+import { Success, EmailVerificationRequired } from "@/constants/auth";
 
 interface SignUpPageProps {
   searchParams: Promise<{ callback_url?: string }>;
@@ -21,6 +21,8 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
       } else {
         redirect("/dashboard");
       }
+    } else if (result === EmailVerificationRequired) {
+      redirect("/auth/verify-email/pending");
     }
     return result;
   };

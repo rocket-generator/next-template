@@ -19,5 +19,3 @@ alwaysApply: true
 - 全てのUnitTestのコードが正しくPassする
 - 全てのE2Eテストのコードが正しくPassする
 
-
-

@@ -10,7 +10,11 @@ export async function createUser(
   const repository = new UserRepository();
 
   try {
-    const user = await repository.create(data);
+    const user = await repository.create({
+      ...data,
+      isActive: true,
+      emailVerified: false,
+    });
     return user.id;
   } catch (error) {
     console.error("Failed to create user:", error);

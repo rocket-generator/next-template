@@ -9,6 +9,8 @@ describe("Auth Model", () => {
         password: "hashedPassword123",
         name: "Test User",
         permissions: ["read", "write"],
+        isActive: true,
+        emailVerified: true,
       };
 
       const result = AuthSchema.parse(validAuth);
@@ -22,6 +24,8 @@ describe("Auth Model", () => {
         password: "hashedPassword456",
         name: "Another User",
         permissions: [],
+        isActive: true,
+        emailVerified: false,
       };
 
       const result = AuthSchema.parse(validAuth);
@@ -36,6 +40,8 @@ describe("Auth Model", () => {
         password: "hashedPassword789",
         name: "Admin User",
         permissions: ["read", "write", "delete", "admin"],
+        isActive: true,
+        emailVerified: true,
       };
 
       const result = AuthSchema.parse(validAuth);
@@ -173,6 +179,8 @@ describe("Auth Model", () => {
           password: "password",
           name: "Test User",
           permissions: [],
+          isActive: true,
+          emailVerified: true,
         };
 
         const result = AuthSchema.parse(auth);
@@ -187,6 +195,8 @@ describe("Auth Model", () => {
         password: "password",
         name: "山田 太郎 (Yamada Taro)",
         permissions: [],
+        isActive: true,
+        emailVerified: true,
       };
 
       const result = AuthSchema.parse(validAuth);
@@ -200,6 +210,8 @@ describe("Auth Model", () => {
         password: "", // Empty but valid string
         name: "", // Empty but valid string
         permissions: [],
+        isActive: false,
+        emailVerified: false,
       };
 
       const result = AuthSchema.parse(validAuth);
@@ -216,6 +228,8 @@ describe("Auth Model", () => {
         password: "password",
         name: "Test User",
         permissions: ["read", "write", "read", "write"], // Duplicates
+        isActive: true,
+        emailVerified: true,
       };
 
       const result = AuthSchema.parse(validAuth);

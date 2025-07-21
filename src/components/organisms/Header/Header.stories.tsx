@@ -20,6 +20,8 @@ const mockUser: User = {
   password: "password",
   name: "田中太郎",
   permissions: ["read", "write"],
+  isActive: true,
+  emailVerified: true,
 };
 
 const mockUserWithLongName: User = {
@@ -28,6 +30,8 @@ const mockUserWithLongName: User = {
   password: "password",
   name: "とても長い名前のユーザー山田花子田中",
   permissions: ["read", "write", "admin"],
+  isActive: true,
+  emailVerified: true,
 };
 
 export const WithSignedInUser: Story = {
