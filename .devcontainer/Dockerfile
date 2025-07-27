@@ -40,6 +40,8 @@ ENV DEVCONTAINER=true
 RUN mkdir -p /workspace /home/node/.claude && \
   chown -R node:node /workspace /home/node/.claude
 
+RUN npm install -g @google/gemini-cli
+
 WORKDIR /workspace
 
 RUN ARCH=$(dpkg --print-architecture) && \

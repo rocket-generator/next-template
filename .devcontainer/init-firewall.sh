@@ -56,6 +56,8 @@ for domain in \
     "api.anthropic.com" \
     "sentry.io" \
     "statsig.anthropic.com" \
+    "accounts.google.com" \
+    "generativelanguage.googleapis.com" \
     "statsig.com"; do
     echo "Resolving $domain..."
     ips=$(dig +short A "$domain")
