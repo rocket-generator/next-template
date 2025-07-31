@@ -15,21 +15,26 @@ alwaysApply: true
 
 なお、リクエストやレスポンスなどのスキーマをRepositoryのファイルに書くことは禁止する。レスポンスのモデルは `/src/models` 以下に、リクエストは `/src/requests` に書くこと。
 
-### 1. APIサーバを別途用意している場合
+### 1. Prismaにアクセスする場合
+
+データベースにはPrismaを利用する。この場合は、 [prisma_repository.ts](mdc:src/repositories/prisma_repository.ts) を継承してリポジトリを作成する。
+
+### 2. APIサーバを別途用意している場合
 
 BaseRepositoryを直接継承して作成する。
 
-### 2. ローカルデータにアクセスする場合
+### 3. ローカルデータにアクセスする場合
 
 プロトタイプを作る際には、別途サーバを用意するのでは無く、`public/data` 下にJSONデータや画像などを置き、それに直接アクセスさせる場合がある。その際には、 [local_repository.ts](mdc:src/repositories/local_repository.ts) のLocalRepositoryを継承して利用する。データは `public/data/[モデル名]/index.json` に一覧、`public/data/[モデル名]/[id].json` にデータを格納しておく。ローカルデータアクセスの場合は、データのアップデートや作成、削除は対応しない。
 
-### 3. AirTableにアクセスする場合
+### 4. AirTableにアクセスする場合
 
 プロトタイプを作る際でも、データを作成、保存、削除がしたい場合には、AirTableをバックエンドとして利用する。この場合は、 [airtable_repository.ts](mdc:src/repositories/airtable_repository.ts) を継承してリポジトリを作成する。
 
-### 4. Difyにアクセスする場合
+### 5. Difyにアクセスする場合
 
 AIを利用する際に、AIのワークフロー実行にはDifyを利用する。チャットのために利用する場合は、 [chat_repository.ts](mdc:src/repositories/chat_repository.ts) を利用する。それ以外のワークフローを利用する場合は、 [workflow_repository.ts](mdc:src/repositories/workflow_repository.ts) を利用する。
+
 
 ## 新たにAPIサーバ以外のサードパーティAPIにアクセスするRepositoryを作成する場合
 
