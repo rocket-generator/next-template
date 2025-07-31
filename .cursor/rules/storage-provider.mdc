@@ -1,0 +1,530 @@
+---
+description: ファイルをストレージに保存する、あるいは新たなストレージプロバイダを追加する際に参照する
+globs:
+alwaysApply: false
+---
+
+# ストレージプロバイダー追加ガイド
+
+このファイルは、既存のストレージサービスに新しいプロバイダーを追加する方法を説明します。
+
+## 現在のアーキテクチャ
+
+ストレージサービスはProvider パターンで設計されており、以下の構造になっています：
+
+```
+src/libraries/storage.ts
+├── StorageService (interface) - ストレージ操作の抽象化
+├── StorageProvider (interface) - プロバイダーの抽象化
+├── S3Provider (class) - AWS S3実装
+├── LocalStorageProvider (class) - ローカルファイルシステム実装
+└── StorageServiceImpl (class) - メインのサービス実装
+```
+
+## 新しいプロバイダーの追加手順
+
+### 1. プロバイダー設定インターフェースの定義
+
+```typescript
+// 例: Google Cloud Storage プロバイダーの場合
+export interface GCSProviderConfig {
+  projectId: string;
+  bucket: string;
+  credentials: {
+    clientEmail: string;
+    privateKey: string;
+  };
+  region?: string;
+}
+```
+
+### 2. プロバイダークラスの実装
+
+```typescript
+export class GCSProvider implements StorageProvider {
+  private config: GCSProviderConfig;
+
+  constructor(config: GCSProviderConfig) {
+    this.config = config;
+  }
+
+  async upload(options: UploadOptions): Promise<UploadResult> {
+    try {
+      // Dynamic import for Edge Runtime compatibility
+      const { Storage } = await import("@google-cloud/storage");
+      
+      const storage = new Storage({
+        projectId: this.config.projectId,
+        credentials: this.config.credentials,
+      });
+      
+      const bucket = storage.bucket(this.config.bucket);
+      const file = bucket.file(options.key);
+      
+      await file.save(options.data, {
+        metadata: {
+          contentType: options.contentType || "application/octet-stream",
+          ...options.metadata,
+        },
+      });
+
+      const url = `https://storage.googleapis.com/${this.config.bucket}/${options.key}`;
+
+      return {
+        success: true,
+        key: options.key,
+        url,
+      };
+    } catch (error) {
+      console.error("GCS upload failed:", error);
+      return {
+        success: false,
+        key: options.key,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  async download(key: string): Promise<DownloadResult> {
+    try {
+      const { Storage } = await import("@google-cloud/storage");
+      
+      const storage = new Storage({
+        projectId: this.config.projectId,
+        credentials: this.config.credentials,
+      });
+      
+      const bucket = storage.bucket(this.config.bucket);
+      const file = bucket.file(key);
+      
+      const [data] = await file.download();
+      const [metadata] = await file.getMetadata();
+
+      return {
+        success: true,
+        data: Buffer.from(data),
+        contentType: metadata.contentType,
+        contentLength: parseInt(metadata.size),
+        lastModified: new Date(metadata.updated),
+      };
+    } catch (error) {
+      console.error("GCS download failed:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    try {
+      const { Storage } = await import("@google-cloud/storage");
+      
+      const storage = new Storage({
+        projectId: this.config.projectId,
+        credentials: this.config.credentials,
+      });
+      
+      const bucket = storage.bucket(this.config.bucket);
+      const file = bucket.file(key);
+      
+      const [signedUrl] = await file.getSignedUrl({
+        action: "read",
+        expires: Date.now() + expiresIn * 1000,
+      });
+
+      return signedUrl;
+    } catch (error) {
+      console.error("GCS signed URL generation failed:", error);
+      throw new Error(
+        `Failed to generate signed URL: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      const { Storage } = await import("@google-cloud/storage");
+      
+      const storage = new Storage({
+        projectId: this.config.projectId,
+        credentials: this.config.credentials,
+      });
+      
+      const bucket = storage.bucket(this.config.bucket);
+      const file = bucket.file(key);
+      
+      await file.delete();
+    } catch (error) {
+      console.error("GCS delete failed:", error);
+      throw new Error(
+        `Failed to delete file: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async list(prefix?: string, maxKeys: number = 1000): Promise<ListResult> {
+    try {
+      const { Storage } = await import("@google-cloud/storage");
+      
+      const storage = new Storage({
+        projectId: this.config.projectId,
+        credentials: this.config.credentials,
+      });
+      
+      const bucket = storage.bucket(this.config.bucket);
+      const [files] = await bucket.getFiles({
+        prefix,
+        maxResults: maxKeys,
+      });
+
+      const storageFiles: StorageFile[] = files.map((file) => ({
+        key: file.name,
+        size: parseInt(file.metadata.size),
+        lastModified: new Date(file.metadata.updated),
+        etag: file.metadata.etag,
+      }));
+
+      return {
+        success: true,
+        files: storageFiles,
+        hasMore: files.length === maxKeys,
+      };
+    } catch (error) {
+      console.error("GCS list failed:", error);
+      return {
+        success: false,
+        files: [],
+        hasMore: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+}
+```
+
+### 3. 設定ファクトリー関数の追加
+
+```typescript
+export function createGCSProviderConfig(): GCSProviderConfig {
+  return {
+    projectId: process.env.GCS_PROJECT_ID || "",
+    bucket: process.env.GCS_BUCKET || "",
+    credentials: {
+      clientEmail: process.env.GCS_CLIENT_EMAIL || "",
+      privateKey: process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
+    },
+    region: process.env.GCS_REGION,
+  };
+}
+```
+
+### 4. メインファクトリー関数の更新
+
+```typescript
+export function createStorageServiceInstance(): StorageService {
+  // Edge Runtime環境の検出を改善
+  const isEdgeRuntime =
+    process.env.NEXT_RUNTIME === "edge" ||
+    typeof process === "undefined" ||
+    typeof process.versions === "undefined" ||
+    typeof process.versions.node === "undefined";
+
+  // Node.js Runtime環境の検出
+  const isNodeRuntime =
+    !isEdgeRuntime &&
+    typeof process !== "undefined" &&
+    typeof process.versions !== "undefined" &&
+    typeof process.versions.node !== "undefined";
+
+  // Edge Runtime環境では常にS3を使用
+  if (isEdgeRuntime) {
+    console.log("Edge Runtime detected, using S3 provider");
+    const s3Config = createS3ProviderConfig();
+    return new StorageServiceImpl(new S3Provider(s3Config));
+  }
+
+  // Node.js環境でのみローカルストレージの選択を許可
+  const storageType = isNodeRuntime
+    ? process.env.STORAGE_PROVIDER || "s3"
+    : "s3";
+
+  let provider: StorageProvider;
+
+  switch (storageType) {
+    case "gcs":
+      const gcsConfig = createGCSProviderConfig();
+      provider = new GCSProvider(gcsConfig);
+      break;
+
+    case "local":
+      if (!isNodeRuntime || !LocalStorageProvider) {
+        console.warn(
+          "LocalStorageProvider is not supported in non-Node.js runtime, falling back to S3"
+        );
+        const s3Config = createS3ProviderConfig();
+        provider = new S3Provider(s3Config);
+      } else {
+        const localPath = process.env.LOCAL_STORAGE_PATH || "./uploads";
+        provider = new LocalStorageProvider(localPath);
+      }
+      break;
+
+    case "s3":
+    default:
+      const s3Config = createS3ProviderConfig();
+      provider = new S3Provider(s3Config);
+      break;
+  }
+
+  return new StorageServiceImpl(provider);
+}
+```
+
+### 5. 環境変数の追加
+
+`.env.sample` に新しいプロバイダー用の環境変数を追加：
+
+```bash
+# Storage Provider Selection
+STORAGE_PROVIDER=s3 # s3, gcs, local, etc.
+
+# Google Cloud Storage Configuration
+GCS_PROJECT_ID=your-gcs-project-id
+GCS_BUCKET=your-gcs-bucket-name
+GCS_CLIENT_EMAIL=your-service-account-email
+GCS_PRIVATE_KEY=your-private-key
+GCS_REGION=us-central1
+```
+
+### 6. package.json の依存関係追加
+
+```bash
+npm install @google-cloud/storage
+# または
+npm install azure-storage-blob
+```
+
+## プロバイダー実装の注意点
+
+### Edge Runtime 対応
+
+Next.js Edge Runtime で使用する場合：
+
+1. **Dynamic Import を使用**: Node.js 固有のモジュールは dynamic import で読み込む
+2. **HTTP ベースの API を選択**: Node.js ネイティブモジュール（fs など）を使わないライブラリを選ぶ
+3. **fetch() を活用**: 可能であれば、ライブラリの代わりに fetch() で直接 API を呼び出す
+
+### エラーハンドリング
+
+- 常に `UploadResult`, `DownloadResult`, `ListResult` 形式で結果を返す
+- エラーは適切にログ出力し、`success: false` で返す
+- ネットワークエラー、認証エラーなど様々なエラーケースを考慮
+
+### 設定の検証
+
+```typescript
+constructor(config: GCSProviderConfig) {
+  if (!config.projectId) {
+    throw new Error("GCS project ID is required");
+  }
+  if (!config.bucket) {
+    throw new Error("GCS bucket is required");
+  }
+  if (!config.credentials.clientEmail || !config.credentials.privateKey) {
+    throw new Error("GCS credentials are required");
+  }
+  this.config = config;
+}
+```
+
+### URL生成の考慮
+
+```typescript
+private generateFileUrl(key: string): string {
+  // プロバイダー固有のURL形式を実装
+  if (this.config.region) {
+    return `https://storage.googleapis.com/${this.config.bucket}/${key}`;
+  } else {
+    return `https://storage.googleapis.com/${this.config.bucket}/${key}`;
+  }
+}
+```
+
+## テスト方法
+
+### 1. 単体テスト
+
+```typescript
+// __tests__/libraries/storage.test.ts
+describe("GCSProvider", () => {
+  it("should upload file successfully", async () => {
+    const provider = new GCSProvider({
+      projectId: "test-project",
+      bucket: "test-bucket",
+      credentials: {
+        clientEmail: "test@example.com",
+        privateKey: "test-key",
+      },
+    });
+    
+    const result = await provider.upload({
+      key: "test/file.txt",
+      data: Buffer.from("test content"),
+      contentType: "text/plain",
+    });
+    
+    expect(result.success).toBe(true);
+    expect(result.key).toBe("test/file.txt");
+  });
+});
+```
+
+### 2. 統合テスト
+
+1. `.env` ファイルで `STORAGE_PROVIDER=gcs` を設定
+2. ファイルアップロード機能で実際にストレージ操作をテスト
+3. ログで操作結果が正しく出力されることを確認
+
+## 利用可能なプロバイダーの例
+
+### Edge Runtime 対応
+
+- **AWS S3**: HTTP API、Edge Runtime 対応（現在実装済み）
+- **Google Cloud Storage**: HTTP API、Edge Runtime 対応
+- **Azure Blob Storage**: HTTP API、Edge Runtime 対応
+- **Cloudflare R2**: S3互換API、Edge Runtime 対応
+
+### Node.js Runtime のみ
+
+- **LocalStorageProvider**: ローカルファイルシステム（現在実装済み）
+- **MinIO**: S3互換ストレージ
+- **DigitalOcean Spaces**: S3互換API
+
+## 既存コードへの影響
+
+新しいプロバイダーを追加しても、以下は変更不要：
+
+- `StorageService` インターフェース
+- `StorageServiceImpl` クラス
+- 既存の `S3Provider` と `LocalStorageProvider`
+- ファイルアップロード機能の実装
+
+プロバイダーの切り替えは環境変数 `STORAGE_PROVIDER` の設定のみで可能です。
+
+## 使用例
+
+### 基本的な使用方法
+
+```typescript
+import { createStorageServiceInstance } from "@/libraries/storage";
+
+const storageService = createStorageServiceInstance();
+
+// ファイルアップロード
+const uploadResult = await storageService.uploadFile(
+  "documents/report.pdf",
+  fileBuffer,
+  "application/pdf"
+);
+
+if (uploadResult.success) {
+  console.log("File uploaded:", uploadResult.url);
+}
+
+// ファイルダウンロード
+const downloadResult = await storageService.downloadFile("documents/report.pdf");
+if (downloadResult.success) {
+  // downloadResult.data を使用
+}
+
+// Signed URL生成
+const signedUrl = await storageService.generateSignedUrl("documents/report.pdf", 3600);
+
+// ファイル削除
+await storageService.deleteFile("documents/report.pdf");
+
+// ファイル一覧取得
+const listResult = await storageService.listFiles("documents/", 100);
+if (listResult.success) {
+  listResult.files.forEach(file => {
+    console.log(file.key, file.size);
+  });
+}
+```
+
+### Server Actionでの使用
+
+```typescript
+// app/actions.ts
+"use server";
+
+import { createStorageServiceInstance } from "@/libraries/storage";
+
+export async function uploadDocumentAction(formData: FormData) {
+  const storageService = createStorageServiceInstance();
+  
+  const file = formData.get("file") as File;
+  if (!file) {
+    throw new Error("No file provided");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const key = `documents/${Date.now()}-${file.name}`;
+  
+  const result = await storageService.uploadFile(
+    key,
+    buffer,
+    file.type
+  );
+
+  if (!result.success) {
+    throw new Error("Failed to upload file");
+  }
+
+  return { success: true, url: result.url };
+}
+```
+
+## 環境別設定例
+
+### 開発環境（LocalStack）
+
+```bash
+STORAGE_PROVIDER=s3
+AWS_S3_REGION=us-east-1
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+AWS_S3_BUCKET=test-bucket
+LOCALSTACK_ENDPOINT=http://localhost:4566
+LOCALSTACK_PUBLIC_ENDPOINT=http://localhost:4566
+```
+
+### 本番環境（AWS S3）
+
+```bash
+STORAGE_PROVIDER=s3
+AWS_S3_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_S3_BUCKET=your-production-bucket
+```
+
+### 本番環境（Google Cloud Storage）
+
+```bash
+STORAGE_PROVIDER=gcs
+GCS_PROJECT_ID=your-project-id
+GCS_BUCKET=your-bucket-name
+GCS_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
+GCS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...
+GCS_REGION=us-central1
+```
+description:
+globs:
+alwaysApply: false
+---
