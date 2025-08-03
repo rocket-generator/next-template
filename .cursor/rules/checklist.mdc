@@ -18,4 +18,5 @@ alwaysApply: true
 - 書き換えたコードに関係するUnitTest / E2Eテスト / Storybookがきちんと更新されている
 - 全てのUnitTestのコードが正しくPassする
 - 全てのE2Eテストのコードが正しくPassする
+- テストで screen.getByLabelText() や screen.getByText() を使わず、きちんとテストIDを使ってテストを行っている
 
