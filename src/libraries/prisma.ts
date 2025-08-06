@@ -6,8 +6,13 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-export const prisma = global.prisma || new PrismaClient();
+// Edge Runtime環境では常に新しいインスタンスを作成
+const isEdgeRuntime = typeof global === "undefined";
 
-if (process.env.NODE_ENV !== "production") {
+export const prisma = isEdgeRuntime
+  ? new PrismaClient()
+  : global.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production" && !isEdgeRuntime) {
   global.prisma = prisma;
 }
