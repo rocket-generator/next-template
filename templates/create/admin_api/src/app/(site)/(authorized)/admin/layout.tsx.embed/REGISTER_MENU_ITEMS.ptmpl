@@ -1,5 +1,0 @@
-  {
-    icon: <Users className="w-5 h-5" />,
-    label: t("{{ .Name.Plural.Snake }}"),
-    href: "/admin/{{ .Name.Plural.Snake }}",
-  },

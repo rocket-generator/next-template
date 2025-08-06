@@ -1,7 +1,7 @@
 ---
-globs: *.ts,*.tsx
-alwaysApply: false
+alwaysApply: true
 ---
+
 # Unit Testing Guidelines
 
 このドキュメントは、このプロジェクトにおけるユニットテストの作成・実行方法についてのガイドラインです。
@@ -157,24 +157,24 @@ describe('Component名', () => {
 
   describe('セクション名', () => {
     it('renders specific element', () => {
-      const element = screen.getByRole('heading', { name: '見出しテキスト' });
+      const element = screen.getByTestId('page-heading');
       expect(element).toBeInTheDocument();
     });
 
     it('renders link with correct href', () => {
-      const link = screen.getByRole('link', { name: 'リンクテキスト' });
+      const link = screen.getByTestId('navigation-link');
       expect(link).toHaveAttribute('href', '/expected/path');
     });
   });
 
   describe('Accessibility', () => {
     it('has proper heading hierarchy', () => {
-      const headings = screen.getAllByRole('heading');
+      const headings = screen.getAllByTestId(/^heading-/);
       // ヘッダー階層の検証
     });
 
     it('all images have alt text', () => {
-      const images = screen.getAllByRole('img');
+      const images = screen.getAllByTestId(/^image-/);
       images.forEach((image) => {
         expect(image).toHaveAttribute('alt');
       });
@@ -234,26 +234,61 @@ expect(element).toHaveTextContent('text');
 expect(element).toHaveClass('className');
 ```
 
-### 4. React Testing Libraryのクエリ
+### 4. React Testing Libraryのクエリ（重要：getByTestIdを基本とする）
+
+**⚠️ 重要: getByText や getByLabelText の使用は禁止**
+
+国際化対応やテキスト変更の可能性を考慮し、以下のルールを厳守してください：
+
 ```typescript
-// 要素の取得方法（優先順位順）
-screen.getByRole('button', { name: 'Submit' });     // アクセシビリティロール
-screen.getByLabelText('Email');                      // ラベルテキスト
-screen.getByPlaceholderText('Enter email');          // プレースホルダー
-screen.getByText('Welcome');                         // テキスト内容
-screen.getByDisplayValue('current value');           // 入力値
-screen.getByAltText('Image description');            // alt属性
-screen.getByTitle('Tooltip text');                   // title属性
-screen.getByTestId('custom-element');                // data-testid（最終手段）
+// ✅ 推奨: data-testidを使用
+screen.getByTestId('submit-button');
+screen.getByTestId('email-input');
+screen.getByTestId('error-message');
+
+// ❌ 禁止: テキストベースのクエリ
+screen.getByText('Submit');           // 禁止
+screen.getByLabelText('Email');       // 禁止
+screen.getByRole('button', { name: 'Submit' }); // 禁止
 
 // 複数要素の取得
-screen.getAllByRole('listitem');
+screen.getAllByTestId(/^list-item-/);
 
 // 要素が存在しないことの確認
-expect(screen.queryByText('Not present')).not.toBeInTheDocument();
+expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
 ```
 
-### 5. 非同期処理のテスト
+### 5. data-testidの命名規則
+
+```typescript
+// 基本的な命名パターン
+data-testid="component-name"           // コンポーネント名
+data-testid="component-name-action"    // アクション付き
+data-testid="component-name-state"     // 状態付き
+
+// 具体例
+data-testid="submit-button"            // 送信ボタン
+data-testid="email-input"              // メール入力
+data-testid="error-message"            // エラーメッセージ
+data-testid="loading-spinner"          // ローディングスピナー
+data-testid="user-avatar"              // ユーザーアバター
+data-testid="navigation-menu"          // ナビゲーションメニュー
+data-testid="search-form"              // 検索フォーム
+data-testid="pagination-next"          // ページネーション次へ
+data-testid="modal-close"              // モーダル閉じるボタン
+
+// 動的な要素の場合
+data-testid={`user-item-${userId}`}   // ユーザーID付き
+data-testid={`product-card-${productId}`} // 商品ID付き
+
+// 複数要素の場合
+data-testid="list-item-1"             // リストアイテム1
+data-testid="list-item-2"             // リストアイテム2
+data-testid="tab-item-home"           // タブアイテム（ホーム）
+data-testid="tab-item-profile"        // タブアイテム（プロフィール）
+```
+
+### 6. 非同期処理のテスト
 ```typescript
 // Promiseを返す関数のテスト
 it('should handle async operation', async () => {
@@ -268,12 +303,12 @@ it('should display data after loading', async () => {
   render(<AsyncComponent />);
   
   await waitFor(() => {
-    expect(screen.getByText('Loaded data')).toBeInTheDocument();
+    expect(screen.getByTestId('loaded-data')).toBeInTheDocument();
   });
 });
 ```
 
-### 6. エラーケースのテスト
+### 7. エラーケースのテスト
 ```typescript
 it('should throw error for invalid input', async () => {
   await expect(functionThatThrows()).rejects.toThrow('Error message');
@@ -282,6 +317,44 @@ it('should throw error for invalid input', async () => {
 it('should return false for invalid data', async () => {
   const result = await validateFunction(invalidData);
   expect(result).toBe(false);
+});
+```
+
+### 8. フォームテストの例
+
+```typescript
+// コンポーネント側
+<form data-testid="login-form">
+  <input 
+    type="email" 
+    data-testid="email-input" 
+    placeholder="Email"
+  />
+  <input 
+    type="password" 
+    data-testid="password-input" 
+    placeholder="Password"
+  />
+  <button type="submit" data-testid="submit-button">
+    Sign In
+  </button>
+</form>
+
+// テスト側
+it('should submit form with valid data', async () => {
+  render(<LoginForm />);
+  
+  const emailInput = screen.getByTestId('email-input');
+  const passwordInput = screen.getByTestId('password-input');
+  const submitButton = screen.getByTestId('submit-button');
+  
+  fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+  fireEvent.change(passwordInput, { target: { value: 'password123' } });
+  fireEvent.click(submitButton);
+  
+  await waitFor(() => {
+    expect(screen.getByTestId('success-message')).toBeInTheDocument();
+  });
 });
 ```
 
@@ -363,10 +436,471 @@ describe.each([
 4. **DOM要素が見つからない**
    - 適切なクエリメソッドを使用しているか確認
    - 非同期レンダリングの場合は `waitFor` を使用
+   - data-testidが正しく設定されているか確認
+
+5. **data-testidが見つからない**
+   - コンポーネントにdata-testid属性が設定されているか確認
+   - 命名規則に従っているか確認
+   - 動的な要素の場合は正しい値が設定されているか確認
 
 ## 追加リソース
 
 - [Jest Documentation](mdc:https:/jestjs.io/docs/getting-started)
+- [React Testing Library Documentation](mdc:https:/testing-library.com/docs/react-testing-library/intro)
+- [Testing Library Queries](mdc:https:/testing-library.com/docs/queries/about)
+- [Jest DOM Matchers](mdc:https:/github.com/testing-library/jest-dom)
+
+- [React Testing Library Documentation](mdc:https:/testing-library.com/docs/react-testing-library/intro)
+- [Testing Library Queries](mdc:https:/testing-library.com/docs/queries/about)
+- [Jest DOM Matchers](mdc:https:/github.com/testing-library/jest-dom)
+# Unit Testing Guidelines
+
+このドキュメントは、このプロジェクトにおけるユニットテストの作成・実行方法についてのガイドラインです。
+
+## テストの義務化
+
+- 新規コンポーネント作成時: 必ずテストファイルを同時に作成すること
+- 既存コンポーネント改修時: 対応するテストも必ず更新すること
+- 削除時: コンポーネントを削除する際は、対応するテストも削除すること
+
+## テスト環境
+
+### 使用ツール
+- **Jest**: JavaScriptテストフレームワーク
+- **React Testing Library**: Reactコンポーネントのテスト用ライブラリ
+- **@testing-library/jest-dom**: DOM要素のアサーション用カスタムマッチャー
+
+### テストファイルの配置
+- テストファイルは `__tests__` ディレクトリに配置
+- ソースコードのディレクトリ構造を反映させる
+  - 例: `src/libraries/hash.ts` → `__tests__/libraries/hash.test.ts`
+  - 例: `src/app/(site)/(unauthorized)/page.tsx` → `__tests__/app/(site)/(unauthorized)/page.test.tsx`
+
+## テストの実行方法
+
+```bash
+# すべてのテストを実行
+npm test
+
+# ウォッチモードでテストを実行（ファイル変更を監視）
+npm test -- --watch
+
+# カバレッジレポートを生成
+npm test -- --coverage
+
+# 特定のファイルのみテストを実行
+npm test -- __tests__/libraries/hash.test.ts
+
+# 特定のテストケースのみ実行
+npm test -- -t "should hash password successfully"
+```
+
+## テストの書き方
+
+### 1. 基本構造
+
+```typescript
+import { テスト対象のモジュール } from '@/path/to/module';
+
+describe('モジュール名', () => {
+  describe('関数名', () => {
+    it('期待される動作の説明', async () => {
+      // Arrange: テストの準備
+      const input = 'テスト入力';
+      
+      // Act: テスト対象の実行
+      const result = await targetFunction(input);
+      
+      // Assert: 結果の検証
+      expect(result).toBe(expectedValue);
+    });
+  });
+});
+```
+
+### 2. ライブラリ・ユーティリティ関数のテスト
+
+```typescript
+// __tests__/libraries/hash.test.ts の例
+describe('Hash Library', () => {
+  describe('hashPassword', () => {
+
+    it('should hash password successfully', async () => {
+      const password = 'testPassword123';
+      const hashedPassword = await hashPassword(password);
+
+      expect(hashedPassword).toBeDefined();
+      expect(typeof hashedPassword).toBe('string');
+      expect(hashedPassword.length).toBeGreaterThan(0);
+    });
+
+    it('should generate hash in correct format', async () => {
+      const password = 'testPassword123';
+      const hashedPassword = await hashPassword(password);
+
+      const parts = hashedPassword.split(':');
+      expect(parts).toHaveLength(4);
+      expect(parts[0]).toBe('pbkdf2');
+    });
+
+    it('should be able to hash empty password', async () => {
+      const password = '';
+      const hashedPassword = await hashPassword(password);
+
+      expect(hashedPassword).toBeDefined();
+    });
+
+    it('should be able to hash password with special characters', async () => {
+      const password = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+      const hashedPassword = await hashPassword(password);
+
+      expect(hashedPassword).toBeDefined();
+    });
+  });
+
+  describe('Integration Tests', () => {
+    it('should handle complete hash→verification flow correctly', async () => {
+      const passwords = [
+        'simplePassword',
+        'Complex!Pass@123',
+        '',
+        '日本語パスワード',
+        'a'.repeat(500),
+      ];
+
+      for (const password of passwords) {
+        const hashedPassword = await hashPassword(password);
+        const isValid = await verifyPassword(password, hashedPassword);
+        expect(isValid).toBe(true);
+      }
+    });
+  });
+});
+```
+
+### 3. Reactコンポーネントのテスト
+
+```typescript
+// __tests__/app/(site)/(unauthorized)/page.test.tsx の例
+import '@testing-library/jest-dom';
+import { render, screen } from '@testing-library/react';
+import Component from '@/app/path/to/component';
+
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    const { priority, quality, placeholder, blurDataURL, ...restProps } = props;
+    return <img {...restProps} />;
+  },
+}));
+
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, href, ...props }: any) => {
+    return <a href={href} {...props}>{children}</a>;
+  },
+}));
+
+describe('Component名', () => {
+  beforeEach(() => {
+    render(<Component />);
+  });
+
+  describe('セクション名', () => {
+    it('renders specific element', () => {
+      const element = screen.getByTestId('page-heading');
+      expect(element).toBeInTheDocument();
+    });
+
+    it('renders link with correct href', () => {
+      const link = screen.getByTestId('navigation-link');
+      expect(link).toHaveAttribute('href', '/expected/path');
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('has proper heading hierarchy', () => {
+      const headings = screen.getAllByTestId(/^heading-/);
+      // ヘッダー階層の検証
+    });
+
+    it('all images have alt text', () => {
+      const images = screen.getAllByTestId(/^image-/);
+      images.forEach((image) => {
+        expect(image).toHaveAttribute('alt');
+      });
+    });
+  });
+});
+```
+
+## テストのベストプラクティス
+
+### 1. テストの構造化
+- `describe`でテスト対象を階層的に整理
+- `it`で具体的な動作を記述（**必ず英語で書く**, 「should」で始める）
+- AAA（Arrange-Act-Assert）パターンを使用
+
+### 2. モックの使用
+```typescript
+// 外部モジュールのモック
+jest.mock('module-name', () => ({
+  functionName: jest.fn(),
+}));
+
+// Next.js特有のコンポーネントは必ずモック
+jest.mock('next/image');
+jest.mock('next/link');
+jest.mock('next/navigation');
+```
+
+### 3. アサーションの選択
+```typescript
+// 基本的なアサーション
+expect(value).toBe(expected);          // 厳密等価
+expect(value).toEqual(expected);       // 深い等価
+expect(value).toBeDefined();           // undefined でない
+expect(value).toBeNull();              // null である
+expect(value).toBeTruthy();            // truthy である
+expect(value).toBeFalsy();             // falsy である
+
+// 数値のアサーション
+expect(number).toBeGreaterThan(value);
+expect(number).toBeGreaterThanOrEqual(value);
+expect(number).toBeLessThan(value);
+expect(number).toBeLessThanOrEqual(value);
+
+// 文字列のアサーション
+expect(string).toMatch(/regex/);
+expect(string).toContain('substring');
+
+// 配列のアサーション
+expect(array).toHaveLength(expected);
+expect(array).toContain(item);
+
+// DOM要素のアサーション（@testing-library/jest-dom）
+expect(element).toBeInTheDocument();
+expect(element).toHaveAttribute('href', '/path');
+expect(element).toHaveTextContent('text');
+expect(element).toHaveClass('className');
+```
+
+### 4. React Testing Libraryのクエリ（重要：getByTestIdを基本とする）
+
+**⚠️ 重要: getByText や getByLabelText の使用は禁止**
+
+国際化対応やテキスト変更の可能性を考慮し、以下のルールを厳守してください：
+
+```typescript
+// ✅ 推奨: data-testidを使用
+screen.getByTestId('submit-button');
+screen.getByTestId('email-input');
+screen.getByTestId('error-message');
+
+// ❌ 禁止: テキストベースのクエリ
+screen.getByText('Submit');           // 禁止
+screen.getByLabelText('Email');       // 禁止
+screen.getByRole('button', { name: 'Submit' }); // 禁止
+
+// 複数要素の取得
+screen.getAllByTestId(/^list-item-/);
+
+// 要素が存在しないことの確認
+expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
+```
+
+### 5. data-testidの命名規則
+
+```typescript
+// 基本的な命名パターン
+data-testid="component-name"           // コンポーネント名
+data-testid="component-name-action"    // アクション付き
+data-testid="component-name-state"     // 状態付き
+
+// 具体例
+data-testid="submit-button"            // 送信ボタン
+data-testid="email-input"              // メール入力
+data-testid="error-message"            // エラーメッセージ
+data-testid="loading-spinner"          // ローディングスピナー
+data-testid="user-avatar"              // ユーザーアバター
+data-testid="navigation-menu"          // ナビゲーションメニュー
+data-testid="search-form"              // 検索フォーム
+data-testid="pagination-next"          // ページネーション次へ
+data-testid="modal-close"              // モーダル閉じるボタン
+
+// 動的な要素の場合
+data-testid={`user-item-${userId}`}   // ユーザーID付き
+data-testid={`product-card-${productId}`} // 商品ID付き
+
+// 複数要素の場合
+data-testid="list-item-1"             // リストアイテム1
+data-testid="list-item-2"             // リストアイテム2
+data-testid="tab-item-home"           // タブアイテム（ホーム）
+data-testid="tab-item-profile"        // タブアイテム（プロフィール）
+```
+
+### 6. 非同期処理のテスト
+```typescript
+// Promiseを返す関数のテスト
+it('should handle async operation', async () => {
+  const result = await asyncFunction();
+  expect(result).toBe(expected);
+});
+
+// 非同期レンダリングの待機
+import { waitFor } from '@testing-library/react';
+
+it('should display data after loading', async () => {
+  render(<AsyncComponent />);
+  
+  await waitFor(() => {
+    expect(screen.getByTestId('loaded-data')).toBeInTheDocument();
+  });
+});
+```
+
+### 7. エラーケースのテスト
+```typescript
+it('should throw error for invalid input', async () => {
+  await expect(functionThatThrows()).rejects.toThrow('Error message');
+});
+
+it('should return false for invalid data', async () => {
+  const result = await validateFunction(invalidData);
+  expect(result).toBe(false);
+});
+```
+
+### 8. フォームテストの例
+
+```typescript
+// コンポーネント側
+<form data-testid="login-form">
+  <input 
+    type="email" 
+    data-testid="email-input" 
+    placeholder="Email"
+  />
+  <input 
+    type="password" 
+    data-testid="password-input" 
+    placeholder="Password"
+  />
+  <button type="submit" data-testid="submit-button">
+    Sign In
+  </button>
+</form>
+
+// テスト側
+it('should submit form with valid data', async () => {
+  render(<LoginForm />);
+  
+  const emailInput = screen.getByTestId('email-input');
+  const passwordInput = screen.getByTestId('password-input');
+  const submitButton = screen.getByTestId('submit-button');
+  
+  fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+  fireEvent.change(passwordInput, { target: { value: 'password123' } });
+  fireEvent.click(submitButton);
+  
+  await waitFor(() => {
+    expect(screen.getByTestId('success-message')).toBeInTheDocument();
+  });
+});
+```
+
+## カバレッジ目標
+
+- ライブラリ/ユーティリティ関数: 90%以上
+- Reactコンポーネント: 80%以上
+- 全体: 80%以上
+
+カバレッジレポートは `coverage/lcov-report/index.html` で確認可能。
+
+## よくあるパターン
+
+### 1. セットアップとクリーンアップ
+```typescript
+describe('Test Suite', () => {
+  let mockData;
+
+  beforeAll(() => {
+    // テストスイート全体の前に一度実行
+  });
+
+  beforeEach(() => {
+    // 各テストの前に実行
+    mockData = { id: 1, name: 'Test' };
+  });
+
+  afterEach(() => {
+    // 各テストの後に実行
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    // テストスイート全体の後に一度実行
+  });
+});
+```
+
+### 2. 条件付きテスト
+```typescript
+it.skip('temporarily disabled test', () => {
+  // このテストはスキップされる
+});
+
+it.only('run only this test', () => {
+  // このテストのみ実行される（デバッグ時に便利）
+});
+```
+
+### 3. パラメータ化テスト
+```typescript
+describe.each([
+  ['input1', 'expected1'],
+  ['input2', 'expected2'],
+  ['input3', 'expected3'],
+])('functionName(%s)', (input, expected) => {
+  it(`should return ${expected}`, () => {
+    expect(functionName(input)).toBe(expected);
+  });
+});
+```
+
+## トラブルシューティング
+
+### よくあるエラーと解決方法
+
+1. **Module not found エラー**
+   - `tsconfig.json` のパスエイリアスが Jest で認識されているか確認
+   - `jest.config.js` の `moduleNameMapper` を確認
+
+2. **Next.js コンポーネントのエラー**
+   - 必要なモックが設定されているか確認
+   - `next/image`, `next/link`, `next/navigation` など
+
+3. **非同期テストのタイムアウト**
+   - `async/await` を適切に使用しているか確認
+   - タイムアウト時間を延長: `jest.setTimeout(10000)`
+
+4. **DOM要素が見つからない**
+   - 適切なクエリメソッドを使用しているか確認
+   - 非同期レンダリングの場合は `waitFor` を使用
+   - data-testidが正しく設定されているか確認
+
+5. **data-testidが見つからない**
+   - コンポーネントにdata-testid属性が設定されているか確認
+   - 命名規則に従っているか確認
+   - 動的な要素の場合は正しい値が設定されているか確認
+
+## 追加リソース
+
+- [Jest Documentation](mdc:https:/jestjs.io/docs/getting-started)
+- [React Testing Library Documentation](mdc:https:/testing-library.com/docs/react-testing-library/intro)
+- [Testing Library Queries](mdc:https:/testing-library.com/docs/queries/about)
+- [Jest DOM Matchers](mdc:https:/github.com/testing-library/jest-dom)
+
 - [React Testing Library Documentation](mdc:https:/testing-library.com/docs/react-testing-library/intro)
 - [Testing Library Queries](mdc:https:/testing-library.com/docs/queries/about)
 - [Jest DOM Matchers](mdc:https:/github.com/testing-library/jest-dom)

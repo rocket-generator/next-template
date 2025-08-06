@@ -140,6 +140,10 @@
     }
   },
   "/* [MODEL_MESSAGES] */": "",
+  "Common": {
+    "settings": "設定",
+    "signout": "ログアウト"
+  },
   "Components": {
     "Pagination": {
       "previous": "前へ",

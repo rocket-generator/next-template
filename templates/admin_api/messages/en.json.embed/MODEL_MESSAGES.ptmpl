@@ -1,5 +1,0 @@
-  {
-{{- range .Columns}}
-      "{{ .Name.Original }}": "{{ .Name.Default.Title }}"
-{{- end }}
-  },

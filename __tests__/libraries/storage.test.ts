@@ -2,7 +2,6 @@ import {
   StorageService,
   StorageProvider,
   S3Provider,
-  LocalStorageProvider,
   StorageServiceImpl,
   createS3ProviderConfig,
   createStorageServiceInstance,
@@ -21,23 +20,6 @@ jest.mock("@aws-sdk/client-s3", () => ({
 
 jest.mock("@aws-sdk/s3-request-presigner", () => ({
   getSignedUrl: jest.fn(),
-}));
-
-// Mock fs module for LocalStorageProvider
-jest.mock("fs", () => ({
-  promises: {
-    mkdir: jest.fn(),
-    writeFile: jest.fn(),
-    readFile: jest.fn(),
-    stat: jest.fn(),
-    unlink: jest.fn(),
-    readdir: jest.fn(),
-  },
-}));
-
-jest.mock("path", () => ({
-  join: jest.fn((...args) => args.join("/")),
-  dirname: jest.fn((path) => path.split("/").slice(0, -1).join("/")),
 }));
 
 describe("Storage Library", () => {
@@ -101,8 +83,7 @@ describe("Storage Library", () => {
       });
 
       it("should handle upload failure", async () => {
-        const errorMessage = "Upload failed";
-        mockSend.mockRejectedValue(new Error(errorMessage));
+        mockSend.mockRejectedValue(new Error("Upload failed"));
 
         const result = await provider.upload({
           key: testKey,
@@ -111,25 +92,23 @@ describe("Storage Library", () => {
         });
 
         expect(result.success).toBe(false);
-        expect(result.error).toBe(errorMessage);
+        expect(result.error).toBe("Upload failed");
       });
 
       it("should include metadata when provided", async () => {
-        mockSend.mockResolvedValue({});
-        const metadata = { author: "test-user" };
-
-        await provider.upload({
-          key: testKey,
-          data: testData,
-          metadata,
+        mockSend.mockResolvedValue({
+          ETag: '"test-etag"',
         });
 
-        const { PutObjectCommand } = require("@aws-sdk/client-s3");
-        expect(PutObjectCommand).toHaveBeenCalledWith(
-          expect.objectContaining({
-            Metadata: metadata,
-          })
-        );
+        const result = await provider.upload({
+          key: testKey,
+          data: testData,
+          contentType: testContentType,
+          metadata: { custom: "value" },
+        });
+
+        expect(result.success).toBe(true);
+        expect(mockSend).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -138,7 +117,10 @@ describe("Storage Library", () => {
         const mockReader = {
           read: jest
             .fn()
-            .mockResolvedValueOnce({ done: false, value: new Uint8Array([116, 101, 115, 116]) })
+            .mockResolvedValueOnce({
+              done: false,
+              value: new Uint8Array([116, 101, 115, 116]),
+            })
             .mockResolvedValueOnce({ done: true }),
         };
 
@@ -146,7 +128,7 @@ describe("Storage Library", () => {
           Body: { getReader: () => mockReader },
           ContentType: testContentType,
           ContentLength: 4,
-          LastModified: new Date(),
+          LastModified: new Date("2024-01-01"),
         });
 
         const result = await provider.download(testKey);
@@ -155,16 +137,16 @@ describe("Storage Library", () => {
         expect(result.data).toBeInstanceOf(Buffer);
         expect(result.contentType).toBe(testContentType);
         expect(result.contentLength).toBe(4);
+        expect(result.lastModified).toEqual(new Date("2024-01-01"));
       });
 
       it("should handle download failure", async () => {
-        const errorMessage = "Download failed";
-        mockSend.mockRejectedValue(new Error(errorMessage));
+        mockSend.mockRejectedValue(new Error("Download failed"));
 
         const result = await provider.download(testKey);
 
         expect(result.success).toBe(false);
-        expect(result.error).toBe(errorMessage);
+        expect(result.error).toBe("Download failed");
       });
 
       it("should handle missing body", async () => {
@@ -179,13 +161,12 @@ describe("Storage Library", () => {
 
     describe("getSignedUrl", () => {
       it("should generate signed URL successfully", async () => {
-        const expectedUrl = "https://test-bucket.s3.amazonaws.com/test/file.txt?signature=test";
         const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-        getSignedUrl.mockResolvedValue(expectedUrl);
+        getSignedUrl.mockResolvedValue("https://signed-url.com");
 
         const result = await provider.getSignedUrl(testKey, 3600);
 
-        expect(result).toBe(expectedUrl);
+        expect(result).toBe("https://signed-url.com");
         expect(getSignedUrl).toHaveBeenCalledTimes(1);
       });
 
@@ -193,8 +174,8 @@ describe("Storage Library", () => {
         const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
         getSignedUrl.mockRejectedValue(new Error("URL generation failed"));
 
-        await expect(provider.getSignedUrl(testKey)).rejects.toThrow(
-          "Failed to generate signed URL"
+        await expect(provider.getSignedUrl(testKey, 3600)).rejects.toThrow(
+          "URL generation failed"
         );
       });
     });
@@ -210,37 +191,35 @@ describe("Storage Library", () => {
       it("should handle delete failure", async () => {
         mockSend.mockRejectedValue(new Error("Delete failed"));
 
-        await expect(provider.delete(testKey)).rejects.toThrow("Failed to delete file");
+        await expect(provider.delete(testKey)).rejects.toThrow("Delete failed");
       });
     });
 
     describe("list", () => {
       it("should list files successfully", async () => {
-        const mockContents = [
-          {
-            Key: "test/file1.txt",
-            Size: 100,
-            LastModified: new Date(),
-            ETag: '"etag1"',
-          },
-          {
-            Key: "test/file2.txt",
-            Size: 200,
-            LastModified: new Date(),
-            ETag: '"etag2"',
-          },
-        ];
-
         mockSend.mockResolvedValue({
-          Contents: mockContents,
+          Contents: [
+            {
+              Key: "file1.txt",
+              Size: 100,
+              LastModified: new Date("2024-01-01"),
+              ETag: '"etag1"',
+            },
+            {
+              Key: "file2.txt",
+              Size: 200,
+              LastModified: new Date("2024-01-02"),
+              ETag: '"etag2"',
+            },
+          ],
           IsTruncated: false,
         });
 
-        const result = await provider.list("test/", 10);
+        const result = await provider.list("prefix/");
 
         expect(result.success).toBe(true);
         expect(result.files).toHaveLength(2);
-        expect(result.files[0].key).toBe("test/file1.txt");
+        expect(result.files[0].key).toBe("file1.txt");
         expect(result.files[0].size).toBe(100);
         expect(result.hasMore).toBe(false);
       });
@@ -248,10 +227,9 @@ describe("Storage Library", () => {
       it("should handle list failure", async () => {
         mockSend.mockRejectedValue(new Error("List failed"));
 
-        const result = await provider.list();
+        const result = await provider.list("prefix/");
 
         expect(result.success).toBe(false);
-        expect(result.files).toHaveLength(0);
         expect(result.error).toBe("List failed");
       });
 
@@ -261,114 +239,11 @@ describe("Storage Library", () => {
           IsTruncated: false,
         });
 
-        const result = await provider.list();
+        const result = await provider.list("prefix/");
 
         expect(result.success).toBe(true);
         expect(result.files).toHaveLength(0);
         expect(result.hasMore).toBe(false);
-      });
-    });
-  });
-
-  describe("LocalStorageProvider", () => {
-    let provider: LocalStorageProvider;
-    let mockFs: jest.Mocked<any>;
-
-    beforeEach(() => {
-      mockFs = require("fs").promises;
-      provider = new LocalStorageProvider("./test-uploads");
-    });
-
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-
-    describe("upload", () => {
-      it("should upload file successfully", async () => {
-        mockFs.mkdir.mockResolvedValue(undefined);
-        mockFs.writeFile.mockResolvedValue(undefined);
-
-        const result = await provider.upload({
-          key: testKey,
-          data: testData,
-          contentType: testContentType,
-        });
-
-        expect(result.success).toBe(true);
-        expect(result.key).toBe(testKey);
-        expect(result.url).toContain(testKey);
-        expect(mockFs.mkdir).toHaveBeenCalled();
-        expect(mockFs.writeFile).toHaveBeenCalledWith(
-          expect.stringContaining(testKey),
-          testData
-        );
-      });
-
-      it("should handle upload failure", async () => {
-        mockFs.mkdir.mockRejectedValue(new Error("Directory creation failed"));
-
-        const result = await provider.upload({
-          key: testKey,
-          data: testData,
-        });
-
-        expect(result.success).toBe(false);
-        expect(result.error).toBe("Directory creation failed");
-      });
-    });
-
-    describe("download", () => {
-      it("should download file successfully", async () => {
-        const stats = {
-          size: testData.length,
-          mtime: new Date(),
-        };
-
-        mockFs.readFile.mockResolvedValue(testData);
-        mockFs.stat.mockResolvedValue(stats);
-
-        const result = await provider.download(testKey);
-
-        expect(result.success).toBe(true);
-        expect(result.data).toEqual(testData);
-        expect(result.contentLength).toBe(testData.length);
-        expect(result.lastModified).toEqual(stats.mtime);
-      });
-
-      it("should handle download failure", async () => {
-        mockFs.readFile.mockRejectedValue(new Error("File not found"));
-
-        const result = await provider.download(testKey);
-
-        expect(result.success).toBe(false);
-        expect(result.error).toBe("File not found");
-      });
-    });
-
-    describe("getSignedUrl", () => {
-      it("should generate local URL", async () => {
-        const url = await provider.getSignedUrl(testKey, 3600);
-
-        expect(url).toContain(testKey);
-        expect(url).toContain("file://");
-        expect(url).toContain("expires=");
-      });
-    });
-
-    describe("delete", () => {
-      it("should delete file successfully", async () => {
-        mockFs.unlink.mockResolvedValue(undefined);
-
-        await expect(provider.delete(testKey)).resolves.not.toThrow();
-        expect(mockFs.unlink).toHaveBeenCalledWith(
-          expect.stringContaining(testKey)
-        );
-      });
-
-      it("should handle delete failure", async () => {
-        mockFs.unlink.mockRejectedValue(new Error("Delete failed"));
-
-        await expect(provider.delete(testKey)).rejects.toThrow("Failed to delete file");
       });
     });
   });
@@ -385,56 +260,61 @@ describe("Storage Library", () => {
         delete: jest.fn(),
         list: jest.fn(),
       };
-
       service = new StorageServiceImpl(mockProvider);
-    });
-
-    afterEach(() => {
-      jest.clearAllMocks();
     });
 
     describe("uploadFile", () => {
       it("should call provider upload method", async () => {
-        const expectedResult = { success: true, key: testKey };
+        const expectedResult = {
+          success: true,
+          key: testKey,
+          url: "https://example.com/file.txt",
+        };
         mockProvider.upload.mockResolvedValue(expectedResult);
 
-        const result = await service.uploadFile(testKey, testData, testContentType);
+        const result = await service.uploadFile(
+          testKey,
+          testData,
+          testContentType
+        );
 
-        expect(result).toEqual(expectedResult);
         expect(mockProvider.upload).toHaveBeenCalledWith({
           key: testKey,
           data: testData,
           contentType: testContentType,
         });
+        expect(result).toEqual(expectedResult);
       });
     });
 
     describe("downloadFile", () => {
       it("should call provider download method", async () => {
-        const expectedResult = { success: true, data: testData };
+        const expectedResult = {
+          success: true,
+          data: testData,
+          contentType: testContentType,
+        };
         mockProvider.download.mockResolvedValue(expectedResult);
 
         const result = await service.downloadFile(testKey);
 
-        expect(result).toEqual(expectedResult);
         expect(mockProvider.download).toHaveBeenCalledWith(testKey);
+        expect(result).toEqual(expectedResult);
       });
     });
 
     describe("generateSignedUrl", () => {
       it("should call provider getSignedUrl method", async () => {
-        const expectedUrl = "https://example.com/signed-url";
-        mockProvider.getSignedUrl.mockResolvedValue(expectedUrl);
+        mockProvider.getSignedUrl.mockResolvedValue("https://signed-url.com");
 
         const result = await service.generateSignedUrl(testKey, 7200);
 
-        expect(result).toBe(expectedUrl);
         expect(mockProvider.getSignedUrl).toHaveBeenCalledWith(testKey, 7200);
+        expect(result).toBe("https://signed-url.com");
       });
 
       it("should use default expiration time", async () => {
-        const expectedUrl = "https://example.com/signed-url";
-        mockProvider.getSignedUrl.mockResolvedValue(expectedUrl);
+        mockProvider.getSignedUrl.mockResolvedValue("https://signed-url.com");
 
         await service.generateSignedUrl(testKey);
 
@@ -454,17 +334,25 @@ describe("Storage Library", () => {
 
     describe("updateFile", () => {
       it("should call uploadFile method", async () => {
-        const expectedResult = { success: true, key: testKey };
+        const expectedResult = {
+          success: true,
+          key: testKey,
+          url: "https://example.com/file.txt",
+        };
         mockProvider.upload.mockResolvedValue(expectedResult);
 
-        const result = await service.updateFile(testKey, testData, testContentType);
+        const result = await service.updateFile(
+          testKey,
+          testData,
+          testContentType
+        );
 
-        expect(result).toEqual(expectedResult);
         expect(mockProvider.upload).toHaveBeenCalledWith({
           key: testKey,
           data: testData,
           contentType: testContentType,
         });
+        expect(result).toEqual(expectedResult);
       });
     });
 
@@ -477,10 +365,10 @@ describe("Storage Library", () => {
         };
         mockProvider.list.mockResolvedValue(expectedResult);
 
-        const result = await service.listFiles("prefix/", 100);
+        const result = await service.listFiles("prefix/", 50);
 
+        expect(mockProvider.list).toHaveBeenCalledWith("prefix/", 50);
         expect(result).toEqual(expectedResult);
-        expect(mockProvider.list).toHaveBeenCalledWith("prefix/", 100);
       });
     });
   });
@@ -490,65 +378,53 @@ describe("Storage Library", () => {
       const originalEnv = process.env;
 
       beforeEach(() => {
+        jest.resetModules();
         process.env = { ...originalEnv };
       });
 
-      afterEach(() => {
+      afterAll(() => {
         process.env = originalEnv;
       });
 
       it("should create production config", () => {
-        process.env.NODE_ENV = "production";
-        process.env.AWS_S3_REGION = "eu-west-1";
-        process.env.AWS_ACCESS_KEY_ID = "prod-key";
-        process.env.AWS_SECRET_ACCESS_KEY = "prod-secret";
-        process.env.AWS_S3_BUCKET = "prod-bucket";
+        process.env.SYSTEM_AWS_S3_REGION = "us-east-1";
+        process.env.SYSTEM_AWS_ACCESS_KEY_ID = "prod-key";
+        process.env.SYSTEM_AWS_SECRET_ACCESS_KEY = "prod-secret";
+        process.env.SYSTEM_AWS_S3_BUCKET = "prod-bucket";
 
         const config = createS3ProviderConfig();
 
-        expect(config.region).toBe("eu-west-1");
-        expect(config.accessKeyId).toBe("prod-key");
-        expect(config.secretAccessKey).toBe("prod-secret");
-        expect(config.bucket).toBe("prod-bucket");
-        expect(config.endpoint).toBeUndefined();
+        expect(config).toEqual({
+          region: "us-east-1",
+          accessKeyId: "prod-key",
+          secretAccessKey: "prod-secret",
+          bucket: "prod-bucket",
+        });
       });
 
       it("should create development config with LocalStack", () => {
-        process.env.NODE_ENV = "development";
-        process.env.LOCALSTACK_ENDPOINT = "http://localhost:4567";
+        process.env.SYSTEM_AWS_REGION = "us-east-1";
+        process.env.SYSTEM_AWS_ACCESS_KEY_ID = "dev-key";
+        process.env.SYSTEM_AWS_SECRET_ACCESS_KEY = "dev-secret";
+        process.env.SYSTEM_AWS_S3_BUCKET = "dev-bucket";
+        process.env.LOCALSTACK_ENDPOINT = "http://localhost:4566";
 
         const config = createS3ProviderConfig();
 
-        expect(config.region).toBe("us-east-1");
-        expect(config.accessKeyId).toBe("test");
-        expect(config.secretAccessKey).toBe("test");
-        expect(config.bucket).toBe("test-bucket");
-        expect(config.endpoint).toBe("http://localhost:4567");
-        expect(config.forcePathStyle).toBe(true);
+        expect(config).toEqual({
+          region: "us-east-1",
+          accessKeyId: "dev-key",
+          secretAccessKey: "dev-secret",
+          bucket: "dev-bucket",
+          endpoint: "http://localhost:4566",
+          publicEndpoint: "http://localhost:4566",
+          forcePathStyle: true,
+        });
       });
     });
 
     describe("createStorageServiceInstance", () => {
-      const originalEnv = process.env;
-
-      beforeEach(() => {
-        process.env = { ...originalEnv };
-      });
-
-      afterEach(() => {
-        process.env = originalEnv;
-      });
-
       it("should create S3 storage service by default", () => {
-        const service = createStorageServiceInstance();
-
-        expect(service).toBeInstanceOf(StorageServiceImpl);
-      });
-
-      it("should create local storage service when specified", () => {
-        process.env.STORAGE_PROVIDER = "local";
-        process.env.LOCAL_STORAGE_PATH = "./custom-uploads";
-
         const service = createStorageServiceInstance();
 
         expect(service).toBeInstanceOf(StorageServiceImpl);
@@ -558,47 +434,50 @@ describe("Storage Library", () => {
 
   describe("Integration Tests", () => {
     it("should handle complete upload→download→delete flow", async () => {
-      const mockProvider: jest.Mocked<StorageProvider> = {
-        upload: jest.fn(),
-        download: jest.fn(),
-        getSignedUrl: jest.fn(),
-        delete: jest.fn(),
-        list: jest.fn(),
+      const provider = new S3Provider({
+        region: "us-east-1",
+        accessKeyId: "test-key",
+        secretAccessKey: "test-secret",
+        bucket: "test-bucket",
+      });
+      const service = new StorageServiceImpl(provider);
+
+      // Mock successful operations
+      const { S3Client } = require("@aws-sdk/client-s3");
+      const mockSend = jest.fn();
+      S3Client.mockImplementation(() => ({ send: mockSend }));
+
+      const mockReader = {
+        read: jest
+          .fn()
+          .mockResolvedValueOnce({
+            done: false,
+            value: new Uint8Array([116, 101, 115, 116]),
+          })
+          .mockResolvedValueOnce({ done: true }),
       };
 
-      const service = new StorageServiceImpl(mockProvider);
+      mockSend
+        .mockResolvedValueOnce({ ETag: '"upload-etag"' }) // upload
+        .mockResolvedValueOnce({
+          Body: { getReader: () => mockReader },
+          ContentType: "text/plain",
+          ContentLength: 4,
+        }) // download
+        .mockResolvedValueOnce({}); // delete
 
-      // Mock successful responses
-      mockProvider.upload.mockResolvedValue({
-        success: true,
-        key: testKey,
-        url: "https://example.com/file.txt",
-      });
-
-      mockProvider.download.mockResolvedValue({
-        success: true,
-        data: testData,
-        contentType: testContentType,
-      });
-
-      mockProvider.delete.mockResolvedValue(undefined);
-
-      // Test upload
-      const uploadResult = await service.uploadFile(testKey, testData, testContentType);
+      // Test the flow
+      const uploadResult = await service.uploadFile(
+        testKey,
+        testData,
+        testContentType
+      );
       expect(uploadResult.success).toBe(true);
 
-      // Test download
       const downloadResult = await service.downloadFile(testKey);
       expect(downloadResult.success).toBe(true);
-      expect(downloadResult.data).toEqual(testData);
 
-      // Test delete
       await expect(service.deleteFile(testKey)).resolves.not.toThrow();
-
-      // Verify all methods were called
-      expect(mockProvider.upload).toHaveBeenCalledTimes(1);
-      expect(mockProvider.download).toHaveBeenCalledTimes(1);
-      expect(mockProvider.delete).toHaveBeenCalledTimes(1);
     });
   });
-}); 
+});

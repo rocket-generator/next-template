@@ -40,14 +40,16 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
         const message = await onSubmit(formData);
         if (message === InvalidInput) {
           setError(tAuth("invalid_input"));
+          setIsLoading(false);
         } else if (message === InvalidCredentials) {
           setError(tAuth("invalid_credentials"));
+          setIsLoading(false);
         }
-        // Success case is handled by parent component (redirect)
+        // Success case: ローディング状態を維持し、親コンポーネントのリダイレクトを待つ
+        // 成功時はsetIsLoading(false)を呼ばない
       } catch (error) {
         console.error(error);
         setError(tAuth("system_error"));
-      } finally {
         setIsLoading(false);
       }
     });

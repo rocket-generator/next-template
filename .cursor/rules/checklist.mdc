@@ -12,6 +12,7 @@ alwaysApply: true
 - 全てのpage.tsx （App Routerのページファイル）は Server Side Componentになっている
 - ページやコンポーネントに書かれている全ての文字列は、国際化の対応がなされている
 - 全てのコンポーネントは、/src/components 以下に置かれ、/src/page には置かれていない
+- /src/components/atoms には ShadCN のコンポーネントだけを入れ、カスタマイズなどは行っていない
 - 新たに作成したコンポーネントは全てStorybookのコードが存在している
 - 全ての新しいコードにUnitTestのコードが書かれている
 - 全ての新しいページや機能に対してE2Eテストのコードが書かれている

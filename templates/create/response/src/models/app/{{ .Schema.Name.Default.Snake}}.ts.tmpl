@@ -1,9 +1,0 @@
-import { z } from "zod";
-
-export const {{ .Schema.Name.Singular.Title }}Schema = z.object({
-{{- range .Schema.Properties}}
-  {{ .Name.Original }}: z.{{ .Type }}(),
-{{- end}}
-});
-
-export type {{ .Schema.Name.Singular.Title }} = z.infer<typeof {{ .Schema.Name.Singular.Title }}Schema>;

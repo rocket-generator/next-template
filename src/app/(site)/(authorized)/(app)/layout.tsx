@@ -1,7 +1,6 @@
-import React from "react";
+import React, { Suspense } from "react";
 
-import SideMenu from "@/components/organisms/SideMenu";
-import Header from "@/components/organisms/Header";
+import AppSidebar from "@/components/organisms/AppSidebar";
 import Footer from "@/components/organisms/Footer";
 import { UserRepository } from "@/repositories/user_repository";
 import AuthError from "@/exceptions/auth_error";
@@ -11,6 +10,7 @@ import { CheckCircle, Home } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { signOutAction } from "./actions";
 import { auth } from "@/libraries/auth";
+import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
 
 type Props = {
   children: React.ReactNode;
@@ -43,17 +43,23 @@ export default async function SiteLayout({ children }: Props) {
   ];
 
   return (
-    <div className="min-h-screen flex">
-      <SideMenu
-        menuItems={menuItems}
-        title="TaskMaster"
-        icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
-      />
-      <div className="flex-1 lg:ml-64 flex flex-col">
-        <Header signInUser={me} onSignOut={signOutAction} />
+    <SidebarProvider>
+      <Suspense fallback={<div>Loading...</div>}>
+        <AppSidebar
+          menuItems={menuItems}
+          title="TaskMaster"
+          icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
+          signInUser={me}
+          onSignOut={signOutAction}
+        />
+      </Suspense>
+      <div className="flex-1 flex flex-col">
+        <div className="p-4 border-b">
+          <SidebarTrigger />
+        </div>
         <main className="p-6 flex-grow">{children}</main>
         <Footer />
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

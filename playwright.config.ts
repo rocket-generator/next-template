@@ -43,7 +43,7 @@ export default defineConfig({
     navigationTimeout: 30000,
     
     /* Wait for navigation to load state */
-    waitForLoadState: 'networkidle'
+    // waitForLoadState: 'networkidle'
   },
 
   /* Configure projects for major browsers */

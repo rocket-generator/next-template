@@ -1,9 +1,0 @@
-import * as z from "zod";
-
-export const {{ .Name.Singular.Title }}CreateRequestSchema = z.object({
-{{- range .Columns}}
-  {{ .Name.Original }}: z.{{ .ObjectType }}(),
-{{- end }}
-});
-
-export type {{ .Name.Singular.Title }}CreateRequest = z.infer<typeof {{ .Name.Singular.Title }}CreateRequestSchema>;

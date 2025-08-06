@@ -123,37 +123,118 @@ export class S3Provider implements StorageProvider {
 
   async download(key: string): Promise<DownloadResult> {
     try {
+      console.log("S3Provider: Starting download for key:", key);
+      console.log("S3Provider: Config:", {
+        bucket: this.config.bucket,
+        region: this.config.region,
+        endpoint: this.config.endpoint,
+        forcePathStyle: this.config.forcePathStyle,
+      });
+
       const { GetObjectCommand } = await import("@aws-sdk/client-s3");
 
       const s3Client = await this.createS3Client();
+      console.log("S3Provider: S3 client created successfully");
 
       const params = {
         Bucket: this.config.bucket,
         Key: key,
       };
 
+      console.log("S3Provider: GetObjectCommand params:", params);
       const command = new GetObjectCommand(params);
       const result = await s3Client.send(command);
 
+      console.log("S3Provider: GetObjectCommand result:", {
+        hasBody: !!result.Body,
+        contentType: result.ContentType,
+        contentLength: result.ContentLength,
+        lastModified: result.LastModified,
+        bodyType: typeof result.Body,
+        bodyConstructor: result.Body?.constructor?.name,
+      });
+
       if (!result.Body) {
+        console.error("S3Provider: No data received from S3");
         return {
           success: false,
           error: "No data received",
         };
       }
 
-      // Convert stream to buffer
-      const chunks: Uint8Array[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const reader = (result.Body as any).getReader();
+      let data: Buffer;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
+      // Bodyの形式に応じてデータを取得
+      if (result.Body instanceof Uint8Array) {
+        // Uint8Arrayの場合
+        console.log(
+          "S3Provider: Body is Uint8Array, length:",
+          result.Body.length
+        );
+        data = Buffer.from(result.Body);
+      } else if (typeof result.Body === "string") {
+        // 文字列の場合
+        console.log(
+          "S3Provider: Body is string, length:",
+          (result.Body as string).length
+        );
+        data = Buffer.from(result.Body, "utf-8");
+      } else if (
+        result.Body &&
+        typeof result.Body === "object" &&
+        "getReader" in result.Body
+      ) {
+        // ReadableStreamの場合
+        console.log("S3Provider: Body is ReadableStream, using getReader");
+        const chunks: Uint8Array[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const reader = (result.Body as any).getReader();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+        }
+
+        data = Buffer.concat(chunks);
+      } else if (
+        result.Body &&
+        typeof result.Body === "object" &&
+        "transformToByteArray" in result.Body
+      ) {
+        // TransformStreamの場合
+        console.log(
+          "S3Provider: Body is TransformStream, using transformToByteArray"
+        );
+        const chunks: Uint8Array[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stream = result.Body as any;
+
+        for await (const chunk of stream) {
+          chunks.push(chunk);
+        }
+
+        data = Buffer.concat(chunks);
+      } else {
+        // その他の場合、toString()を試す
+        console.log("S3Provider: Body is unknown type, trying toString()");
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const bodyString = (result.Body as any).toString();
+          data = Buffer.from(bodyString, "utf-8");
+        } catch (error) {
+          console.error("S3Provider: Failed to convert Body to string:", error);
+          return {
+            success: false,
+            error: `Unsupported Body type: ${typeof result.Body}`,
+          };
+        }
       }
 
-      const data = Buffer.concat(chunks);
+      console.log(
+        "S3Provider: Stream data converted to buffer, length:",
+        data.length
+      );
 
       return {
         success: true,
@@ -163,7 +244,16 @@ export class S3Provider implements StorageProvider {
         lastModified: result.LastModified,
       };
     } catch (error) {
-      console.error("S3 download failed:", error);
+      console.error("S3Provider: Download failed:", {
+        key,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        config: {
+          bucket: this.config.bucket,
+          region: this.config.region,
+          endpoint: this.config.endpoint,
+        },
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -317,158 +407,6 @@ export class S3Provider implements StorageProvider {
   }
 }
 
-// Local Storage Provider for Development (Node.js Runtime only)
-export let LocalStorageProvider: new (basePath?: string) => StorageProvider;
-
-// Node.js環境でのみLocalStorageProviderを定義
-if (
-  typeof process !== "undefined" &&
-  typeof process.versions !== "undefined" &&
-  typeof process.versions.node !== "undefined" &&
-  process.env.NEXT_RUNTIME !== "edge"
-) {
-  LocalStorageProvider = class implements StorageProvider {
-    private basePath: string;
-
-    constructor(basePath: string = "./uploads") {
-      this.basePath = basePath;
-    }
-
-    async upload(options: UploadOptions): Promise<UploadResult> {
-      try {
-        const { promises: fs } = await import("fs");
-        const path = await import("path");
-
-        const filePath = path.join(this.basePath, options.key);
-        const dirPath = path.dirname(filePath);
-
-        // Create directory if it doesn't exist
-        await fs.mkdir(dirPath, { recursive: true });
-
-        // Write file
-        await fs.writeFile(filePath, options.data);
-
-        return {
-          success: true,
-          key: options.key,
-          url: `file://${filePath}`,
-        };
-      } catch (error) {
-        console.error("Local storage upload failed:", error);
-        return {
-          success: false,
-          key: options.key,
-          error: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
-    }
-
-    async download(key: string): Promise<DownloadResult> {
-      try {
-        const { promises: fs } = await import("fs");
-        const path = await import("path");
-
-        const filePath = path.join(this.basePath, key);
-        const data = await fs.readFile(filePath);
-        const stats = await fs.stat(filePath);
-
-        return {
-          success: true,
-          data,
-          contentLength: stats.size,
-          lastModified: stats.mtime,
-        };
-      } catch (error) {
-        console.error("Local storage download failed:", error);
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
-    }
-
-    async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
-      // For local storage, return a simple file path URL
-      // In a real implementation, you might want to implement a token-based system
-      const path = await import("path");
-      const filePath = path.join(this.basePath, key);
-      return `file://${filePath}?expires=${Date.now() + expiresIn * 1000}`;
-    }
-
-    async delete(key: string): Promise<void> {
-      try {
-        const { promises: fs } = await import("fs");
-        const path = await import("path");
-
-        const filePath = path.join(this.basePath, key);
-        await fs.unlink(filePath);
-      } catch (error) {
-        console.error("Local storage delete failed:", error);
-        throw new Error(
-          `Failed to delete file: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        );
-      }
-    }
-
-    async list(prefix?: string, maxKeys: number = 1000): Promise<ListResult> {
-      try {
-        const { promises: fs } = await import("fs");
-        const path = await import("path");
-
-        const searchPath = prefix
-          ? path.join(this.basePath, prefix)
-          : this.basePath;
-
-        const files: StorageFile[] = [];
-
-        async function walk(dir: string, currentPrefix: string = "") {
-          try {
-            const entries = await fs.readdir(dir, { withFileTypes: true });
-
-            for (const entry of entries) {
-              if (files.length >= maxKeys) break;
-
-              const fullPath = path.join(dir, entry.name);
-              const relativePath = path.join(currentPrefix, entry.name);
-
-              if (entry.isDirectory()) {
-                await walk(fullPath, relativePath);
-              } else {
-                const stats = await fs.stat(fullPath);
-                files.push({
-                  key: relativePath,
-                  size: stats.size,
-                  lastModified: stats.mtime,
-                });
-              }
-            }
-          } catch {
-            // Directory might not exist, continue
-          }
-        }
-
-        await walk(searchPath);
-
-        return {
-          success: true,
-          files,
-          hasMore: false, // Simple implementation doesn't support pagination
-        };
-      } catch (error) {
-        console.error("Local storage list failed:", error);
-        return {
-          success: false,
-          files: [],
-          hasMore: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
-    }
-  };
-}
-
 // Main Storage Service Implementation
 export class StorageServiceImpl implements StorageService {
   private provider: StorageProvider;
@@ -500,7 +438,22 @@ export class StorageServiceImpl implements StorageService {
   }
 
   async downloadFile(key: string): Promise<DownloadResult> {
+    console.log("StorageServiceImpl: Starting download for key:", key);
+    console.log(
+      "StorageServiceImpl: Provider type:",
+      this.provider.constructor.name
+    );
+
     const result = await this.provider.download(key);
+
+    console.log("StorageServiceImpl: Download result:", {
+      success: result.success,
+      hasData: !!result.data,
+      dataLength: result.data?.length,
+      contentType: result.contentType,
+      contentLength: result.contentLength,
+      error: result.error,
+    });
 
     if (result.success) {
       console.log(`File downloaded successfully: ${key}`);
@@ -551,81 +504,53 @@ export class StorageServiceImpl implements StorageService {
 
 // Configuration Factory
 export function createS3ProviderConfig(): S3ProviderConfig {
-  const isProduction = process.env.NODE_ENV === "production";
+  const useLocalStack = process.env.USE_LOCALSTACK === "true";
 
-  if (isProduction) {
-    // Production: Use AWS S3
+  if (useLocalStack) {
+    // LocalStack: Use LocalStack S3
     return {
-      region: process.env.AWS_S3_REGION || "us-east-1",
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-      bucket: process.env.AWS_S3_BUCKET || "",
-    };
-  } else {
-    // Development: Use LocalStack S3
-    return {
-      region: process.env.AWS_S3_REGION || "us-east-1",
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
-      bucket: process.env.AWS_S3_BUCKET || "test-bucket",
+      region: process.env.SYSTEM_AWS_S3_REGION || "us-east-1",
+      accessKeyId: process.env.SYSTEM_AWS_ACCESS_KEY_ID || "test",
+      secretAccessKey: process.env.SYSTEM_AWS_SECRET_ACCESS_KEY || "test",
+      bucket: process.env.SYSTEM_AWS_S3_BUCKET || "test-bucket",
       endpoint: process.env.LOCALSTACK_ENDPOINT || "http://localhost:4566",
       publicEndpoint:
         process.env.LOCALSTACK_PUBLIC_ENDPOINT || "http://localhost:4566",
       forcePathStyle: true,
+    };
+  } else {
+    // Production: Use AWS S3
+    return {
+      region: process.env.SYSTEM_AWS_S3_REGION || "us-east-1",
+      accessKeyId: process.env.SYSTEM_AWS_ACCESS_KEY_ID || "",
+      secretAccessKey: process.env.SYSTEM_AWS_SECRET_ACCESS_KEY || "",
+      bucket: process.env.SYSTEM_AWS_S3_BUCKET || "",
     };
   }
 }
 
 // Storage Service Factory
 export function createStorageServiceInstance(): StorageService {
-  // Edge Runtime環境の検出を改善
-  const isEdgeRuntime =
-    process.env.NEXT_RUNTIME === "edge" ||
-    typeof process === "undefined" ||
-    typeof process.versions === "undefined" ||
-    typeof process.versions.node === "undefined";
+  console.log(
+    "createStorageServiceInstance: Creating storage service instance"
+  );
 
-  // Node.js Runtime環境の検出
-  const isNodeRuntime =
-    !isEdgeRuntime &&
-    typeof process !== "undefined" &&
-    typeof process.versions !== "undefined" &&
-    typeof process.versions.node !== "undefined";
+  // 常にS3プロバイダーを使用
+  const s3Config = createS3ProviderConfig();
+  console.log("createStorageServiceInstance: S3 config created:", {
+    region: s3Config.region,
+    bucket: s3Config.bucket,
+    endpoint: s3Config.endpoint,
+    forcePathStyle: s3Config.forcePathStyle,
+    hasAccessKey: !!s3Config.accessKeyId,
+    hasSecretKey: !!s3Config.secretAccessKey,
+  });
 
-  // Edge Runtime環境では常にS3を使用
-  if (isEdgeRuntime) {
-    console.log("Edge Runtime detected, using S3 provider");
-    const s3Config = createS3ProviderConfig();
-    return new StorageServiceImpl(new S3Provider(s3Config));
-  }
+  const provider = new S3Provider(s3Config);
+  console.log("createStorageServiceInstance: S3Provider created");
 
-  // Node.js環境でのみローカルストレージの選択を許可
-  const storageType = isNodeRuntime
-    ? process.env.STORAGE_PROVIDER || "s3"
-    : "s3";
+  const service = new StorageServiceImpl(provider);
+  console.log("createStorageServiceInstance: StorageServiceImpl created");
 
-  let provider: StorageProvider;
-
-  switch (storageType) {
-    case "local":
-      if (!isNodeRuntime || !LocalStorageProvider) {
-        console.warn(
-          "LocalStorageProvider is not supported in non-Node.js runtime, falling back to S3"
-        );
-        const s3Config = createS3ProviderConfig();
-        provider = new S3Provider(s3Config);
-      } else {
-        const localPath = process.env.LOCAL_STORAGE_PATH || "./uploads";
-        provider = new LocalStorageProvider(localPath);
-      }
-      break;
-
-    case "s3":
-    default:
-      const s3Config = createS3ProviderConfig();
-      provider = new S3Provider(s3Config);
-      break;
-  }
-
-  return new StorageServiceImpl(provider);
+  return service;
 }
