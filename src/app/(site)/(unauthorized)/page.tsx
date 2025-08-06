@@ -2,31 +2,34 @@ import Link from "next/link";
 import { Button } from "@/components/atoms/button";
 import {
   Sparkles,
-  Upload,
-  Clock,
   Code,
-  FileText,
-  Image as ImageIcon,
-  Table,
   Check,
-  Zap,
   Shield,
+  Database,
+  Globe,
+  Users,
+  Settings,
+  GitBranch,
+  Server,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const t = await getTranslations("Landing");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* ナビゲーションバー */}
-      <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+      <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50" data-testid="navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center mr-2">
-                  <span className="text-white font-bold text-lg">AI</span>
+                  <span className="text-white font-bold text-lg">TS</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">
-                  Prototype Generator
+                <span className="text-xl font-bold text-gray-900" data-testid="brand-name">
+                  {t("navigation.brand_name")}
                 </span>
               </div>
             </div>
@@ -34,12 +37,13 @@ export default function LandingPage() {
               <Link
                 href="/auth/signin"
                 className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                data-testid="login-link"
               >
-                ログイン
+                {t("navigation.login")}
               </Link>
-              <Link href="/auth/signup">
+              <Link href="/auth/signup" data-testid="signup-link">
                 <Button className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
-                  無料で始める
+                  {t("navigation.get_started")}
                 </Button>
               </Link>
             </div>
@@ -48,40 +52,34 @@ export default function LandingPage() {
       </nav>
 
       {/* ヒーローセクション */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white" data-testid="hero-section">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-black text-xs font-medium mb-6">
-              AI駆動の次世代プロトタイプ生成
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-black text-xs font-medium mb-6" data-testid="hero-badge">
+              {t("hero.badge")}
             </div>
-            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              アイデアを
+            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight" data-testid="hero-title">
+              {t("hero.title")}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
-                10分
+                {t("hero.title_highlight")}
               </span>
-              で
-              <br />
-              カタチに変える
+              {t("hero.title_end")}
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              要件定義書、Excel/CSV、スクリーンショット、ワイヤーフレームから
-              <br />
-              美しく機能的なWebプロトタイプを瞬時に生成。
-              <br />
-              コーディング不要で、誰でも簡単にアプリケーションを作成できます。
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto whitespace-pre-line" data-testid="hero-description">
+              {t("hero.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth/signup">
+              <Link href="/auth/signup" data-testid="hero-cta-primary">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                 >
-                  無料で始める
+                  {t("hero.cta_primary")}
                 </Button>
               </Link>
-              <Link href="#how-it-works">
+              <Link href="#how-it-works" data-testid="hero-cta-secondary">
                 <Button size="lg" variant="outline">
-                  使い方を見る
+                  {t("hero.cta_secondary")}
                 </Button>
               </Link>
             </div>
@@ -90,67 +88,68 @@ export default function LandingPage() {
       </section>
 
       {/* 特徴セクション */}
-      <section id="features" className="py-20 bg-gray-50">
+      <section id="features" className="py-20 bg-gray-50" data-testid="features-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              なぜAI Prototype Generatorなのか
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="features-title">
+              {t("features.title")}
             </h2>
-            <p className="text-xl text-gray-600">
-              従来の開発プロセスを革新する、強力な機能群をご提供します
+            <p className="text-xl text-gray-600" data-testid="features-subtitle">
+              {t("features.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" data-testid="features-grid">
             {[
               {
-                icon: Clock,
-                title: "10分で完成",
-                description:
-                  "アイデアから動作するプロトタイプまで、わずか10分。開発期間を大幅に短縮します。",
+                icon: Code,
+                title: t("features.items.typescript.title"),
+                description: t("features.items.typescript.description"),
+                testId: "feature-typescript"
               },
               {
-                icon: Upload,
-                title: "多様な入力形式",
-                description:
-                  "テキスト、Excel/CSV、画像、ワイヤーフレームなど、あらゆる形式の要件を理解します。",
+                icon: Globe,
+                title: t("features.items.nextjs.title"),
+                description: t("features.items.nextjs.description"),
+                testId: "feature-nextjs"
               },
               {
                 icon: Sparkles,
-                title: "AI自動生成",
-                description:
-                  "最新のAI技術により、要件を理解し、最適なUIとコードを自動生成します。",
-              },
-              {
-                icon: Code,
-                title: "コード出力",
-                description:
-                  "生成されたプロトタイプは、実際のHTMLl/CSS/JavaScriptコードとして出力可能です。",
+                title: t("features.items.tailwind.title"),
+                description: t("features.items.tailwind.description"),
+                testId: "feature-tailwind"
               },
               {
                 icon: Shield,
-                title: "セキュア",
-                description:
-                  "エンタープライズグレードのセキュリティで、あなたのデータを安全に保護します。",
+                title: t("features.items.shadcn.title"),
+                description: t("features.items.shadcn.description"),
+                testId: "feature-shadcn"
               },
               {
-                icon: Zap,
-                title: "即座にプレビュー",
-                description:
-                  "生成されたプロトタイプは、即座にブラウザでプレビュー・共有できます。",
+                icon: Users,
+                title: t("features.items.auth.title"),
+                description: t("features.items.auth.description"),
+                testId: "feature-auth"
+              },
+              {
+                icon: Database,
+                title: t("features.items.database.title"),
+                description: t("features.items.database.description"),
+                testId: "feature-database"
               },
             ].map((feature) => (
               <div
                 key={feature.title}
                 className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow text-left"
+                data-testid={feature.testId}
               >
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
                   <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center mx-auto">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center mx-auto" data-testid={`${feature.testId}-title`}>
                   {feature.title}
                 </h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <p className="text-gray-600" data-testid={`${feature.testId}-description`}>{feature.description}</p>
               </div>
             ))}
           </div>
@@ -158,42 +157,42 @@ export default function LandingPage() {
       </section>
 
       {/* 使い方セクション */}
-      <section id="how-it-works" className="py-20 bg-white">
+      <section id="how-it-works" className="py-20 bg-white" data-testid="how-it-works-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              たった3ステップで完成
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="how-it-works-title">
+              {t("how_it_works.title")}
             </h2>
-            <p className="text-xl text-gray-600">
-              シンプルな操作で、プロフェッショナルなプロトタイプを作成します
+            <p className="text-xl text-gray-600" data-testid="how-it-works-subtitle">
+              {t("how_it_works.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8" data-testid="how-it-works-steps">
             {[
               {
                 step: "1",
-                title: "要件をアップロード",
-                description:
-                  "テキスト、Excel/CSV、画像など、お好きな形式で要件をアップロードします。",
-                icon: Upload,
+                title: t("how_it_works.steps.clone.title"),
+                description: t("how_it_works.steps.clone.description"),
+                icon: GitBranch,
+                testId: "step-clone"
               },
               {
                 step: "2",
-                title: "AIが自動生成",
-                description:
-                  "アップロードされた要件を基に、AIが最適なプロトタイプを生成します。",
-                icon: Sparkles,
+                title: t("how_it_works.steps.setup.title"),
+                description: t("how_it_works.steps.setup.description"),
+                icon: Settings,
+                testId: "step-setup"
               },
               {
                 step: "3",
-                title: "プレビュー＆ダウンロード",
-                description:
-                  "生成されたプロトタイプをプレビューし、コードをダウンロードできます。",
-                icon: Zap,
+                title: t("how_it_works.steps.deploy.title"),
+                description: t("how_it_works.steps.deploy.description"),
+                icon: Server,
+                testId: "step-deploy"
               },
             ].map((step, index) => (
-              <div key={step.title} className="relative">
+              <div key={step.title} className="relative" data-testid={step.testId}>
                 {index < 2 && (
                   <div className="hidden md:block absolute top-12 left-1/2 w-full h-0.5 bg-gray-200"></div>
                 )}
@@ -202,10 +201,10 @@ export default function LandingPage() {
                     {step.step}
                   </div>
                   <step.icon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2" data-testid={`${step.testId}-title`}>
                     {step.title}
                   </h3>
-                  <p className="text-gray-600 text-left">{step.description}</p>
+                  <p className="text-gray-600 text-left" data-testid={`${step.testId}-description`}>{step.description}</p>
                 </div>
               </div>
             ))}
@@ -213,50 +212,55 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 対応する入力形式 */}
-      <section className="py-20 bg-gray-50">
+      {/* 技術スタックセクション */}
+      <section className="py-20 bg-gray-50" data-testid="tech-stack-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              あらゆる形式の要件に対応
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="tech-stack-title">
+              {t("tech_stack.title")}
             </h2>
-            <p className="text-xl text-gray-600">
-              お持ちの資料をそのまま活用できます
+            <p className="text-xl text-gray-600" data-testid="tech-stack-subtitle">
+              {t("tech_stack.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="tech-stack-grid">
             {[
               {
-                title: "要件定義書",
-                description: "Word、PDF、テキスト形式の要件定義書から生成",
-                icon: FileText,
-              },
-              {
-                title: "Excel/CSV",
-                description: "データ構造やフィールド定義から管理画面を生成",
-                icon: Table,
-              },
-              {
-                title: "スクリーンショット",
-                description: "既存アプリの画面から類似のUIを生成",
-                icon: ImageIcon,
-              },
-              {
-                title: "ワイヤーフレーム",
-                description: "手書きスケッチやワイヤーフレームから生成",
+                title: t("tech_stack.items.frontend.title"),
+                description: t("tech_stack.items.frontend.description"),
                 icon: Code,
+                testId: "tech-frontend"
+              },
+              {
+                title: t("tech_stack.items.backend.title"),
+                description: t("tech_stack.items.backend.description"),
+                icon: Server,
+                testId: "tech-backend"
+              },
+              {
+                title: t("tech_stack.items.auth.title"),
+                description: t("tech_stack.items.auth.description"),
+                icon: Shield,
+                testId: "tech-auth"
+              },
+              {
+                title: t("tech_stack.items.deployment.title"),
+                description: t("tech_stack.items.deployment.description"),
+                icon: Globe,
+                testId: "tech-deployment"
               },
             ].map((format) => (
               <div
                 key={format.title}
                 className="bg-white rounded-xl p-6 shadow-lg text-center"
+                data-testid={format.testId}
               >
                 <format.icon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2" data-testid={`${format.testId}-title`}>
                   {format.title}
                 </h3>
-                <p className="text-sm text-gray-600 text-left">
+                <p className="text-sm text-gray-600 text-left" data-testid={`${format.testId}-description`}>
                   {format.description}
                 </p>
               </div>
@@ -266,61 +270,64 @@ export default function LandingPage() {
       </section>
 
       {/* 料金プラン */}
-      <section id="pricing" className="py-20 bg-white">
+      <section id="pricing" className="py-20 bg-white" data-testid="pricing-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              シンプルな料金プラン
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="pricing-title">
+              {t("pricing.title")}
             </h2>
-            <p className="text-xl text-gray-600">
-              あなたのニーズに合わせた最適なプランをご用意しています
+            <p className="text-xl text-gray-600" data-testid="pricing-subtitle">
+              {t("pricing.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto" data-testid="pricing-plans">
             {[
               {
-                name: "Free",
-                price: "¥0",
-                description: "個人利用や試用に最適",
+                name: t("pricing.plans.free.name"),
+                price: t("pricing.plans.free.price"),
+                description: t("pricing.plans.free.description"),
                 features: [
-                  "月3回まで生成可能",
-                  "基本的なテンプレート",
-                  "コミュニティサポート",
-                  "7日間のプロジェクト保存",
+                  "完全なソースコード",
+                  "基本的な認証機能",
+                  "データベース設定",
+                  "GitHubサポート"
                 ],
-                cta: "無料で始める",
+                cta: t("pricing.plans.free.cta"),
                 highlighted: false,
+                testId: "plan-free"
               },
               {
-                name: "Pro",
-                price: "¥4,980",
-                description: "プロフェッショナル向け",
+                name: t("pricing.plans.pro.name"),
+                price: t("pricing.plans.pro.price"),
+                description: t("pricing.plans.pro.description"),
                 features: [
-                  "無制限の生成",
-                  "全テンプレート利用可能",
+                  "Freeの全機能",
                   "優先サポート",
-                  "無制限のプロジェクト保存",
-                  "カスタムブランディング",
-                  "API アクセス",
+                  "カスタム機能追加",
+                  "デプロイ支援",
+                  "セキュリティ監査",
+                  "パフォーマンス最適化"
                 ],
-                cta: "Proを始める",
+                cta: t("pricing.plans.pro.cta"),
                 highlighted: true,
+                testId: "plan-pro"
               },
               {
-                name: "Enterprise",
-                price: "ご相談",
-                description: "大規模チーム・企業向け",
+                name: t("pricing.plans.enterprise.name"),
+                price: t("pricing.plans.enterprise.price"),
+                description: t("pricing.plans.enterprise.description"),
                 features: [
                   "Proの全機能",
                   "専任サポート",
                   "SLA保証",
                   "オンプレミス対応",
                   "カスタム開発",
-                  "セキュリティ監査",
+                  "セキュリティ監査"
                 ],
-                cta: "お問い合わせ",
+                cta: t("pricing.plans.enterprise.cta"),
                 highlighted: false,
+                testId: "plan-enterprise"
               },
             ].map((plan) => (
               <div
@@ -330,6 +337,7 @@ export default function LandingPage() {
                     ? "bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-2xl scale-105"
                     : "bg-white border border-gray-200 shadow-lg"
                 }`}
+                data-testid={plan.testId}
               >
                 {plan.highlighted && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -343,6 +351,7 @@ export default function LandingPage() {
                     className={`text-2xl font-bold mb-2 ${
                       plan.highlighted ? "text-white" : "text-gray-900"
                     }`}
+                    data-testid={`${plan.testId}-name`}
                   >
                     {plan.name}
                   </h3>
@@ -350,6 +359,7 @@ export default function LandingPage() {
                     className={`text-sm mb-4 ${
                       plan.highlighted ? "text-blue-100" : "text-gray-600"
                     }`}
+                    data-testid={`${plan.testId}-description`}
                   >
                     {plan.description}
                   </p>
@@ -357,6 +367,7 @@ export default function LandingPage() {
                     className={`text-4xl font-bold ${
                       plan.highlighted ? "text-white" : "text-gray-900"
                     }`}
+                    data-testid={`${plan.testId}-price`}
                   >
                     {plan.price}
                     {plan.price !== "ご相談" && (
@@ -364,7 +375,7 @@ export default function LandingPage() {
                     )}
                   </div>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8" data-testid={`${plan.testId}-features`}>
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start">
                       <Check
@@ -391,6 +402,7 @@ export default function LandingPage() {
                       : "/auth/signup"
                   }
                   className="block"
+                  data-testid={`${plan.testId}-cta`}
                 >
                   <Button
                     className={`w-full ${
@@ -412,44 +424,45 @@ export default function LandingPage() {
       </section>
 
       {/* お客様の声 */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50" data-testid="testimonials-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              お客様の声
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="testimonials-title">
+              {t("testimonials.title")}
             </h2>
-            <p className="text-xl text-gray-600">
-              多くの企業やクリエイターに選ばれています
+            <p className="text-xl text-gray-600" data-testid="testimonials-subtitle">
+              {t("testimonials.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8" data-testid="testimonials-grid">
             {[
               {
-                name: "高橋 悠斗",
-                role: "スタートアップ創業者",
-                comment:
-                  "アイデアを素早く形にできるので、投資家へのプレゼンが格段に楽になりました。",
+                name: t("testimonials.items.developer1.name"),
+                role: t("testimonials.items.developer1.role"),
+                comment: t("testimonials.items.developer1.comment"),
                 avatar: "/images/testimonials-01.jpg",
+                testId: "testimonial-1"
               },
               {
-                name: "加藤 里奈",
-                role: "プロダクトマネージャー",
-                comment:
-                  "チームとのコミュニケーションが円滑になり、開発スピードが3倍になりました。",
+                name: t("testimonials.items.developer2.name"),
+                role: t("testimonials.items.developer2.role"),
+                comment: t("testimonials.items.developer2.comment"),
                 avatar: "/images/testimonials-02.jpg",
+                testId: "testimonial-2"
               },
               {
-                name: "渡辺 祐介",
-                role: "フリーランスデザイナー",
-                comment:
-                  "クライアントへの提案が視覚的になり、受注率が大幅に向上しました。",
+                name: t("testimonials.items.developer3.name"),
+                role: t("testimonials.items.developer3.role"),
+                comment: t("testimonials.items.developer3.comment"),
                 avatar: "/images/testimonials-03.jpg",
+                testId: "testimonial-3"
               },
             ].map((testimonial) => (
               <div
                 key={testimonial.name}
                 className="bg-white rounded-xl p-6 shadow-lg"
+                data-testid={testimonial.testId}
               >
                 <div className="flex items-center mb-4">
                   <img
@@ -460,13 +473,13 @@ export default function LandingPage() {
                     className="rounded-full object-cover mr-4"
                   />
                   <div>
-                    <h4 className="font-semibold text-gray-900">
+                    <h4 className="font-semibold text-gray-900" data-testid={`${testimonial.testId}-name`}>
                       {testimonial.name}
                     </h4>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                    <p className="text-sm text-gray-600" data-testid={`${testimonial.testId}-role`}>{testimonial.role}</p>
                   </div>
                 </div>
-                <p className="text-gray-700 italic">{testimonial.comment}</p>
+                <p className="text-gray-700 italic" data-testid={`${testimonial.testId}-comment`}>{testimonial.comment}</p>
               </div>
             ))}
           </div>
@@ -474,136 +487,151 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-cyan-500">
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-cyan-500" data-testid="cta-section">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            今すぐ始めましょう
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" data-testid="cta-title">
+            {t("cta.title")}
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            アイデアを形にする最速の方法を体験してください
+          <p className="text-xl text-blue-100 mb-8" data-testid="cta-description">
+            {t("cta.description")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signup">
+            <Link href="/auth/signup" data-testid="cta-button">
               <Button
                 size="lg"
                 className="bg-white text-blue-600 hover:bg-gray-100"
               >
-                無料で始める
+                {t("cta.button")}
               </Button>
             </Link>
           </div>
-          <p className="mt-6 text-sm text-blue-100">
-            クレジットカード不要 • いつでもキャンセル可能 • 3分で開始
+          <p className="mt-6 text-sm text-blue-100" data-testid="cta-note">
+            {t("cta.note")}
           </p>
         </div>
       </section>
 
       {/* フッター */}
-      <footer className="bg-gray-900 text-gray-300">
+      <footer className="bg-gray-900 text-gray-300" data-testid="footer">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center mr-2">
-                  <span className="text-white font-bold text-sm">AI</span>
+                  <span className="text-white font-bold text-sm">TS</span>
                 </div>
-                <span className="text-lg font-bold text-white">
-                  Prototype Generator
+                <span className="text-lg font-bold text-white" data-testid="footer-brand-name">
+                  {t("navigation.brand_name")}
                 </span>
               </div>
-              <p className="text-sm">AIの力で、アイデアを瞬時にカタチに。</p>
+              <p className="text-sm" data-testid="footer-description">{t("footer.description")}</p>
             </div>
             <div>
-              <h3 className="font-semibold text-white mb-4">製品</h3>
+              <h3 className="font-semibold text-white mb-4" data-testid="footer-product-title">
+                {t("footer.sections.product.title")}
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
                     href="#features"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-features"
                   >
-                    機能
+                    {t("footer.sections.product.links.features")}
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="#pricing"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-pricing"
                   >
-                    料金
+                    {t("footer.sections.product.links.pricing")}
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="#how-it-works"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-how-it-works"
                   >
-                    使い方
+                    {t("footer.sections.product.links.how_it_works")}
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-white mb-4">サポート</h3>
+              <h3 className="font-semibold text-white mb-4" data-testid="footer-support-title">
+                {t("footer.sections.support.title")}
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
                     href="/docs"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-docs"
                   >
-                    ドキュメント
+                    {t("footer.sections.support.links.docs")}
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/contact"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-contact"
                   >
-                    お問い合わせ
+                    {t("footer.sections.support.links.contact")}
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/faq"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-faq"
                   >
-                    FAQ
+                    {t("footer.sections.support.links.faq")}
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-white mb-4">会社</h3>
+              <h3 className="font-semibold text-white mb-4" data-testid="footer-company-title">
+                {t("footer.sections.company.title")}
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
                     href="/about"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-about"
                   >
-                    会社情報
+                    {t("footer.sections.company.links.about")}
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/privacy"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-privacy"
                   >
-                    プライバシーポリシー
+                    {t("footer.sections.company.links.privacy")}
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/terms"
                     className="hover:text-white transition-colors"
+                    data-testid="footer-link-terms"
                   >
-                    利用規約
+                    {t("footer.sections.company.links.terms")}
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
-            <p>
-              &copy; {new Date().getFullYear()} AI Prototype Generator. All
+            <p data-testid="footer-copyright">
+              &copy; {new Date().getFullYear()} {t("navigation.brand_name")}. All
               rights reserved.
             </p>
           </div>

@@ -84,6 +84,194 @@
       "token_min_length": "Token must be at least 1 character"
     }
   },
+  "Landing": {
+    "navigation": {
+      "brand_name": "TypeScript Next Template",
+      "login": "Sign In",
+      "get_started": "Get Started Free"
+    },
+    "hero": {
+      "badge": "TypeScript + Next.js Template",
+      "title": "Build modern web applications",
+      "title_highlight": "quickly",
+      "title_end": "",
+      "description": "Complete web application template using TypeScript, Next.js, Tailwind CSS, and shadcn/ui.\nAuthentication, database, and internationalization included.",
+      "cta_primary": "Get Started Free",
+      "cta_secondary": "See How It Works"
+    },
+    "features": {
+      "title": "Why TypeScript Next Template?",
+      "subtitle": "Powerful features that provide a modern development experience",
+      "items": {
+        "typescript": {
+          "title": "TypeScript Support",
+          "description": "Ensure type safety and significantly improve development efficiency and code quality."
+        },
+        "nextjs": {
+          "title": "Next.js 15",
+          "description": "Build fast, SEO-friendly applications with the latest App Router and Server Components."
+        },
+        "tailwind": {
+          "title": "Tailwind CSS",
+          "description": "Create beautiful UIs efficiently with utility-first CSS framework."
+        },
+        "shadcn": {
+          "title": "shadcn/ui",
+          "description": "Achieve consistent design systems with high-quality component library."
+        },
+        "auth": {
+          "title": "Authentication System",
+          "description": "Complete authentication system with NextAuth.js. Login, registration, and password reset support."
+        },
+        "database": {
+          "title": "Database",
+          "description": "Type-safe database operations with Prisma ORM and PostgreSQL."
+        }
+      }
+    },
+    "how_it_works": {
+      "title": "Get Started in 3 Steps",
+      "subtitle": "Simple setup to start development immediately",
+      "steps": {
+        "clone": {
+          "title": "Clone Repository",
+          "description": "Clone the template from GitHub and initialize your project."
+        },
+        "setup": {
+          "title": "Setup Environment",
+          "description": "Install dependencies and configure environment variables."
+        },
+        "deploy": {
+          "title": "Deploy",
+          "description": "Deploy to Vercel, Netlify, or your preferred platform."
+        }
+      }
+    },
+    "tech_stack": {
+      "title": "Comprehensive Tech Stack",
+      "subtitle": "Covers technologies used in production environments",
+      "items": {
+        "frontend": {
+          "title": "Frontend",
+          "description": "React, TypeScript, Tailwind CSS"
+        },
+        "backend": {
+          "title": "Backend",
+          "description": "Next.js, Prisma, PostgreSQL"
+        },
+        "auth": {
+          "title": "Authentication",
+          "description": "NextAuth.js, Email verification"
+        },
+        "deployment": {
+          "title": "Deployment",
+          "description": "Docker, Vercel support"
+        }
+      }
+    },
+    "pricing": {
+      "title": "Simple Pricing Plans",
+      "subtitle": "Optimal plans tailored to your needs",
+      "plans": {
+        "free": {
+          "name": "Free",
+          "price": "$0",
+          "description": "Perfect for personal use and trials",
+          "features": [
+            "Complete source code",
+            "Basic authentication features",
+            "Database setup",
+            "GitHub support"
+          ],
+          "cta": "Get Started Free"
+        },
+        "pro": {
+          "name": "Pro",
+          "price": "$49",
+          "description": "For professionals",
+          "features": [
+            "All Free features",
+            "Priority support",
+            "Custom feature additions",
+            "Deployment assistance",
+            "Security audit",
+            "Performance optimization"
+          ],
+          "cta": "Start Pro"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "price": "Contact Us",
+          "description": "For large teams and enterprises",
+          "features": [
+            "All Pro features",
+            "Dedicated support",
+            "SLA guarantee",
+            "On-premise support",
+            "Custom development",
+            "Security audit"
+          ],
+          "cta": "Contact Us"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Developer Testimonials",
+      "subtitle": "Chosen by many developers",
+      "items": {
+        "developer1": {
+          "name": "Ken Tanaka",
+          "role": "Full Stack Developer",
+          "comment": "The combination of TypeScript and Next.js is amazing, and development speed has improved dramatically."
+        },
+        "developer2": {
+          "name": "Misaki Sato",
+          "role": "Product Manager",
+          "comment": "Since the authentication system is built-in from the start, I can create prototypes immediately."
+        },
+        "developer3": {
+          "name": "Taro Yamada",
+          "role": "Startup Founder",
+          "comment": "Thanks to Tailwind CSS and shadcn/ui, I can build beautiful UIs quickly."
+        }
+      }
+    },
+    "cta": {
+      "title": "Get Started Now",
+      "description": "Experience the fastest way to build modern web applications",
+      "button": "Get Started Free",
+      "note": "No credit card required • Cancel anytime • Start in 3 minutes"
+    },
+    "footer": {
+      "description": "Build modern web applications with the power of TypeScript and Next.js.",
+      "sections": {
+        "product": {
+          "title": "Product",
+          "links": {
+            "features": "Features",
+            "pricing": "Pricing",
+            "how_it_works": "How It Works"
+          }
+        },
+        "support": {
+          "title": "Support",
+          "links": {
+            "docs": "Documentation",
+            "contact": "Contact",
+            "faq": "FAQ"
+          }
+        },
+        "company": {
+          "title": "Company",
+          "links": {
+            "about": "About",
+            "privacy": "Privacy Policy",
+            "terms": "Terms of Service"
+          }
+        }
+      }
+    }
+  },
   "Crud": {
     "create": "Create",
     "save": "Save",

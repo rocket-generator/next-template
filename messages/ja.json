@@ -84,6 +84,194 @@
       "token_min_length": "トークンは1文字以上で入力してください"
     }
   },
+  "Landing": {
+    "navigation": {
+      "brand_name": "TypeScript Next Template",
+      "login": "ログイン",
+      "get_started": "無料で始める"
+    },
+    "hero": {
+      "badge": "TypeScript + Next.js テンプレート",
+      "title": "モダンなWebアプリケーションを",
+      "title_highlight": "素早く",
+      "title_end": "構築",
+      "description": "TypeScript、Next.js、Tailwind CSS、shadcn/uiを使用した\n完全なWebアプリケーションテンプレート。\n認証、データベース、国際化対応済み。",
+      "cta_primary": "無料で始める",
+      "cta_secondary": "使い方を見る"
+    },
+    "features": {
+      "title": "なぜTypeScript Next Templateなのか",
+      "subtitle": "モダンな開発体験を提供する、強力な機能群をご提供します",
+      "items": {
+        "typescript": {
+          "title": "TypeScript対応",
+          "description": "型安全性を確保し、開発効率とコード品質を大幅に向上させます。"
+        },
+        "nextjs": {
+          "title": "Next.js 15",
+          "description": "最新のApp RouterとServer Componentsで、高速でSEOフレンドリーなアプリケーションを構築。"
+        },
+        "tailwind": {
+          "title": "Tailwind CSS",
+          "description": "ユーティリティファーストのCSSフレームワークで、美しいUIを効率的に作成。"
+        },
+        "shadcn": {
+          "title": "shadcn/ui",
+          "description": "高品質なコンポーネントライブラリで、一貫性のあるデザインシステムを実現。"
+        },
+        "auth": {
+          "title": "認証システム",
+          "description": "NextAuth.jsによる完全な認証システム。ログイン、登録、パスワードリセット対応。"
+        },
+        "database": {
+          "title": "データベース",
+          "description": "Prisma ORMとPostgreSQLで、型安全なデータベース操作を実現。"
+        }
+      }
+    },
+    "how_it_works": {
+      "title": "たった3ステップで開始",
+      "subtitle": "シンプルなセットアップで、すぐに開発を始められます",
+      "steps": {
+        "clone": {
+          "title": "リポジトリをクローン",
+          "description": "GitHubからテンプレートをクローンし、プロジェクトを初期化します。"
+        },
+        "setup": {
+          "title": "環境をセットアップ",
+          "description": "依存関係をインストールし、環境変数を設定します。"
+        },
+        "deploy": {
+          "title": "デプロイ",
+          "description": "Vercel、Netlify、またはお好みのプラットフォームにデプロイ。"
+        }
+      }
+    },
+    "tech_stack": {
+      "title": "充実した技術スタック",
+      "subtitle": "プロダクション環境で使用される技術を網羅",
+      "items": {
+        "frontend": {
+          "title": "フロントエンド",
+          "description": "React、TypeScript、Tailwind CSS"
+        },
+        "backend": {
+          "title": "バックエンド",
+          "description": "Next.js、Prisma、PostgreSQL"
+        },
+        "auth": {
+          "title": "認証",
+          "description": "NextAuth.js、メール認証"
+        },
+        "deployment": {
+          "title": "デプロイ",
+          "description": "Docker、Vercel対応"
+        }
+      }
+    },
+    "pricing": {
+      "title": "シンプルな料金プラン",
+      "subtitle": "あなたのニーズに合わせた最適なプランをご用意しています",
+      "plans": {
+        "free": {
+          "name": "Free",
+          "price": "¥0",
+          "description": "個人利用や試用に最適",
+          "features": [
+            "完全なソースコード",
+            "基本的な認証機能",
+            "データベース設定",
+            "GitHubサポート"
+          ],
+          "cta": "無料で始める"
+        },
+        "pro": {
+          "name": "Pro",
+          "price": "¥4,980",
+          "description": "プロフェッショナル向け",
+          "features": [
+            "Freeの全機能",
+            "優先サポート",
+            "カスタム機能追加",
+            "デプロイ支援",
+            "セキュリティ監査",
+            "パフォーマンス最適化"
+          ],
+          "cta": "Proを始める"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "price": "ご相談",
+          "description": "大規模チーム・企業向け",
+          "features": [
+            "Proの全機能",
+            "専任サポート",
+            "SLA保証",
+            "オンプレミス対応",
+            "カスタム開発",
+            "セキュリティ監査"
+          ],
+          "cta": "お問い合わせ"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "開発者の声",
+      "subtitle": "多くの開発者に選ばれています",
+      "items": {
+        "developer1": {
+          "name": "田中 健太",
+          "role": "フルスタック開発者",
+          "comment": "TypeScriptとNext.jsの組み合わせが素晴らしく、開発速度が格段に向上しました。"
+        },
+        "developer2": {
+          "name": "佐藤 美咲",
+          "role": "プロダクトマネージャー",
+          "comment": "認証システムが最初から組み込まれているので、すぐにプロトタイプを作成できました。"
+        },
+        "developer3": {
+          "name": "山田 太郎",
+          "role": "スタートアップ創業者",
+          "comment": "Tailwind CSSとshadcn/uiのおかげで、美しいUIを素早く構築できました。"
+        }
+      }
+    },
+    "cta": {
+      "title": "今すぐ始めましょう",
+      "description": "モダンなWebアプリケーション開発の最速の方法を体験してください",
+      "button": "無料で始める",
+      "note": "クレジットカード不要 • いつでもキャンセル可能 • 3分で開始"
+    },
+    "footer": {
+      "description": "TypeScriptとNext.jsの力で、モダンなWebアプリケーションを構築。",
+      "sections": {
+        "product": {
+          "title": "製品",
+          "links": {
+            "features": "機能",
+            "pricing": "料金",
+            "how_it_works": "使い方"
+          }
+        },
+        "support": {
+          "title": "サポート",
+          "links": {
+            "docs": "ドキュメント",
+            "contact": "お問い合わせ",
+            "faq": "FAQ"
+          }
+        },
+        "company": {
+          "title": "会社",
+          "links": {
+            "about": "会社情報",
+            "privacy": "プライバシーポリシー",
+            "terms": "利用規約"
+          }
+        }
+      }
+    }
+  },
   "Crud": {
     "create": "新規作成",
     "save": "保存",
