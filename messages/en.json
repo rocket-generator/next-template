@@ -290,6 +290,9 @@
     "Admin": {
       "dashboard": "Dashboard",
       "users": "Users",
+      "statistics": "Statistics",
+      "settings": "Settings",
+      "administration": "Administration",
       "/* [ADMIN_MENU_ITEMS] */": ""
     }
   },

@@ -1,8 +1,7 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
 
-import SideMenu from "@/components/organisms/SideMenu";
-import AdminHeader from "@/components/organisms/AdminHeader";
+import AdminSidebar from "@/components/organisms/AdminSidebar";
 import AdminFooter from "@/components/organisms/AdminFooter";
 import { UserRepository } from "@/repositories/user_repository";
 import AuthError from "@/exceptions/auth_error";
@@ -10,6 +9,7 @@ import { redirect, notFound } from "next/navigation";
 import { User } from "@/models/user";
 import { getTranslations } from "next-intl/server";
 import { signOutAction } from "./actions";
+import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
 
 type Props = {
   children: React.ReactNode;
@@ -44,27 +44,33 @@ export default async function SiteLayout({ children }: Props) {
     /* [REGISTER_MENU_ITEMS] */
     {
       icon: <BarChart2 className="w-5 h-5" />,
-      label: "統計",
+      label: t("statistics"),
       href: "/admin/statistics",
     },
     {
       icon: <Settings className="w-5 h-5" />,
-      label: "設定",
+      label: t("settings"),
       href: "/admin/settings",
     },
   ];
   return (
-    <div className="min-h-screen flex">
-      <SideMenu
-        menuItems={menuItems}
-        title="Admin Panel"
-        icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
-      />
-      <div className="flex-1 lg:ml-64 flex flex-col">
-        <AdminHeader signInUser={me} onSignOut={signOutAction} />
+    <SidebarProvider>
+      <Suspense fallback={<div>Loading...</div>}>
+        <AdminSidebar
+          menuItems={menuItems}
+          title="Admin Panel"
+          icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
+          signInUser={me}
+          onSignOut={signOutAction}
+        />
+      </Suspense>
+      <div className="flex-1 flex flex-col">
+        <div className="p-4 border-b">
+          <SidebarTrigger />
+        </div>
         <main className="p-6 flex-grow">{children}</main>
         <AdminFooter />
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

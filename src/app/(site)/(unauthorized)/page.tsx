@@ -21,7 +21,10 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* ナビゲーションバー */}
-      <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50" data-testid="navigation">
+      <nav
+        className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"
+        data-testid="navigation"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -29,7 +32,10 @@ export default async function LandingPage() {
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center mr-2">
                   <span className="text-white font-bold text-lg">TS</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900" data-testid="brand-name">
+                <span
+                  className="text-xl font-bold text-gray-900"
+                  data-testid="brand-name"
+                >
                   {t("navigation.brand_name")}
                 </span>
               </div>
@@ -53,20 +59,32 @@ export default async function LandingPage() {
       </nav>
 
       {/* ヒーローセクション */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white" data-testid="hero-section">
+      <section
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-white"
+        data-testid="hero-section"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-black text-xs font-medium mb-6" data-testid="hero-badge">
+            <div
+              className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-black text-xs font-medium mb-6"
+              data-testid="hero-badge"
+            >
               {t("hero.badge")}
             </div>
-            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight" data-testid="hero-title">
+            <h1
+              className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight"
+              data-testid="hero-title"
+            >
               {t("hero.title")}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
                 {t("hero.title_highlight")}
               </span>
               {t("hero.title_end")}
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto whitespace-pre-line" data-testid="hero-description">
+            <p
+              className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto whitespace-pre-line"
+              data-testid="hero-description"
+            >
               {t("hero.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -89,54 +107,67 @@ export default async function LandingPage() {
       </section>
 
       {/* 特徴セクション */}
-      <section id="features" className="py-20 bg-gray-50" data-testid="features-section">
+      <section
+        id="features"
+        className="py-20 bg-gray-50"
+        data-testid="features-section"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="features-title">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"
+              data-testid="features-title"
+            >
               {t("features.title")}
             </h2>
-            <p className="text-xl text-gray-600" data-testid="features-subtitle">
+            <p
+              className="text-xl text-gray-600"
+              data-testid="features-subtitle"
+            >
               {t("features.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" data-testid="features-grid">
+          <div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            data-testid="features-grid"
+          >
             {[
               {
                 icon: Code,
                 title: t("features.items.typescript.title"),
                 description: t("features.items.typescript.description"),
-                testId: "feature-typescript"
+                testId: "feature-typescript",
               },
               {
                 icon: Globe,
                 title: t("features.items.nextjs.title"),
                 description: t("features.items.nextjs.description"),
-                testId: "feature-nextjs"
+                testId: "feature-nextjs",
               },
               {
                 icon: Sparkles,
                 title: t("features.items.tailwind.title"),
                 description: t("features.items.tailwind.description"),
-                testId: "feature-tailwind"
+                testId: "feature-tailwind",
               },
               {
                 icon: Shield,
                 title: t("features.items.shadcn.title"),
                 description: t("features.items.shadcn.description"),
-                testId: "feature-shadcn"
+                testId: "feature-shadcn",
               },
               {
                 icon: Users,
                 title: t("features.items.auth.title"),
                 description: t("features.items.auth.description"),
-                testId: "feature-auth"
+                testId: "feature-auth",
               },
               {
                 icon: Database,
                 title: t("features.items.database.title"),
                 description: t("features.items.database.description"),
-                testId: "feature-database"
+                testId: "feature-database",
               },
             ].map((feature) => (
               <div
@@ -147,10 +178,18 @@ export default async function LandingPage() {
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
                   <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center mx-auto" data-testid={`${feature.testId}-title`}>
+                <h3
+                  className="text-xl font-semibold text-gray-900 mb-2 text-center mx-auto"
+                  data-testid={`${feature.testId}-title`}
+                >
                   {feature.title}
                 </h3>
-                <p className="text-gray-600" data-testid={`${feature.testId}-description`}>{feature.description}</p>
+                <p
+                  className="text-gray-600"
+                  data-testid={`${feature.testId}-description`}
+                >
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -158,42 +197,59 @@ export default async function LandingPage() {
       </section>
 
       {/* 使い方セクション */}
-      <section id="how-it-works" className="py-20 bg-white" data-testid="how-it-works-section">
+      <section
+        id="how-it-works"
+        className="py-20 bg-white"
+        data-testid="how-it-works-section"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="how-it-works-title">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"
+              data-testid="how-it-works-title"
+            >
               {t("how_it_works.title")}
             </h2>
-            <p className="text-xl text-gray-600" data-testid="how-it-works-subtitle">
+            <p
+              className="text-xl text-gray-600"
+              data-testid="how-it-works-subtitle"
+            >
               {t("how_it_works.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8" data-testid="how-it-works-steps">
+          <div
+            className="grid md:grid-cols-3 gap-8"
+            data-testid="how-it-works-steps"
+          >
             {[
               {
                 step: "1",
                 title: t("how_it_works.steps.clone.title"),
                 description: t("how_it_works.steps.clone.description"),
                 icon: GitBranch,
-                testId: "step-clone"
+                testId: "step-clone",
               },
               {
                 step: "2",
                 title: t("how_it_works.steps.setup.title"),
                 description: t("how_it_works.steps.setup.description"),
                 icon: Settings,
-                testId: "step-setup"
+                testId: "step-setup",
               },
               {
                 step: "3",
                 title: t("how_it_works.steps.deploy.title"),
                 description: t("how_it_works.steps.deploy.description"),
                 icon: Server,
-                testId: "step-deploy"
+                testId: "step-deploy",
               },
             ].map((step, index) => (
-              <div key={step.title} className="relative" data-testid={step.testId}>
+              <div
+                key={step.title}
+                className="relative"
+                data-testid={step.testId}
+              >
                 {index < 2 && (
                   <div className="hidden md:block absolute top-12 left-1/2 w-full h-0.5 bg-gray-200"></div>
                 )}
@@ -202,10 +258,18 @@ export default async function LandingPage() {
                     {step.step}
                   </div>
                   <step.icon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2" data-testid={`${step.testId}-title`}>
+                  <h3
+                    className="text-xl font-semibold text-gray-900 mb-2"
+                    data-testid={`${step.testId}-title`}
+                  >
                     {step.title}
                   </h3>
-                  <p className="text-gray-600 text-left" data-testid={`${step.testId}-description`}>{step.description}</p>
+                  <p
+                    className="text-gray-600 text-left"
+                    data-testid={`${step.testId}-description`}
+                  >
+                    {step.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -217,39 +281,48 @@ export default async function LandingPage() {
       <section className="py-20 bg-gray-50" data-testid="tech-stack-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="tech-stack-title">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"
+              data-testid="tech-stack-title"
+            >
               {t("tech_stack.title")}
             </h2>
-            <p className="text-xl text-gray-600" data-testid="tech-stack-subtitle">
+            <p
+              className="text-xl text-gray-600"
+              data-testid="tech-stack-subtitle"
+            >
               {t("tech_stack.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="tech-stack-grid">
+          <div
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+            data-testid="tech-stack-grid"
+          >
             {[
               {
                 title: t("tech_stack.items.frontend.title"),
                 description: t("tech_stack.items.frontend.description"),
                 icon: Code,
-                testId: "tech-frontend"
+                testId: "tech-frontend",
               },
               {
                 title: t("tech_stack.items.backend.title"),
                 description: t("tech_stack.items.backend.description"),
                 icon: Server,
-                testId: "tech-backend"
+                testId: "tech-backend",
               },
               {
                 title: t("tech_stack.items.auth.title"),
                 description: t("tech_stack.items.auth.description"),
                 icon: Shield,
-                testId: "tech-auth"
+                testId: "tech-auth",
               },
               {
                 title: t("tech_stack.items.deployment.title"),
                 description: t("tech_stack.items.deployment.description"),
                 icon: Globe,
-                testId: "tech-deployment"
+                testId: "tech-deployment",
               },
             ].map((format) => (
               <div
@@ -258,10 +331,16 @@ export default async function LandingPage() {
                 data-testid={format.testId}
               >
                 <format.icon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2" data-testid={`${format.testId}-title`}>
+                <h3
+                  className="text-lg font-semibold text-gray-900 mb-2"
+                  data-testid={`${format.testId}-title`}
+                >
                   {format.title}
                 </h3>
-                <p className="text-sm text-gray-600 text-left" data-testid={`${format.testId}-description`}>
+                <p
+                  className="text-sm text-gray-600 text-left"
+                  data-testid={`${format.testId}-description`}
+                >
                   {format.description}
                 </p>
               </div>
@@ -271,10 +350,17 @@ export default async function LandingPage() {
       </section>
 
       {/* 料金プラン */}
-      <section id="pricing" className="py-20 bg-white" data-testid="pricing-section">
+      <section
+        id="pricing"
+        className="py-20 bg-white"
+        data-testid="pricing-section"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="pricing-title">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"
+              data-testid="pricing-title"
+            >
               {t("pricing.title")}
             </h2>
             <p className="text-xl text-gray-600" data-testid="pricing-subtitle">
@@ -282,7 +368,10 @@ export default async function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto" data-testid="pricing-plans">
+          <div
+            className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
+            data-testid="pricing-plans"
+          >
             {[
               {
                 name: t("pricing.plans.free.name"),
@@ -292,11 +381,11 @@ export default async function LandingPage() {
                   "完全なソースコード",
                   "基本的な認証機能",
                   "データベース設定",
-                  "GitHubサポート"
+                  "GitHubサポート",
                 ],
                 cta: t("pricing.plans.free.cta"),
                 highlighted: false,
-                testId: "plan-free"
+                testId: "plan-free",
               },
               {
                 name: t("pricing.plans.pro.name"),
@@ -308,11 +397,11 @@ export default async function LandingPage() {
                   "カスタム機能追加",
                   "デプロイ支援",
                   "セキュリティ監査",
-                  "パフォーマンス最適化"
+                  "パフォーマンス最適化",
                 ],
                 cta: t("pricing.plans.pro.cta"),
                 highlighted: true,
-                testId: "plan-pro"
+                testId: "plan-pro",
               },
               {
                 name: t("pricing.plans.enterprise.name"),
@@ -324,11 +413,11 @@ export default async function LandingPage() {
                   "SLA保証",
                   "オンプレミス対応",
                   "カスタム開発",
-                  "セキュリティ監査"
+                  "セキュリティ監査",
                 ],
                 cta: t("pricing.plans.enterprise.cta"),
                 highlighted: false,
-                testId: "plan-enterprise"
+                testId: "plan-enterprise",
               },
             ].map((plan) => (
               <div
@@ -376,7 +465,10 @@ export default async function LandingPage() {
                     )}
                   </div>
                 </div>
-                <ul className="space-y-3 mb-8" data-testid={`${plan.testId}-features`}>
+                <ul
+                  className="space-y-3 mb-8"
+                  data-testid={`${plan.testId}-features`}
+                >
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start">
                       <Check
@@ -428,36 +520,45 @@ export default async function LandingPage() {
       <section className="py-20 bg-gray-50" data-testid="testimonials-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4" data-testid="testimonials-title">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"
+              data-testid="testimonials-title"
+            >
               {t("testimonials.title")}
             </h2>
-            <p className="text-xl text-gray-600" data-testid="testimonials-subtitle">
+            <p
+              className="text-xl text-gray-600"
+              data-testid="testimonials-subtitle"
+            >
               {t("testimonials.subtitle")}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8" data-testid="testimonials-grid">
+          <div
+            className="grid md:grid-cols-3 gap-8"
+            data-testid="testimonials-grid"
+          >
             {[
               {
                 name: t("testimonials.items.developer1.name"),
                 role: t("testimonials.items.developer1.role"),
                 comment: t("testimonials.items.developer1.comment"),
                 avatar: "/images/testimonials-01.jpg",
-                testId: "testimonial-1"
+                testId: "testimonial-1",
               },
               {
                 name: t("testimonials.items.developer2.name"),
                 role: t("testimonials.items.developer2.role"),
                 comment: t("testimonials.items.developer2.comment"),
                 avatar: "/images/testimonials-02.jpg",
-                testId: "testimonial-2"
+                testId: "testimonial-2",
               },
               {
                 name: t("testimonials.items.developer3.name"),
                 role: t("testimonials.items.developer3.role"),
                 comment: t("testimonials.items.developer3.comment"),
                 avatar: "/images/testimonials-03.jpg",
-                testId: "testimonial-3"
+                testId: "testimonial-3",
               },
             ].map((testimonial) => (
               <div
@@ -474,13 +575,26 @@ export default async function LandingPage() {
                     className="rounded-full object-cover mr-4"
                   />
                   <div>
-                    <h4 className="font-semibold text-gray-900" data-testid={`${testimonial.testId}-name`}>
+                    <h4
+                      className="font-semibold text-gray-900"
+                      data-testid={`${testimonial.testId}-name`}
+                    >
                       {testimonial.name}
                     </h4>
-                    <p className="text-sm text-gray-600" data-testid={`${testimonial.testId}-role`}>{testimonial.role}</p>
+                    <p
+                      className="text-sm text-gray-600"
+                      data-testid={`${testimonial.testId}-role`}
+                    >
+                      {testimonial.role}
+                    </p>
                   </div>
                 </div>
-                <p className="text-gray-700 italic" data-testid={`${testimonial.testId}-comment`}>{testimonial.comment}</p>
+                <p
+                  className="text-gray-700 italic"
+                  data-testid={`${testimonial.testId}-comment`}
+                >
+                  {testimonial.comment}
+                </p>
               </div>
             ))}
           </div>
@@ -488,12 +602,21 @@ export default async function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-cyan-500" data-testid="cta-section">
+      <section
+        className="py-20 bg-gradient-to-r from-blue-600 to-cyan-500"
+        data-testid="cta-section"
+      >
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" data-testid="cta-title">
+          <h2
+            className="text-3xl sm:text-4xl font-bold text-white mb-4"
+            data-testid="cta-title"
+          >
             {t("cta.title")}
           </h2>
-          <p className="text-xl text-blue-100 mb-8" data-testid="cta-description">
+          <p
+            className="text-xl text-blue-100 mb-8"
+            data-testid="cta-description"
+          >
             {t("cta.description")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -521,14 +644,22 @@ export default async function LandingPage() {
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center mr-2">
                   <span className="text-white font-bold text-sm">TS</span>
                 </div>
-                <span className="text-lg font-bold text-white" data-testid="footer-brand-name">
+                <span
+                  className="text-lg font-bold text-white"
+                  data-testid="footer-brand-name"
+                >
                   {t("navigation.brand_name")}
                 </span>
               </div>
-              <p className="text-sm" data-testid="footer-description">{t("footer.description")}</p>
+              <p className="text-sm" data-testid="footer-description">
+                {t("footer.description")}
+              </p>
             </div>
             <div>
-              <h3 className="font-semibold text-white mb-4" data-testid="footer-product-title">
+              <h3
+                className="font-semibold text-white mb-4"
+                data-testid="footer-product-title"
+              >
                 {t("footer.sections.product.title")}
               </h3>
               <ul className="space-y-2 text-sm">
@@ -562,7 +693,10 @@ export default async function LandingPage() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-white mb-4" data-testid="footer-support-title">
+              <h3
+                className="font-semibold text-white mb-4"
+                data-testid="footer-support-title"
+              >
                 {t("footer.sections.support.title")}
               </h3>
               <ul className="space-y-2 text-sm">
@@ -596,7 +730,10 @@ export default async function LandingPage() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-white mb-4" data-testid="footer-company-title">
+              <h3
+                className="font-semibold text-white mb-4"
+                data-testid="footer-company-title"
+              >
                 {t("footer.sections.company.title")}
               </h3>
               <ul className="space-y-2 text-sm">
@@ -632,8 +769,8 @@ export default async function LandingPage() {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
             <p data-testid="footer-copyright">
-              &copy; {new Date().getFullYear()} {t("navigation.brand_name")}. All
-              rights reserved.
+              &copy; {new Date().getFullYear()} {t("navigation.brand_name")}.
+              All rights reserved.
             </p>
           </div>
         </div>
