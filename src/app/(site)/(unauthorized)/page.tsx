@@ -1,4 +1,6 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/atoms/button";
 import {
   Sparkles,
@@ -6,13 +8,12 @@ import {
   Check,
   Shield,
   Database,
-  Globe,
   Users,
   Settings,
   GitBranch,
   Server,
+  Globe,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
 
 export default async function LandingPage() {
   const t = await getTranslations("Landing");
@@ -465,7 +466,7 @@ export default async function LandingPage() {
                 data-testid={testimonial.testId}
               >
                 <div className="flex items-center mb-4">
-                  <img
+                  <Image
                     src={testimonial.avatar}
                     alt={testimonial.name + "の写真"}
                     width={100}

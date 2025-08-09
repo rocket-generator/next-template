@@ -41,31 +41,37 @@ const mockMenuItems = [
 
 export const Default: Story = {
   args: {
-    user: mockUser,
+    signInUser: mockUser,
     menuItems: mockMenuItems,
+    title: "アプリケーション",
+    onSignOut: () => console.log("Sign out clicked"),
   },
 };
 
 export const WithoutUser: Story = {
   args: {
-    user: null,
+    signInUser: null,
     menuItems: mockMenuItems,
+    title: "アプリケーション",
+    onSignOut: () => console.log("Sign out clicked"),
   },
 };
 
 export const WithLongUserName: Story = {
   args: {
-    user: {
+    signInUser: {
       ...mockUser,
       name: "とても長い名前を持つユーザー",
     },
     menuItems: mockMenuItems,
+    title: "アプリケーション",
+    onSignOut: () => console.log("Sign out clicked"),
   },
 };
 
 export const WithManyMenuItems: Story = {
   args: {
-    user: mockUser,
+    signInUser: mockUser,
     menuItems: [
       ...mockMenuItems,
       {
@@ -79,5 +85,7 @@ export const WithManyMenuItems: Story = {
         href: "/analytics",
       },
     ],
+    title: "アプリケーション",
+    onSignOut: () => console.log("Sign out clicked"),
   },
 };
