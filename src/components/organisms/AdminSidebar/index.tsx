@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/atoms/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/atoms/avatar";
+import LanguageSwitcher from "@/components/molecules/LanguageSwitcher";
 
 export type AdminMenuItem = {
   icon: React.ReactNode;
@@ -114,6 +115,20 @@ export default function AdminSidebar({
       </SidebarContent>
 
       <SidebarFooter data-testid="admin-sidebar-footer">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <LanguageSwitcher
+              userLanguage={signInUser?.language}
+              onSelect={async (locale) => {
+                const { setLanguageAction } = await import(
+                  "@/app/(site)/(authorized)/(app)/actions"
+                );
+                await setLanguageAction(locale, true);
+                window.location.reload();
+              }}
+            />
+          </SidebarMenuItem>
+        </SidebarMenu>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

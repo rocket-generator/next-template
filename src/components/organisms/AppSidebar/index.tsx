@@ -25,6 +25,7 @@ import {
 } from "@/components/atoms/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/atoms/avatar";
 import { CheckCircle } from "lucide-react";
+import LanguageSwitcher from "@/components/molecules/LanguageSwitcher";
 
 export type MenuItem = {
   icon: React.ReactNode;
@@ -65,7 +66,7 @@ export default function AppSidebar({
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("application")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -84,6 +85,21 @@ export default function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {/* Language Switcher */}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <LanguageSwitcher
+              userLanguage={signInUser?.language}
+              onSelect={async (locale) => {
+                const { setLanguageAction } = await import(
+                  "@/app/(site)/(authorized)/(app)/actions"
+                );
+                await setLanguageAction(locale, true);
+                window.location.reload();
+              }}
+            />
+          </SidebarMenuItem>
+        </SidebarMenu>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
