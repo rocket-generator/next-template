@@ -4,6 +4,7 @@ import { AuthSchema } from "./auth";
 
 export const UserSchema = AuthSchema.extend({
   avatarKey: z.string().optional(),
+  language: z.string().optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;
@@ -22,6 +23,7 @@ export function transformPrismToModel(data: unknown): User {
       ? (prismaData.permissions as string[])
       : [],
     isActive: prismaData.isActive ?? true,
+    language: prismaData.language || "",
     emailVerified: prismaData.emailVerified ?? false,
     avatarKey: prismaData.avatarKey || undefined,
   };

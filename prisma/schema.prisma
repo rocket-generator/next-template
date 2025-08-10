@@ -15,6 +15,7 @@ model User {
   email              String          @unique
   password           String
   permissions        Json
+  language           String          @default("")
   avatarKey          String?         @map("avatar_key")
   isActive           Boolean         @default(true) @map("is_active")
   emailVerified      Boolean         @default(false) @map("email_verified")

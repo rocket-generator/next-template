@@ -61,7 +61,7 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
     <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">
       <div className="text-center">
         <h1 className="text-2xl font-bold">{tAuth("signin")}</h1>
-        <p className="mt-2 text-gray-600">アカウントにログインしてください</p>
+        <p className="mt-2 text-gray-600">{tAuth("signin_description")}</p>
       </div>
       {error && (
         <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded">
