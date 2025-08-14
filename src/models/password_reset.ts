@@ -5,8 +5,8 @@ export const PasswordResetSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   token: z.string(),
-  expiresAt: z.date(),
-  usedAt: z.date().nullable(),
+  expiresAt: z.bigint(),
+  usedAt: z.bigint().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

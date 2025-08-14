@@ -61,7 +61,7 @@ export async function hashPassword(password: string): Promise<string> {
   // Import the password as a key
   const baseKey = await crypto.subtle.importKey(
     "raw",
-    passwordBuffer,
+    passwordBuffer.slice(),
     { name: "PBKDF2" },
     false,
     ["deriveBits"]
@@ -71,7 +71,7 @@ export async function hashPassword(password: string): Promise<string> {
   const derivedBits = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
-      salt: saltBuffer,
+      salt: saltBuffer.slice(),
       iterations: 100000,
       hash: "SHA-256",
     },
@@ -115,7 +115,7 @@ export async function verifyPassword(
     // Import the password as a key
     const baseKey = await crypto.subtle.importKey(
       "raw",
-      passwordBuffer,
+      passwordBuffer.slice(),
       { name: "PBKDF2" },
       false,
       ["deriveBits"]
@@ -125,7 +125,7 @@ export async function verifyPassword(
     const derivedBits = await crypto.subtle.deriveBits(
       {
         name: "PBKDF2",
-        salt: saltBuffer,
+        salt: saltBuffer.slice(),
         iterations: iterations,
         hash: "SHA-256",
       },

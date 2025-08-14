@@ -10,14 +10,15 @@ export async function generateResetToken(): Promise<string> {
   return generateToken(32); // 32 bytes = 64 hex characters
 }
 
-export function isTokenExpired(expiresAt: Date): boolean {
-  return new Date() > expiresAt;
+export function isTokenExpired(expiresAt: bigint): boolean {
+  const now = BigInt(Math.floor(Date.now()));
+  return now > expiresAt;
 }
 
-export function createTokenExpiry(hoursFromNow: number = 24): Date {
+export function createTokenExpiry(hoursFromNow: number = 24): bigint {
   const expiry = new Date();
   expiry.setHours(expiry.getHours() + hoursFromNow);
-  return expiry;
+  return BigInt(expiry.getTime());
 }
 
 export function isValidToken(token: string): boolean {
@@ -26,4 +27,25 @@ export function isValidToken(token: string): boolean {
     token.length === 64 &&
     /^[a-f0-9]+$/.test(token)
   );
+}
+
+/**
+ * Unix TimestampをDateオブジェクトに変換
+ */
+export function bigIntToDate(timestamp: bigint): Date {
+  return new Date(Number(timestamp));
+}
+
+/**
+ * DateオブジェクトをUnix Timestampに変換
+ */
+export function dateToBigInt(date: Date): bigint {
+  return BigInt(date.getTime());
+}
+
+/**
+ * 現在時刻をUnix Timestampで取得
+ */
+export function getCurrentTimestamp(): bigint {
+  return BigInt(Math.floor(Date.now()));
 }

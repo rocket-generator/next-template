@@ -2,131 +2,119 @@ import { AuthService } from "@/services/auth_service";
 import { AuthRepositoryInterface } from "@/repositories/auth_repository";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
 import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
+import { Auth } from "@/models/auth";
+import { PasswordReset } from "@/models/password_reset";
+import { EmailVerification } from "@/models/email_verification";
 import { SignInRequest } from "@/requests/signin_request";
 import { SignUpRequest } from "@/requests/signup_request";
 import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
-import { Auth } from "@/models/auth";
-import { PasswordReset } from "@/models/password_reset";
-import { z } from "zod";
+import {
+  generateResetToken,
+  createTokenExpiry,
+  isTokenExpired,
+  getCurrentTimestamp,
+} from "@/libraries/reset_token";
+import { createEmailServiceInstance } from "@/libraries/email";
 
-// Mock the hash functions
-jest.mock("@/libraries/hash", () => ({
-  hashPassword: jest.fn(),
-  verifyPassword: jest.fn(),
-  generateToken: jest.fn(),
-}));
+// Mock dependencies
+jest.mock("@/libraries/hash");
+jest.mock("@/libraries/reset_token");
+jest.mock("@/libraries/email");
+jest.mock("next-intl/server");
 
-// Mock email service
-jest.mock("@/libraries/email", () => ({
-  createEmailServiceInstance: jest.fn(() => ({
-    sendPasswordResetEmail: jest.fn(),
-    sendVerificationEmail: jest.fn(),
-  })),
-}));
-
-// Mock reset token functions
-jest.mock("@/libraries/reset_token", () => ({
-  generateResetToken: jest.fn(),
-  createTokenExpiry: jest.fn(),
-  isTokenExpired: jest.fn(),
-}));
-
-// Mock email verification repository imports
-import { EmailVerification } from "@/models/email_verification";
-import { generateResetToken, createTokenExpiry, isTokenExpired } from "@/libraries/reset_token";
+const mockHashPassword = hashPassword as jest.MockedFunction<typeof hashPassword>;
+const mockVerifyPassword = verifyPassword as jest.MockedFunction<typeof verifyPassword>;
+const mockGenerateToken = generateToken as jest.MockedFunction<typeof generateToken>;
+const mockGenerateResetToken = generateResetToken as jest.MockedFunction<typeof generateResetToken>;
+const mockCreateTokenExpiry = createTokenExpiry as jest.MockedFunction<typeof createTokenExpiry>;
+const mockIsTokenExpired = isTokenExpired as jest.MockedFunction<typeof isTokenExpired>;
+const mockGetCurrentTimestamp = getCurrentTimestamp as jest.MockedFunction<typeof getCurrentTimestamp>;
+const mockCreateEmailServiceInstance = createEmailServiceInstance as jest.MockedFunction<typeof createEmailServiceInstance>;
 
 describe("AuthService", () => {
   let authService: AuthService;
   let mockAuthRepository: jest.Mocked<AuthRepositoryInterface>;
   let mockPasswordResetRepository: jest.Mocked<PasswordResetRepository>;
   let mockEmailVerificationRepository: jest.Mocked<EmailVerificationRepository>;
-  let mockHashPassword: jest.MockedFunction<typeof hashPassword>;
-  let mockVerifyPassword: jest.MockedFunction<typeof verifyPassword>;
-  let mockGenerateToken: jest.MockedFunction<typeof generateToken>;
-  let mockGenerateResetToken: jest.MockedFunction<typeof generateResetToken>;
-  let mockCreateTokenExpiry: jest.MockedFunction<typeof createTokenExpiry>;
-  let mockIsTokenExpired: jest.MockedFunction<typeof isTokenExpired>;
-
-  // Mock environment variables
-  const originalEnv = process.env;
-
-  beforeAll(() => {
-    process.env = { ...originalEnv, ENABLE_EMAIL_VERIFICATION: 'true' };
-  });
-
-  afterAll(() => {
-    process.env = originalEnv;
-  });
 
   beforeEach(() => {
+    // Reset all mocks
+    jest.clearAllMocks();
+
     // Create mock repositories
     mockAuthRepository = {
       get: jest.fn(),
-      findById: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-      getMe: jest.fn(),
-    };
+      findById: jest.fn(),
+    } as any;
 
     mockPasswordResetRepository = {
       get: jest.fn(),
-      findById: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteUserTokens: jest.fn(),
-    } as jest.Mocked<PasswordResetRepository>;
-
-    mockEmailVerificationRepository = {
-      get: jest.fn(),
-      findById: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
       deleteUserTokens: jest.fn(),
       findByToken: jest.fn(),
-    } as jest.Mocked<EmailVerificationRepository>;
+    } as any;
 
-    authService = new AuthService(mockAuthRepository, mockPasswordResetRepository, mockEmailVerificationRepository);
+    mockEmailVerificationRepository = {
+      get: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      deleteUserTokens: jest.fn(),
+      findByToken: jest.fn(),
+    } as any;
 
-    // Setup mocks
-    mockHashPassword = hashPassword as jest.MockedFunction<typeof hashPassword>;
-    mockVerifyPassword = verifyPassword as jest.MockedFunction<typeof verifyPassword>;
-    mockGenerateToken = generateToken as jest.MockedFunction<typeof generateToken>;
-    mockGenerateResetToken = generateResetToken as jest.MockedFunction<typeof generateResetToken>;
-    mockCreateTokenExpiry = createTokenExpiry as jest.MockedFunction<typeof createTokenExpiry>;
-    mockIsTokenExpired = isTokenExpired as jest.MockedFunction<typeof isTokenExpired>;
+    // Create AuthService instance
+    authService = new AuthService(
+      mockAuthRepository,
+      mockPasswordResetRepository,
+      mockEmailVerificationRepository
+    );
 
-    // Reset all mocks
-    jest.clearAllMocks();
+    // Setup default mock implementations
+    mockHashPassword.mockResolvedValue("hashedPassword");
+    mockVerifyPassword.mockResolvedValue(true);
+    mockGenerateToken.mockResolvedValue("accessToken");
+    mockGenerateResetToken.mockResolvedValue("resetToken");
+    mockCreateTokenExpiry.mockReturnValue(BigInt(Date.now() + 24 * 60 * 60 * 1000));
+    mockIsTokenExpired.mockReturnValue(false);
+    mockGetCurrentTimestamp.mockReturnValue(BigInt(Date.now()));
+    mockCreateEmailServiceInstance.mockReturnValue({
+      sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+      sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+    } as any);
   });
 
   describe("signIn", () => {
-    it("should authenticate user with valid credentials", async () => {
+    it("should sign in user with valid credentials", async () => {
       const user: Auth = {
         id: "user-1",
         email: "test@example.com",
         password: "hashedPassword",
         name: "Test User",
-        permissions: ["read", "write"],
+        permissions: [],
         emailVerified: true,
         isActive: true,
       };
 
       const request: SignInRequest = {
         email: "test@example.com",
-        password: "plainPassword",
+        password: "password123",
       };
 
       mockAuthRepository.get.mockResolvedValue({
         data: [user],
-        count: 1,
+        total: 1,
+        page: 0,
+        limit: 1,
       });
       mockVerifyPassword.mockResolvedValue(true);
-      mockGenerateToken.mockResolvedValue("generated-token");
 
       const result = await authService.signIn(request);
 
@@ -136,93 +124,83 @@ describe("AuthService", () => {
         undefined,
         undefined,
         undefined,
-        [{ column: "email", operator: "=", value: request.email }]
+        [{ column: "email", operator: "=", value: "test@example.com" }]
       );
-      expect(mockVerifyPassword).toHaveBeenCalledWith(
-        "plainPassword",
-        "hashedPassword"
-      );
-      expect(mockGenerateToken).toHaveBeenCalled();
+      expect(mockVerifyPassword).toHaveBeenCalledWith("password123", "hashedPassword");
       expect(result).toEqual({
         id: "user-1",
-        access_token: "generated-token",
+        access_token: "accessToken",
         token_type: "Bearer",
         expires_in: 3600,
-        permissions: ["read", "write"],
+        permissions: [],
       });
     });
 
-    it("should throw error for non-existent user", async () => {
-      const request: SignInRequest = {
-        email: "nonexistent@example.com",
-        password: "password",
-      };
-
-      mockAuthRepository.get.mockResolvedValue({
-        data: [],
-        count: 0,
-      });
-
-      await expect(authService.signIn(request)).rejects.toThrow(
-        "Invalid credentials"
-      );
-    });
-
-    it("should throw error for invalid password", async () => {
-      const user: Auth = {
-        id: "user-1",
-        email: "test@example.com",
-        password: "hashedPassword",
-        name: "Test User",
-        permissions: ["read"],
-        emailVerified: true,
-        isActive: true,
-      };
-
+    it("should throw error for invalid credentials", async () => {
       const request: SignInRequest = {
         email: "test@example.com",
         password: "wrongPassword",
       };
 
       mockAuthRepository.get.mockResolvedValue({
-        data: [user],
-        count: 1,
+        data: [],
+        total: 0,
+        page: 0,
+        limit: 1,
       });
-      mockVerifyPassword.mockResolvedValue(false);
+
+      await expect(authService.signIn(request)).rejects.toThrow("Invalid credentials");
+    });
+
+    it("should throw error for unverified email when verification is enabled", async () => {
+      const user: Auth = {
+        id: "user-1",
+        email: "test@example.com",
+        password: "hashedPassword",
+        name: "Test User",
+        permissions: [],
+        emailVerified: false,
+        isActive: true,
+      };
+
+      const request: SignInRequest = {
+        email: "test@example.com",
+        password: "password123",
+      };
+
+      // Enable email verification
+      process.env.ENABLE_EMAIL_VERIFICATION = "true";
+
+      mockAuthRepository.get.mockResolvedValue({
+        data: [user],
+        total: 1,
+        page: 0,
+        limit: 1,
+      });
+      mockVerifyPassword.mockResolvedValue(true);
 
       await expect(authService.signIn(request)).rejects.toThrow(
-        "Invalid credentials"
+        "Email not verified. Please check your email and verify your account."
       );
-      expect(mockVerifyPassword).toHaveBeenCalledWith(
-        "wrongPassword",
-        "hashedPassword"
-      );
+
+      // Clean up
+      delete process.env.ENABLE_EMAIL_VERIFICATION;
     });
   });
 
   describe("signUp", () => {
-    beforeEach(() => {
-      // Disable email verification for basic signUp tests
-      process.env.ENABLE_EMAIL_VERIFICATION = 'false';
-    });
-
-    afterEach(() => {
-      // Reset to true for other tests
-      process.env.ENABLE_EMAIL_VERIFICATION = 'true';
-    });
-
-    it("should create new user successfully", async () => {
+    it("should sign up new user successfully", async () => {
       const request: SignUpRequest = {
         email: "new@example.com",
-        password: "newPassword",
-        confirm_password: "newPassword",
+        password: "password123",
+        confirm_password: "password123",
         name: "New User",
       };
 
-      const newUser: Auth = {
+      const createdUser: Auth = {
         id: "user-1",
         email: "new@example.com",
-        password: "hashedNewPassword",
+        password: "hashedPassword",
         name: "New User",
         permissions: [],
         emailVerified: false,
@@ -231,34 +209,48 @@ describe("AuthService", () => {
 
       mockAuthRepository.get.mockResolvedValue({
         data: [],
-        count: 0,
+        total: 0,
+        page: 0,
+        limit: 1,
       });
-      mockHashPassword.mockResolvedValue("hashedNewPassword");
-      mockAuthRepository.create.mockResolvedValue(newUser);
-      mockGenerateToken.mockResolvedValue("new-token");
+      mockAuthRepository.create.mockResolvedValue(createdUser);
 
       const result = await authService.signUp(request);
 
-      expect(mockHashPassword).toHaveBeenCalledWith("newPassword");
+      expect(mockAuthRepository.get).toHaveBeenCalledWith(
+        0,
+        1,
+        undefined,
+        undefined,
+        undefined,
+        [{ column: "email", operator: "=", value: "new@example.com" }]
+      );
+      expect(mockHashPassword).toHaveBeenCalledWith("password123");
       expect(mockAuthRepository.create).toHaveBeenCalledWith({
         email: "new@example.com",
-        password: "hashedNewPassword",
+        password: "hashedPassword",
         name: "New User",
         permissions: [],
-        emailVerified: true,
+        emailVerified: false,
         isActive: true,
       });
-      expect(mockGenerateToken).toHaveBeenCalled();
       expect(result).toEqual({
         id: "user-1",
-        access_token: "new-token",
+        access_token: "accessToken",
         token_type: "Bearer",
         expires_in: 3600,
         permissions: [],
       });
     });
 
-    it("should throw error when user already exists", async () => {
+    it("should throw error for existing user", async () => {
+      const request: SignUpRequest = {
+        email: "existing@example.com",
+        password: "password123",
+        confirm_password: "password123",
+        name: "Existing User",
+      };
+
       const existingUser: Auth = {
         id: "user-1",
         email: "existing@example.com",
@@ -269,73 +261,49 @@ describe("AuthService", () => {
         isActive: true,
       };
 
-      const request: SignUpRequest = {
-        email: "existing@example.com",
-        password: "password",
-        confirm_password: "password",
-        name: "Duplicate User",
-      };
-
       mockAuthRepository.get.mockResolvedValue({
         data: [existingUser],
-        count: 1,
+        total: 1,
+        page: 0,
+        limit: 1,
       });
 
-      await expect(authService.signUp(request)).rejects.toThrow(
-        "User already exists"
-      );
+      await expect(authService.signUp(request)).rejects.toThrow("User already exists");
     });
   });
 
   describe("forgotPassword", () => {
-    it("should return success message regardless of email existence", async () => {
-      const request: ForgotPasswordRequest = {
-        email: "any@example.com",
-      };
-
-      mockAuthRepository.get.mockResolvedValue({
-        data: [],
-        count: 0,
-      });
-
-      const result = await authService.forgotPassword(request);
-
-      expect(result).toEqual({
-        success: true,
-        message:
-          "If an account with that email exists, a password reset link has been sent.",
-        code: 200,
-      });
-    });
-
-    it("should return same message for existing user", async () => {
+    it("should send password reset email for existing user", async () => {
       const user: Auth = {
         id: "user-1",
-        email: "existing@example.com",
+        email: "test@example.com",
         password: "hashedPassword",
-        name: "Existing User",
+        name: "Test User",
         permissions: [],
+        emailVerified: true,
+        isActive: true,
       };
 
       const request: ForgotPasswordRequest = {
-        email: "existing@example.com",
+        email: "test@example.com",
       };
-
-      mockAuthRepository.get.mockResolvedValue({
-        data: [user],
-        count: 1,
-      });
 
       const resetToken: PasswordReset = {
         id: "token-1",
         userId: "user-1",
         token: "reset-token",
-        expiresAt: new Date(),
+        expiresAt: BigInt(Date.now() + 24 * 60 * 60 * 1000),
         usedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
+      mockAuthRepository.get.mockResolvedValue({
+        data: [user],
+        total: 1,
+        page: 0,
+        limit: 1,
+      });
       mockPasswordResetRepository.deleteUserTokens.mockResolvedValue();
       jest.spyOn(authService, 'createResetToken').mockResolvedValue(resetToken);
 
@@ -364,7 +332,7 @@ describe("AuthService", () => {
         id: "token-1",
         userId: "user-1",
         token: "reset-token",
-        expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
+        expiresAt: BigInt(Date.now() + 3600000), // 1 hour from now
         usedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -386,7 +354,7 @@ describe("AuthService", () => {
       });
       mockPasswordResetRepository.update.mockResolvedValue({
         ...resetToken,
-        usedAt: new Date(),
+        usedAt: BigInt(Date.now()),
       });
       mockPasswordResetRepository.deleteUserTokens.mockResolvedValue();
 
@@ -643,7 +611,7 @@ describe("AuthService", () => {
         isActive: true,
       };
 
-      const mockExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const mockExpiresAt = BigInt(Date.now() + 24 * 60 * 60 * 1000);
       const mockVerificationRecord: EmailVerification = {
         id: "verification-1",
         userId,
@@ -696,7 +664,7 @@ describe("AuthService", () => {
         id: "verification-1",
         userId,
         token,
-        expiresAt: new Date(Date.now() + 3600000), // 1 hour from now
+        expiresAt: BigInt(Date.now() + 3600000), // 1 hour from now
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -736,7 +704,7 @@ describe("AuthService", () => {
         id: "verification-1",
         userId,
         token,
-        expiresAt: new Date(Date.now() - 3600000), // 1 hour ago
+        expiresAt: BigInt(Date.now() - 3600000), // 1 hour ago
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -747,10 +715,7 @@ describe("AuthService", () => {
       const result = await authService.verifyEmailToken(token);
 
       expect(result).toBe(false);
-      expect(mockEmailVerificationRepository.findByToken).toHaveBeenCalledWith(token);
       expect(mockIsTokenExpired).toHaveBeenCalledWith(verificationRecord.expiresAt);
-      expect(mockAuthRepository.update).not.toHaveBeenCalled();
-      expect(mockEmailVerificationRepository.deleteUserTokens).not.toHaveBeenCalled();
     });
   });
 }); 

@@ -15,6 +15,7 @@ import {
   generateResetToken,
   createTokenExpiry,
   isTokenExpired,
+  getCurrentTimestamp,
 } from "@/libraries/reset_token";
 import { PasswordReset } from "@/models/password_reset";
 import { EmailVerification } from "@/models/email_verification";
@@ -348,7 +349,7 @@ export class AuthService {
    */
   async cleanupExpiredVerificationTokens(): Promise<void> {
     try {
-      const now = new Date();
+      const now = getCurrentTimestamp();
       const expiredTokens = await this.emailVerificationRepository.get(
         0,
         1000,
@@ -460,7 +461,7 @@ export class AuthService {
 
       // Mark the token as used
       await this.passwordResetRepository.update(resetToken.id, {
-        usedAt: new Date(),
+        usedAt: getCurrentTimestamp(),
       });
 
       // Delete all other tokens for this user
@@ -587,7 +588,7 @@ export class AuthService {
    */
   async cleanupExpiredTokens(): Promise<void> {
     try {
-      const now = new Date();
+      const now = getCurrentTimestamp();
       const expiredTokens = await this.passwordResetRepository.get(
         0,
         1000,

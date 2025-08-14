@@ -20,7 +20,7 @@ CREATE TABLE "public"."email_verifications" (
     "id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
     "token" TEXT NOT NULL,
-    "expires_at" TIMESTAMP(3) NOT NULL,
+    "expires_at" BIGINT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -32,8 +32,8 @@ CREATE TABLE "public"."password_resets" (
     "id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
     "token" TEXT NOT NULL,
-    "expires_at" TIMESTAMP(3) NOT NULL,
-    "used_at" TIMESTAMP(3),
+    "expires_at" BIGINT NOT NULL,
+    "used_at" BIGINT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 

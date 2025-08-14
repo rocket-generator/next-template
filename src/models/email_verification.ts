@@ -5,7 +5,7 @@ export const EmailVerificationSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   token: z.string(),
-  expiresAt: z.date(),
+  expiresAt: z.bigint(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
