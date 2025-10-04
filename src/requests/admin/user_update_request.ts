@@ -11,7 +11,6 @@ export const emailSchema = z
 
 export const passwordSchema = z
   .string({
-    required_error: "Password is required",
     invalid_type_error: "Password must be a string",
   })
   .min(8, {
@@ -23,7 +22,9 @@ export const passwordSchema = z
   .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/, {
     message:
       "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
-  });
+  })
+  .optional()
+  .or(z.literal("")); // 空文字列も許可
 
 export const nameSchema = z
   .string({

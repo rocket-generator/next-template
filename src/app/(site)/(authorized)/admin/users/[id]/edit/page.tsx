@@ -50,7 +50,7 @@ export default async function Page({ params }: Props) {
       type: "password",
       value: "",
       required: false,
-      placeholder: tUser("password"),
+      placeholder: tUser("password_placeholder"),
     },
     {
       name: tUser("permissions"),

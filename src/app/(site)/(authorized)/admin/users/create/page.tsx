@@ -42,7 +42,7 @@ export default async function Page() {
       key: "password",
       type: "password",
       value: "",
-      required: false,
+      required: true,
       placeholder: tUser("password"),
     },
     {
@@ -67,7 +67,7 @@ export default async function Page() {
               breadcrumbLinks={[
                 { href: "/admin/dashboard", label: tMenu("dashboard") },
               ]}
-              title="新規ユーザー作成"
+              title={tUser("title")}
               buttons={[]}
             />
             <DataForm<UserCreateRequest>

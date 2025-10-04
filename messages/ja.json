@@ -301,7 +301,8 @@
     "name": "名前",
     "email": "メールアドレス",
     "permissions": "権限",
-    "password": "パスワード"
+    "password": "パスワード",
+    "password_placeholder": "変更する場合のみ入力してください"
   },
   "Settings": {
     "title": "設定",

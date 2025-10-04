@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { InvalidCredentials, InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 interface AuthSigninFormProps {
   onSubmit: (formData: SignInRequest) => Promise<string>;
@@ -48,6 +49,9 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
         // Success case: ローディング状態を維持し、親コンポーネントのリダイレクトを待つ
         // 成功時はsetIsLoading(false)を呼ばない
       } catch (error) {
+        if (isRedirectError(error)) {
+          return;
+        }
         console.error(error);
         setError(tAuth("system_error"));
         setIsLoading(false);

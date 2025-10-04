@@ -11,6 +11,7 @@ alwaysApply: true
 - モックデータやダミーデータを使った仮実装などがなく、すべて完全に実装されている
 - 全てのpage.tsx （App Routerのページファイル）は Server Side Componentになっている
 - ページやコンポーネントに書かれている全ての文字列は、国際化の対応がなされている
+- 言語ファイルが正しくJSONとしてフォーマットされ、キーの重複がない
 - 全てのコンポーネントは、/src/components 以下に置かれ、/src/page には置かれていない
 - /src/components/atoms には ShadCN のコンポーネントだけを入れ、カスタマイズなどは行っていない
 - 新たに作成したコンポーネントは全てStorybookのコードが存在している

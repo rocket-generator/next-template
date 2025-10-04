@@ -301,7 +301,8 @@
     "name": "Name",
     "email": "Email",
     "permissions": "Permissions",
-    "password": "Password"
+    "password": "Password",
+    "password_placeholder": "Enter only if you want to change"
   },
   "Settings": {
     "title": "Settings",
