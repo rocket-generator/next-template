@@ -1,269 +1,193 @@
 ---
-description: 認証関係の作業を行う際に参照する
+description: 認証機能の DB 設計とデータ整合性を確認するためのガイド
 alwaysApply: false
 ---
-# 認証システムのDB設計ガイド
+# Better Auth 対応 認証データベース設計ガイド
 
-このドキュメントは、本リポジトリの認証システムにおけるデータベース設計について説明します。
+本リポジトリの認証基盤は **Better Auth + Prisma** を採用しており、ユーザー／セッション／検証トークンを PostgreSQL で管理します。本書では現行スキーマの役割、カラム仕様、アプリケーションコードとの結びつきを整理します。
 
-## 概要
+## スキーマ全体像
 
-本システムはNextAuth.js v5 (beta)を使用した認証システムで、独自のCredentials Providerを実装しています。認証に必要なフィールドは`src/models/auth.ts`で定義されており、これを基にデータベーステーブルを設計します。
+`prisma/schema.prisma` で定義している主要モデルは以下のとおりです。
 
-## 必須フィールド
+| モデル | 役割 | 主な関連 |
+| ------ | ---- | -------- |
+| `User` | エンドユーザー情報の中核。プロファイル／権限を保持 | `Session`, `Account`, `PasswordReset`, `EmailVerification` |
+| `Session` | Better Auth のセッショントークンと付加情報 | `User` (多対1) |
+| `Account` | 認証プロバイダー単位のクレデンシャル管理。Credential プロバイダーで PBKDF2 ハッシュも保持 | `User` |
+| `Verification` | Better Auth が利用する汎用検証トークン（主にメール検証） | なし |
+| `PasswordReset` | ドメインサービスが発行するパスワードリセットトークン | `User` |
+| `EmailVerification` | サービス独自のメール検証トークン（再送・状態管理用） | `User` |
 
-認証システムが正常に動作するためには、以下のフィールドが必須です：
+以降では各モデルを詳しく解説します。コメントは schema.prisma の内容に準じます。
 
-### Auth モデル（`src/models/auth.ts`）
-
-```typescript
-export const AuthSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  password: z.string(),
-  name: z.string(),
-  permissions: z.array(z.string()),
-});
-```
-
-これらのフィールドは認証システムの中核となるため、すべてのユーザーテーブルに含まれている必要があります。
-
-## Prismaスキーマの基本構造
-
-### 基本的なUserテーブル
+## User モデル
 
 ```prisma
 model User {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @db.Text
-  email       String   @unique @db.Text
-  password    String   @db.Text
-  permissions Json
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  email         String   @unique
+  password      String
+  permissions   Json
+  language      String   @default("")
+  avatarKey     String?  @map("avatar_key")
+  isActive      Boolean  @default(true) @map("is_active")
+  emailVerified Boolean  @default(false) @map("email_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  passwordResets     PasswordReset[]
+  emailVerifications EmailVerification[]
+  sessions           Session[]
+  accounts           Account[]
+
+  @@map("users")
+}
+```
+
+- `permissions` は JSON 配列で格納し、Better Auth セッション書き戻し時にマージされます。
+- `language` は UI の既定言語。`hooks/useAuthSession` から参照されることがあります。
+- `emailVerified` はドメイン側（`AuthService.verifyEmail*`）と Better Auth 両方で利用され、ミドルウェアのアクセス制御にも関与します。
+
+## Session モデル
+
+```prisma
+model Session {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id") @db.Uuid
+  token       String   @unique
+  expiresAt   DateTime @map("expires_at")
+  accessToken String?  @map("access_token")
+  permissions Json?    @map("permissions")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  @@map(name: "users")
-}
-```
-
-### フィールドの詳細説明
-
-1. **id**: UUID形式の一意識別子
-   - 自動生成される
-   - PostgreSQLのUUID型を使用
-
-2. **email**: ログインに使用するメールアドレス
-   - 一意制約が必要
-   - 大文字小文字を区別
-
-3. **password**: ハッシュ化されたパスワード
-   - PBKDF2アルゴリズムでハッシュ化
-   - フォーマット: `pbkdf2:100000:salt:hash`
-
-4. **name**: ユーザーの表示名
-
-5. **permissions**: 権限の配列
-   - JSON形式で保存
-   - 例: `["admin", "read", "write"]`
-
-## 拡張フィールドの追加
-
-### 1. モデルの拡張
-
-`src/models/user.ts`でAuthSchemaを拡張する例：
-
-```typescript
-import { z } from "zod";
-import { AuthSchema } from "./auth";
-
-// 拡張フィールドのスキーマ
-export const UserExtensionSchema = z.object({
-  // プロフィール関連
-  bio: z.string().optional(),
-  avatarUrl: z.string().url().optional(),
-  phoneNumber: z.string().optional(),
-  
-  // アカウント管理
-  isActive: z.boolean().default(true),
-  emailVerified: z.boolean().default(false),
-  lastLoginAt: z.date().optional(),
-  
-  // 追加の権限管理
-  department: z.string().optional(),
-  role: z.enum(["user", "manager", "admin"]).default("user"),
-});
-
-// AuthSchemaと拡張フィールドをマージ
-export const UserSchema = AuthSchema.extend(UserExtensionSchema.shape);
-
-export type User = z.infer<typeof UserSchema>;
-```
-
-### 2. Prismaスキーマの拡張
-
-カラムの名前や用途はあくまで例です。
-
-```prisma
-model User {
-  // 必須フィールド（Authモデル）
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @db.Text
-  email       String   @unique @db.Text
-  password    String   @db.Text
-  permissions Json
-  
-  // 拡張フィールド - プロフィール
-  bio         String?  @db.Text
-  avatarUrl   String?  @map("avatar_url") @db.Text
-  phoneNumber String?  @map("phone_number") @db.Text
-  
-  // 拡張フィールド - アカウント管理
-  isActive      Boolean  @default(true) @map("is_active")
-  emailVerified Boolean  @default(false) @map("email_verified")
-  
-  // タイムスタンプ
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  
-  // リレーション（必要に応じて）
-  posts     Post[]
-  comments  Comment[]
-
-  @@map(name: "users")
-  @@index([email])
-  @@index([department])
-}
-```
-
-## 高度な拡張パターン
-
-### 1. ソーシャルログイン対応
-
-```prisma
-model User {
-  // 基本フィールド...
-  
-  // OAuth対応
-  provider    String?  @default("credentials") @db.Text
-  providerId  String?  @map("provider_id") @db.Text
-  
-  // 複数プロバイダー対応の場合
-  accounts Account[]
-}
-
-model Account {
-  id                String  @id @default(uuid()) @db.Uuid
-  userId            String  @map("user_id") @db.Uuid
-  type              String
-  provider          String
-  providerAccountId String  @map("provider_account_id")
-  refreshToken      String? @map("refresh_token") @db.Text
-  accessToken       String? @map("access_token") @db.Text
-  expiresAt         Int?    @map("expires_at")
-  tokenType         String? @map("token_type")
-  scope             String?
-  idToken           String? @map("id_token") @db.Text
-  sessionState      String? @map("session_state")
-  
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([provider, providerAccountId])
+
+  @@index([userId])
+  @@map("sessions")
+}
+```
+
+- Better Auth の `session.additionalFields` と同期しており、`accessToken` / `permissions` はサーバーアクションで付与されます。
+- `cookieCache` 機能を有効にしているため、`updatedAt` の更新頻度に注意（`updateAge`=4h）。
+- 監査ログや IP 制限が必要になった場合は `ipAddress` / `userAgent` を参照し、集計できるようにしています。
+
+## Account モデル
+
+```prisma
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String    @map("user_id") @db.Uuid
+  providerId            String    @map("provider_id")
+  accountId             String    @map("account_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?   @map("scope")
+  password              String?   @map("password")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
   @@map("accounts")
 }
 ```
 
-### 2. 2要素認証対応
+- 現状は `providerId = "credential"` のみを想定し、`password` カラムに PBKDF2 ハッシュを保持。`syncCredentialAccount()` で同期します。
+- 外部 IdP を追加する際は `providerId` / `accountId` ペアで一意制約となるようにしてください。
+
+## Verification モデル
 
 ```prisma
-model User {
-  // 基本フィールド...
-  
-  // 2FA
-  twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
-  twoFactorSecret  String? @map("two_factor_secret")
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String   @map("token")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
 }
 ```
 
-### 3. パスワードリセット機能
+- Better Auth の内部 API が利用する汎用トークンテーブルです。メール検証やパスワードレスログインなどで使用される可能性があります。
+- アプリ側で直接参照するケースは現状ありませんが、クリーンアップを予定する場合は `expiresAt` を条件に削除してください。
+
+## PasswordReset モデル
 
 ```prisma
-model User {
-  // 基本フィールド...
-  
-  // パスワードリセット
-  passwordResetToken   String?   @unique @map("password_reset_token")
-  passwordResetExpires DateTime? @map("password_reset_expires")
+model PasswordReset {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  expiresAt BigInt   @map("expires_at")
+  usedAt    BigInt?  @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_resets")
 }
 ```
 
-## 実装時の注意点
+- `AuthService.createResetToken()` が生成・保存。`expiresAt` / `usedAt` は `BigInt`（UNIX time）で管理します。
+- 有効期限切れトークンのクリーンアップは `AuthService.cleanupExpiredTokens()` を参照。
 
-### 1. モデルの変換関数
+## EmailVerification モデル
 
-Prismaモデルからアプリケーションモデルへの変換：
+```prisma
+model EmailVerification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  expiresAt BigInt   @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-```typescript
-import { User as PrismaUser } from "@/generated/prisma";
-import { UserSchema } from "./user";
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-export function transformPrismaToModel(data: PrismaUser): User {
-  return UserSchema.parse({
-    ...data,
-    // 必要に応じて変換処理
-    permissions: data.permissions as string[],
-  });
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("email_verifications")
 }
 ```
 
-### 2. リポジトリでの実装
+- メール認証の再送や状態表示に使用します。Better Auth 標準の `Verification` とは別個に管理する点に注意してください（ドメイン都合のため）。
+- `AuthService.sendVerificationEmail()` が新規レコードを作成し、使用後は `deleteUserTokens()` で削除します。
 
-```typescript
-export class UserPrismaRepository extends PrismaRepository<User> {
-  async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
-    
-    if (!user) return null;
-    
-    return transformPrismaToModel(user);
-  }
-  
-  async create(data: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
-    const user = await this.prisma.user.create({
-      data: {
-        ...data,
-        permissions: data.permissions || [],
-      },
-    });
-    
-    return transformPrismaToModel(user);
-  }
-}
-```
+## モデル間の関係と整合性
 
-### 3. マイグレーション
+- すべての従属テーブルは `onDelete: Cascade` を設定しているため、ユーザー削除時には関連データがまとめて消去されます。
+- サインイン時は `AuthService.signIn()` → `establishSession()` の流れで `Session` と `Account` が更新されるため、トランザクション整合性を保ちたい場合は今後 `prisma.$transaction` への拡張を検討してください。
+- 追加の外部プロバイダーを実装する際は `Account` テーブルに必要なカラム（refresh token 等）が揃っているか確認し、不足があればマイグレーションを作成します。
 
-スキーマ変更後は以下のコマンドを実行：
+## マイグレーション運用
 
-```bash
-# 開発環境でのマイグレーション
-npx prisma migrate dev
+- Prisma のマイグレーションは `prisma/migrations/` に記録されます。Better Auth 関連のスキーマ変更を行った場合は、マイグレーションファイルに **意図とリスク** をコメント等で残すことを推奨します。
+- 本番環境へデプロイする際は `prisma migrate deploy` を使用してください。ローカル検証では `prisma migrate dev` を利用し、`npm run docker:db:setup` で LocalStack/DB と合わせて初期化できます。
 
-# 本番環境へのデプロイ
-npx prisma migrate deploy
+## 開発時のチェックリスト
 
-# Prismaクライアントの再生成
-npx prisma generate
-```
+1. **新しいフィールドを追加したら** `src/models/user.ts` や `AuthSchema` を同期し、サーバーアクション／テストが型チェックを通るようにする。
+2. **Better Auth の追加フィールドを増やす場合** は `Session` モデルと `session.additionalFields` の両方を更新し、`jest.setup.ts` のモックも忘れずに。
+3. **削除やデータ移行を行う場合**、`syncCredentialAccount()` や `AuthService` のロジックが期待通り動作するか E2E (`e2e/auth.spec.ts`) を通して確認する。
 
-## セキュリティ考慮事項
+---
 
-1. **パスワード**: 必ずハッシュ化して保存（PBKDF2使用）
-2. **permissions**: 権限チェックは必ずサーバーサイドで実施
-3. **email**: 一意制約により重複登録を防止
-4. **sensitiveフィールド**: APIレスポンスから除外する
-
-## まとめ
-
-認証システムのDB設計では、`src/models/auth.ts`で定義された必須フィールドを確実に実装しつつ、アプリケーションの要件に応じて適切に拡張することが重要です。拡張時は、Zodスキーマ、Prismaスキーマ、およびリポジトリ実装の整合性を保つことを忘れないでください。
+このドキュメントを更新した際は、README や環境変数テンプレートも合わせて見直し、開発者体験を揃えてください。

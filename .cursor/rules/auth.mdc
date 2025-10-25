@@ -1,47 +1,47 @@
 ---
-description: 認証関係の作業をする際に参照する
+description: 認証まわりの実装・改修時に参照するガイド
 alwaysApply: false
 ---
-# NextAuth.js + Prisma 認証システム実装ガイド
+# Better Auth + Prisma 認証システム実装ガイド
 
-このドキュメントは、Next.js 15、NextAuth.js v5、Prisma ORMを使用した認証システムの実装方法を詳細に説明します。
+このドキュメントでは、本リポジトリで採用している **Better Auth** と **Prisma** を組み合わせた認証基盤の構成・運用方法をまとめます。サーバー／クライアントのエントリポイント、DB スキーマ、サーバーアクション連携までを俯瞰し、改修時に必要な判断材料を提供することを目的としています。
 
 ## 目次
 
-1. [概要](#概要)
-2. [必要な依存関係](#必要な依存関係)
-3. [ディレクトリ構造](#ディレクトリ構造)
-4. [実装手順](#実装手順)
-5. [ファイル別実装詳細](#ファイル別実装詳細)
-6. [認証フロー](#認証フロー)
-7. [セキュリティ](#セキュリティ)
-8. [権限システム](#権限システム)
-9. [使用方法](#使用方法)
+- [Better Auth + Prisma 認証システム実装ガイド](#better-auth--prisma-認証システム実装ガイド)
+  - [目次](#目次)
+  - [全体像](#全体像)
+  - [主要依存関係](#主要依存関係)
+  - [ディレクトリ構造](#ディレクトリ構造)
+  - [環境変数](#環境変数)
+  - [サーバー実装](#サーバー実装)
+  - [クライアント実装](#クライアント実装)
+  - [サーバーアクションとフロー](#サーバーアクションとフロー)
+    - [サインイン (`src/app/(site)/(unauthorized)/auth/signin/actions.ts`)](#サインイン-srcappsiteunauthorizedauthsigninactionsts)
+    - [サインアップ (`src/app/(site)/(unauthorized)/auth/signup/actions.ts`)](#サインアップ-srcappsiteunauthorizedauthsignupactionsts)
+    - [サインアウト (`src/app/(site)/(authorized)/(app)/actions.ts` など)](#サインアウト-srcappsiteauthorizedappactionsts-など)
+  - [ミドルウェアとルーティング制御](#ミドルウェアとルーティング制御)
+  - [セキュリティと監査ポイント](#セキュリティと監査ポイント)
+  - [テスト戦略](#テスト戦略)
 
-## 概要
+## 全体像
 
-この認証システムは以下の特徴を持ちます：
+- 認証は **Better Auth** の `betterAuth()` を用いてサーバー側に常駐させ、Prisma アダプターで PostgreSQL の `Session` / `Account` / `Verification` テーブルを管理します。
+- ログインフォームなどの UI は Server Action 経由で `AuthService`（既存のドメインサービス）に委譲し、アクセストークンや権限情報を Better Auth セッションに書き戻します。
+- クライアント側でセッション状態を取得する箇所は `better-auth/react` のクライアントを薄くラップした `src/libraries/auth-client.ts` と `hooks/useAuthSession.ts` を使用します。
+- 既存の API クライアントや権限チェックは `session.permissions` / `session.accessToken` を使用するよう統一されています。
 
-- **NextAuth.js v5** を使用したセッション管理
-- **Prisma ORM** を使用したユーザーデータの永続化
-- **Credentials Provider** による独自の認証実装
-- **PBKDF2** によるパスワードハッシュ化
-- **権限ベースのアクセス制御**
-- **TypeScript** による型安全性
-- **Server Actions** を使用したフォーム処理
-- **Zod** によるバリデーション
+## 主要依存関係
 
-## 必要な依存関係
+`package.json` から認証に直結するものを抜粋します。
 
-```json
+```jsonc
 {
   "dependencies": {
+    "better-auth": "^1.3.29",
+    "@better-fetch/fetch": "^1.1.18",
     "@prisma/client": "^6.8.2",
-    "next": "15.3.3",
-    "next-auth": "^5.0.0-beta.25",
-    "react": "19.1.0",
-    "react-hook-form": "^7.53.1",
-    "zod": "^3.23.8"
+    "next-intl": "^3.26.3"
   },
   "devDependencies": {
     "prisma": "^6.8.2",
@@ -51,678 +51,147 @@ alwaysApply: false
 }
 ```
 
+`better-auth/adapters/prisma` を利用するため、Prisma の生成物は `src/generated/prisma` に配置しています。
+
 ## ディレクトリ構造
 
 ```
 src/
 ├── app/
-│   ├── api/auth/[...nextauth]/
-│   │   └── route.ts              # NextAuth.js APIルート
-│   └── (site)/
-│       ├── (authorized)/         # 認証必須ページ
-│       │   ├── (app)/           # 一般ユーザー向け
-│       │   └── admin/           # 管理者向け
-│       └── (unauthorized)/       # 公開ページ
-│           └── auth/
-│               ├── signin/      # サインイン
-│               ├── signup/      # サインアップ
-│               ├── forgot-password/
-│               └── reset-password/
+│   ├── api/auth/[...all]/route.ts    # Better Auth の Next.js ルートハンドラ
+│   ├── (site)/(unauthorized)/auth/   # サインイン/アップ等の公開エリア
+│   │   └── signin/actions.ts         # Server Action から AuthService と better-auth を連携
+│   └── middleware.ts                 # getSessionCookie() を用いた保護ロジック
 ├── libraries/
-│   ├── auth.ts                  # NextAuth設定
-│   ├── hash.ts                  # パスワードハッシュ
-│   └── prisma.ts               # Prismaクライアント
-├── models/
-│   ├── user.ts                  # ユーザーモデル
-│   ├── auth.ts                  # 認証モデル
-│   └── access_token.ts          # アクセストークンモデル
-├── repositories/
-│   ├── base_repository.ts       # ベースリポジトリ
-│   ├── prisma_repository.ts     # Prismaリポジトリ
-│   ├── auth_repository.ts       # 認証リポジトリ
-│   └── user_repository.ts       # ユーザーリポジトリ
-├── requests/
-│   ├── signin_request.ts        # サインインバリデーション
-│   └── signup_request.ts        # サインアップバリデーション
-├── types/
-│   └── next-auth.d.ts          # NextAuth型定義
-├── constants/
-│   └── auth.ts                  # 認証定数
-├── exceptions/
-│   └── auth_error.ts           # 認証エラー
-└── middleware.ts                # 認証ミドルウェア
+│   ├── auth.ts                       # betterAuth() のサーバー設定・ヘルパー群
+│   ├── auth-client.ts                # better-auth/react クライアントラッパー
+│   └── hash.ts                       # PBKDF2 によるハッシュ/検証
+├── hooks/
+│   └── useAuthSession.ts             # セッション情報を安全に抽出
+├── services/
+│   └── auth_service.ts               # 既存 AuthService（DBとSES/メール機能を統括）
+├── repositories/                     # Prisma ベースのデータアクセス
+└── models/                           # Zod スキーマ（AuthSchema, UserSchema など）
 
 prisma/
-├── schema.prisma               # Prismaスキーマ
-└── seed.ts                     # シードデータ
+├── schema.prisma                     # Better Auth 用 Session / Account / Verification を含む
+└── seed.ts                           # 初期データ投入スクリプト
 ```
 
-## 実装手順
+## 環境変数
 
-### 1. 環境変数の設定
+必須となるキーを整理します。全シーンで `.env.sample` / `.env.docker` を参照してください。
 
-`.env` ファイルに以下を設定：
+| 変数 | 用途 | 備考 |
+| ---- | ---- | ---- |
+| `BETTER_AUTH_BASE_URL` | Better Auth が生成するリンクのベース URL | dev では `http://localhost:3000` |
+| `BETTER_AUTH_SECRET` | セッション暗号化用の秘密鍵 | 旧 `AUTH_SECRET` でも互換を維持（`auth.ts` 側でフォールバック） |
+| `NEXT_PUBLIC_BETTER_AUTH_BASE_PATH` | クライアントからの API パス | 既定値 `/api/auth` |
+| `ENABLE_EMAIL_VERIFICATION` | メール検証の有効／無効フラグ | サインアップ時の動作切り替え |
+| `LOCALSTACK_ENDPOINT` 等 | SES/S3 のエミュレーション | LocalStack 利用時 |
 
-```env
-# データベース接続
-DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
+`src/libraries/auth.ts` では `BETTER_AUTH_SECRET` → `AUTH_SECRET` の順で解決し、NextAuth 用のキーには依存しません。
 
-# NextAuth設定
-AUTH_URL=http://localhost:3000/api/auth
-AUTH_SECRET=your-secret-key-here
-```
+## サーバー実装
 
-### 2. Prismaスキーマの定義
+`src/libraries/auth.ts` のポイントを押さえます。
 
-```prisma
-// prisma/schema.prisma
-generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @db.Text
-  email       String   @unique @db.Text
-  password    String   @db.Text
-  permissions Json
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map(name: "users")
-}
-```
-
-### 3. Prismaクライアントの生成
-
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-## ファイル別実装詳細
-
-### 1. NextAuth設定 (`src/libraries/auth.ts`)
-
-```typescript
-import { UserRepository } from "@/repositories/user_repository";
-import { SignInRequest } from "@/requests/signin_request";
-import { SignUpRequest } from "@/requests/signup_request";
-import type { NextAuthConfig } from "next-auth";
-import NextAuth, { Session } from "next-auth";
-import type { JWT } from "next-auth/jwt";
-import CredentialsProvider from "next-auth/providers/credentials";
-
-export const authConfig: NextAuthConfig = {
-  trustHost: true,
-  secret: process.env.AUTH_SECRET,
-  providers: [
-    CredentialsProvider({
-      id: "signin",
-      name: "SignIn",
-      credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const repository = new UserRepository();
-        const request = {
-          email: credentials.email,
-          password: credentials.password,
-        } as SignInRequest;
-        try {
-          const response = await repository.postSignIn(request);
-          if (response.access_token) {
-            return {
-              id: response.id,
-              email: credentials.email as string,
-              password: "",
-              name: "",
-              access_token: response.access_token,
-              permissions: response.permissions,
-              expires_in: response.expires_in,
-              token_type: response.token_type,
-            };
-          } else {
-            return null;
-          }
-        } catch (error) {
-          throw error;
-        }
-      },
-    }),
-    CredentialsProvider({
-      id: "signup",
-      name: "SignUp",
-      credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
-        name: { label: "Name", type: "text" },
-        confirm_password: { label: "Confirm Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const repository = new UserRepository();
-        const request = {
-          email: credentials.email,
-          password: credentials.password,
-          name: credentials.name,
-        } as SignUpRequest;
-        try {
-          const response = await repository.postSignUp(request);
-          if (response.access_token) {
-            return {
-              id: response.id,
-              email: credentials.email as string,
-              password: "",
-              name: credentials.name as string,
-              access_token: response.access_token,
-              permissions: response.permissions,
-              expires_in: response.expires_in,
-              token_type: response.token_type,
-            };
-          } else {
-            return null;
-          }
-        } catch (error) {
-          throw error;
-        }
-      },
-    }),
-  ],
-  pages: {
-    signIn: "/dashboard",
+```ts
+const authInstance = betterAuth({
+  baseURL,
+  secret,
+  database: prismaAdapter(prisma, { transaction: true, usePlural: false }),
+  plugins: [nextCookies()],
+  session: {
+    additionalFields: {
+      accessToken: { type: "string", fieldName: "accessToken", returned: true },
+      permissions: { type: "json", fieldName: "permissions", returned: true, defaultValue: () => [] }
+    },
+    cookieCache: { enabled: true, maxAge: 60 * 5 },
+    storeSessionInDatabase: true,
+    expiresIn: 60 * 60 * 24,
+    updateAge: 60 * 60 * 4
   },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.access_token = user.access_token || "";
-        token.name = user.name || "";
-        token.permissions = user.permissions || [];
-      }
-      return token;
-    },
-    async session({ session, token }: { session: Session; token: JWT }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id as string,
-          name: token.name || undefined,
-          permissions: token.permissions || [],
-        },
-        access_token: token.access_token || undefined,
-        name: token.name || undefined,
-        permissions: token.permissions || [],
-      };
-    },
-  },
-};
-
-export const { auth, handlers, signIn, signOut } = NextAuth(authConfig);
-```
-
-### 2. パスワードハッシュ実装 (`src/libraries/hash.ts`)
-
-```typescript
-// Web Crypto APIを使用したPBKDF2実装
-export async function hashPassword(password: string): Promise<string> {
-  // ランダムソルトの生成
-  const salt = await getRandomBytes(16);
-  
-  // PBKDF2でハッシュ化（100,000回の反復、SHA-256）
-  const passwordBuffer = stringToBuffer(password);
-  const saltBuffer = hexToBuffer(salt);
-  
-  const baseKey = await crypto.subtle.importKey(
-    "raw",
-    passwordBuffer,
-    { name: "PBKDF2" },
-    false,
-    ["deriveBits"]
-  );
-  
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      salt: saltBuffer,
-      iterations: 100000,
-      hash: "SHA-256",
-    },
-    baseKey,
-    256 // 32 bytes
-  );
-  
-  const hash = bufferToHex(derivedBits);
-  
-  // フォーマット: algorithm:iterations:salt:hash
-  return `pbkdf2:100000:${salt}:${hash}`;
-}
-
-export async function verifyPassword(
-  password: string,
-  storedHash: string
-): Promise<boolean> {
-  // 保存されたハッシュを解析して同じパラメータで検証
-  const [algorithm, iterationsStr, salt, originalHash] = storedHash.split(":");
-  
-  if (algorithm !== "pbkdf2") return false;
-  
-  // 同じパラメータでハッシュ化して比較
-  // 実装詳細は省略
-}
-
-export async function generateToken(length: number = 32): Promise<string> {
-  return getRandomBytes(length);
-}
-```
-
-### 3. 型定義 (`src/types/next-auth.d.ts`)
-
-```typescript
-import { DefaultSession } from "next-auth";
-
-declare module "next-auth" {
-  interface Session {
-    access_token: string | undefined;
-    user: {
-      id: string | undefined;
-      name: string | undefined;
-      permissions: string[];
-    } & DefaultSession["user"];
+  emailAndPassword: {
+    enabled: true,
+    disableSignUp: true, // サインアップは AuthService 側で制御
+    requireEmailVerification: process.env.ENABLE_EMAIL_VERIFICATION === "true",
+    password: {
+      hash: hashPassword,
+      verify: async ({ hash, password }) => verifyPassword(password, hash)
+    }
   }
-
-  interface User {
-    id: string;
-    email: string;
-    access_token: string | undefined;
-    expires_in: number;
-    token_type: string;
-    name: string | undefined;
-    permissions: string[];
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string | undefined;
-    name: string | undefined;
-    permissions: string[];
-    access_token: string | undefined;
-  }
-}
-```
-
-### 4. ミドルウェア (`src/middleware.ts`)
-
-```typescript
-import { NextResponse } from "next/server";
-import { auth } from "@/libraries/auth";
-
-const PUBLIC_PAGES = [
-  "/",
-  "/auth/signin",
-  "/auth/signup",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-];
-
-export default auth((request) => {
-  const { nextUrl } = request;
-  const isAuthenticated = !!request.auth;
-  const isPublicPage = PUBLIC_PAGES.includes(nextUrl.pathname);
-  
-  if (!isPublicPage && !isAuthenticated) {
-    const url = new URL("/auth/signin", request.url);
-    url.searchParams.append("callback_url", encodeURI(request.url));
-    return Response.redirect(url);
-  }
-  
-  return NextResponse.next();
 });
-
-export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
-};
 ```
 
-### 5. 認証リポジトリ (`src/repositories/auth_repository.ts`)
+公開される主なヘルパー：
 
-```typescript
-export abstract class AuthRepository extends PrismaRepository<typeof AuthSchema> {
-  async postSignIn(request: SignInRequest): Promise<AccessToken> {
-    // ユーザーをメールで検索
-    const users = await this.get(0, 1, undefined, undefined, undefined, [
-      { column: "email", operator: "=", value: request.email },
-    ]);
-    
-    if (users.data.length === 0) {
-      throw new Error("Invalid credentials");
-    }
-    
-    const user = users.data[0];
-    
-    // パスワード検証
-    const isValidPassword = await verifyPassword(
-      request.password,
-      user.password
-    );
-    if (!isValidPassword) {
-      throw new Error("Invalid credentials");
-    }
-    
-    // アクセストークン生成
-    const accessToken = await generateToken();
-    
-    return AccessTokenSchema.parse({
-      id: user.id,
-      access_token: accessToken,
-      token_type: "Bearer",
-      expires_in: 3600,
-      permissions: user.permissions,
-    });
-  }
-  
-  async postSignUp(request: SignUpRequest): Promise<AccessToken> {
-    // 既存ユーザーチェック
-    const existingUsers = await this.get(0, 1, undefined, undefined, undefined, [
-      { column: "email", operator: "=", value: request.email }
-    ]);
-    
-    if (existingUsers.data.length > 0) {
-      throw new Error("User already exists");
-    }
-    
-    // パスワードハッシュ化
-    const hashedPassword = await hashPassword(request.password);
-    
-    // ユーザー作成
-    const newUser = await this.create({
-      email: request.email,
-      password: hashedPassword,
-      name: request.name,
-      permissions: [],
-    });
-    
-    // アクセストークン生成
-    const accessToken = await generateToken();
-    
-    return AccessTokenSchema.parse({
-      id: newUser.id,
-      access_token: accessToken,
-      token_type: "Bearer",
-      expires_in: 3600,
-      permissions: newUser.permissions,
-    });
-  }
-}
-```
+- `auth(options)` – `authInstance.api.getSession` を包んだユーティリティ。`disableCookieCache` や `disableRefresh` を切り替え可能。
+- `signIn(options)` / `signOut()` – `establishSession` や API 経由で Better Auth セッションを制御。
+- `establishSession()` – `signInEmail` 呼び出し後、`Session` テーブルに `accessToken` / `permissions` を書き戻す。
+- `syncCredentialAccount()` – Prisma 経由で `Account` テーブルと `User` を同期（既存 AuthService で生成したハッシュを保持）。
+- `handlers` – `/api/auth/[...all]` で利用する Next.js ルートハンドラ。
 
-### 6. Server Actions
+## クライアント実装
 
-#### サインインアクション (`src/app/(site)/(unauthorized)/auth/signin/actions.ts`)
+`src/libraries/auth-client.ts` では `better-auth/react` の `createAuthClient` を初期化し、`signIn`, `signOut`, `useSession` をエクスポートしています。サーバーと同じベース URL／パスを共有する点が重要です。
 
-```typescript
-"use server";
+`hooks/useAuthSession.ts` は `useSession()` の戻り値を正規化し、
 
-import { SignInRequestSchema, SignInRequest } from "@/requests/signin_request";
-import { signIn } from "@/libraries/auth";
-import { AuthError } from "next-auth";
-import { InvalidInput, InvalidCredentials, Success } from "@/constants/auth";
+- `session` / `user`
+- 最終的な `permissions` 配列（セッション優先）
+- `accessToken`
 
-export async function signInAction(
-  rawInput: SignInRequest
-): Promise<typeof InvalidInput | typeof InvalidCredentials | typeof Success> {
-  try {
-    const validatedInput = SignInRequestSchema.safeParse(rawInput);
-    if (!validatedInput.success) {
-      return InvalidInput;
-    }
-    
-    const result = await signIn("signin", {
-      ...validatedInput.data,
-      redirect: false,
-    });
-    
-    if (!result || result.error) {
-      return InvalidCredentials;
-    }
-    
-    return Success;
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return InvalidCredentials;
-    }
-    return InvalidCredentials;
-  }
-}
-```
+をまとめて返すヘルパーです。UI コンポーネントはこの hook を通じて Better Auth のレスポンス構造を意識せずに済みます。
 
-### 7. 保護されたレイアウト
+## サーバーアクションとフロー
 
-```typescript
-export default async function SiteLayout({ children }: Props) {
-  let me: User | null = null;
-  try {
-    const repository = new UserRepository();
-    me = await repository.getMe();
-  } catch (error) {
-    if (error instanceof AuthError) {
-      redirect("/auth/signin");
-    }
-  }
-  
-  // 管理者権限チェック
-  if (!me || !me.permissions.includes("admin")) {
-    return notFound();
-  }
-  
-  // レイアウトレンダリング
-}
-```
+### サインイン (`src/app/(site)/(unauthorized)/auth/signin/actions.ts`)
 
-## 認証フロー
+1. `AuthService.signIn()` で資格情報の検証とアクセストークン発行。
+2. `syncCredentialAccount()` で `Account` テーブルを更新し Better Auth と認証情報を合わせる。
+3. `signIn()` で Better Auth セッションを確立し、`Session` レコードに `accessToken` / `permissions` を保存。
+4. エラー時は `invalid_credentials` や `email_not_verified` にマッピングして UI に返却。
 
-### サインアップフロー
+### サインアップ (`src/app/(site)/(unauthorized)/auth/signup/actions.ts`)
 
-1. ユーザーがフォームに情報入力
-2. Zodスキーマでバリデーション
-3. Server Actionで`signIn("signup", ...)`を呼び出し
-4. NextAuthが`signup`プロバイダーの`authorize`メソッドを実行
-5. `UserRepository.postSignUp`でユーザー作成
-6. パスワードをPBKDF2でハッシュ化
-7. データベースに保存
-8. アクセストークン生成
-9. JWTトークンとセッション作成
-10. ダッシュボードへリダイレクト
+- `AuthService.signUp()` によりドメインルールに沿ってユーザー作成。
+- `ENABLE_EMAIL_VERIFICATION` が有効な場合はアクセストークンを返さずメール検証を要求。
+- アクセストークンが返るケースでは、そのまま `signIn()` で Better Auth セッションを作成。
 
-### サインインフロー
+### サインアウト (`src/app/(site)/(authorized)/(app)/actions.ts` など)
 
-1. ユーザーがメールとパスワード入力
-2. Zodスキーマでバリデーション
-3. Server Actionで`signIn("signin", ...)`を呼び出し
-4. NextAuthが`signin`プロバイダーの`authorize`メソッドを実行
-5. `UserRepository.postSignIn`で認証処理
-6. データベースからユーザー検索
-7. パスワード検証
-8. アクセストークン生成
-9. JWTトークンとセッション作成
-10. ダッシュボードへリダイレクト
+- `signOut()` は `authInstance.api.signOut` を呼び出し、クッキーと DB セッションを無効化します。
 
-## セキュリティ
+## ミドルウェアとルーティング制御
 
-### パスワード保護
+`src/middleware.ts` では Better Auth の `getSessionCookie()` と `auth()` を組み合わせ、以下を実装しています。
 
-- **PBKDF2**（100,000回の反復、SHA-256）でハッシュ化
-- 16バイトのランダムソルト使用
-- パスワードは平文で保存されない
+- `PUBLIC_PAGES` リストに含まれる URL は常に許可。
+- 認証が必要なパスかつ未ログインの場合、サインインページへリダイレクト。
+- セッション更新を最小化するため、Cookie キャッシュを尊重。
 
-### セッション管理
+新しい保護ページを追加する際は `PUBLIC_PAGES` の確認と route グループの構成を必ず見直してください。
 
-- JWTトークンベースのセッション
-- HTTPOnlyクッキーで保存
-- `AUTH_SECRET`による署名
+## セキュリティと監査ポイント
 
-### ルート保護
+- パスワードは `hash.ts` 内の PBKDF2 実装でハッシュ化されています。Salt/iterations は変更する場合でも `verifyPassword` と整合するようにすること。
+- `Session` テーブルに保存する `accessToken` は API 認証で使用されるため、再生成時のインバリデーションポリシーをドキュメント化してください。
+- メール検証は `EmailVerification` テーブルで Unix タイムスタンプ (`BigInt`) を使用。LocalStack を利用する場合は `LOCALSTACK_ENDPOINT` が適切に設定されているか確認します。
+- `permissions` は JSON 配列で保持されるため、UI 側でも `Array<string>` への正規化を忘れないこと。
 
-- ミドルウェアによる認証チェック
-- 未認証ユーザーは自動的にサインインページへリダイレクト
-- コールバックURLで元のページへ戻る
+## テスト戦略
 
-## 権限システム
+- Jest のセットアップ (`jest.setup.ts`) で better-auth の主要モジュールをモックし、ESM 由来の取り込み問題を回避しています。構造を変える場合はモックの戻り値 (`useSession` の shape など) を同時に更新してください。
+- ユニットテストでは `@/libraries/auth` を直接モックするケースが多いので、`signIn`/`auth` など新しいヘルパーを追加した場合はモックも拡張する必要があります。
+- Playwright の E2E (`e2e/auth.spec.ts`) は `/auth/signin` → `/dashboard` のフローで Better Auth のクッキーを検証します。リダイレクト先を変更した場合はテストも合わせて更新してください。
 
-### 権限の定義
+---
 
-ユーザーモデルの`permissions`フィールドはJSON配列として保存：
+Better Auth 周りの変更を実施した際は、
 
-```typescript
-permissions: ["admin", "read", "write", "delete"]
-```
+1. 環境変数テンプレートとドキュメントを更新
+2. Prisma マイグレーション（セッション構造）を確認
+3. Jest/E2E のモック・期待値を同期
 
-### 権限チェック
-
-```typescript
-// 管理者権限チェック
-if (!me.permissions.includes("admin")) {
-  return notFound();
-}
-
-// 複数権限チェック
-const hasPermission = requiredPermissions.every(
-  permission => me.permissions.includes(permission)
-);
-```
-
-### 階層的な権限
-
-- `admin`: 全ての操作が可能
-- `write`: 作成・更新が可能
-- `read`: 閲覧のみ可能
-- カスタム権限の追加も可能
-
-## 使用方法
-
-### 1. 初期設定
-
-```bash
-# 依存関係のインストール
-npm install
-
-# Prismaクライアント生成
-npx prisma generate
-
-# データベースマイグレーション
-npx prisma db push
-
-# シードデータ投入
-npx prisma db seed
-```
-
-### 2. 認証フォームの実装
-
-```typescript
-// サインインフォームの例
-"use client";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { SignInRequestSchema } from "@/requests/signin_request";
-import { signInAction } from "./actions";
-
-export default function SignInForm() {
-  const form = useForm({
-    resolver: zodResolver(SignInRequestSchema),
-  });
-  
-  const onSubmit = async (data) => {
-    const result = await signInAction(data);
-    if (result === "success") {
-      // リダイレクト処理
-    }
-  };
-  
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      {/* フォームフィールド */}
-    </form>
-  );
-}
-```
-
-### 3. 認証状態の取得
-
-```typescript
-// サーバーコンポーネント
-import { auth } from "@/libraries/auth";
-
-export default async function Page() {
-  const session = await auth();
-  
-  if (!session) {
-    // 未認証
-  }
-  
-  // session.user.id
-  // session.user.permissions
-}
-
-// クライアントコンポーネント
-import { useSession } from "next-auth/react";
-
-export default function Component() {
-  const { data: session } = useSession();
-  
-  if (!session) {
-    // 未認証
-  }
-}
-```
-
-### 4. サインアウト
-
-```typescript
-import { signOut } from "@/libraries/auth";
-
-// Server Action
-export async function signOutAction() {
-  await signOut({ redirectTo: "/" });
-}
-```
-
-## トラブルシューティング
-
-### よくある問題
-
-1. **"Cannot read properties of undefined"エラー**
-   - Prismaモデル名が正しいか確認（`user`単数形）
-   - `npx prisma generate`を実行
-
-2. **"Invalid credentials"エラー**
-   - メールアドレスの大文字小文字を確認
-   - パスワードが正しくハッシュ化されているか確認
-
-3. **セッションが保持されない**
-   - `AUTH_SECRET`が設定されているか確認
-   - `trustHost: true`が設定されているか確認
-
-4. **権限チェックが機能しない**
-   - セッションコールバックで権限が正しく設定されているか確認
-   - JWTコールバックで権限が転送されているか確認
-
-## まとめ
-
-このドキュメントでは、NextAuth.js v5とPrismaを使用した認証システムの実装方法を説明しました。この実装は以下の利点があります：
-
-- **型安全性**: TypeScriptによる完全な型定義
-- **セキュリティ**: 業界標準のパスワードハッシュ化
-- **柔軟性**: カスタマイズ可能な権限システム
-- **保守性**: リポジトリパターンによる整理されたコード
-- **拡張性**: 新しい認証プロバイダーの追加が容易
-
-このガイドに従って実装することで、本番環境でも使用可能な堅牢な認証システムを構築できます。
+することを忘れないでください。
