@@ -1,6 +1,8 @@
 
 # add-email-provider
 
+日本語で回答すること
+
 ---
 description: メール送信で、新しい送信プロバイダを追加する時に参照する
 alwaysApply: false
