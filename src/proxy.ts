@@ -23,7 +23,7 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const publicPage = isPublicPath(pathname);
   const sessionCookie = getSessionCookie(request);
