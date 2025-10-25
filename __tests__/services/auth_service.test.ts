@@ -110,9 +110,7 @@ describe("AuthService", () => {
 
       mockAuthRepository.get.mockResolvedValue({
         data: [user],
-        total: 1,
-        page: 0,
-        limit: 1,
+        count: 1,
       });
       mockVerifyPassword.mockResolvedValue(true);
 
@@ -144,9 +142,7 @@ describe("AuthService", () => {
 
       mockAuthRepository.get.mockResolvedValue({
         data: [],
-        total: 0,
-        page: 0,
-        limit: 1,
+        count: 0,
       });
 
       await expect(authService.signIn(request)).rejects.toThrow("Invalid credentials");
@@ -173,9 +169,7 @@ describe("AuthService", () => {
 
       mockAuthRepository.get.mockResolvedValue({
         data: [user],
-        total: 1,
-        page: 0,
-        limit: 1,
+        count: 1,
       });
       mockVerifyPassword.mockResolvedValue(true);
 
@@ -209,9 +203,7 @@ describe("AuthService", () => {
 
       mockAuthRepository.get.mockResolvedValue({
         data: [],
-        total: 0,
-        page: 0,
-        limit: 1,
+        count: 0,
       });
       mockAuthRepository.create.mockResolvedValue(createdUser);
 
@@ -263,9 +255,7 @@ describe("AuthService", () => {
 
       mockAuthRepository.get.mockResolvedValue({
         data: [existingUser],
-        total: 1,
-        page: 0,
-        limit: 1,
+        count: 1,
       });
 
       await expect(authService.signUp(request)).rejects.toThrow("User already exists");
@@ -300,9 +290,7 @@ describe("AuthService", () => {
 
       mockAuthRepository.get.mockResolvedValue({
         data: [user],
-        total: 1,
-        page: 0,
-        limit: 1,
+        count: 1,
       });
       mockPasswordResetRepository.deleteUserTokens.mockResolvedValue();
       jest.spyOn(authService, 'createResetToken').mockResolvedValue(resetToken);
@@ -326,6 +314,8 @@ describe("AuthService", () => {
         password: "oldHashedPassword",
         name: "Test User",
         permissions: [],
+        emailVerified: true,
+        isActive: true,
       };
 
       const resetToken: PasswordReset = {
@@ -396,6 +386,8 @@ describe("AuthService", () => {
         password: "newHashedPassword",
         name: "Test User",
         permissions: [],
+        isActive: true,
+        emailVerified: true,
       });
 
       await authService.updateUserPassword("user-1", "newPassword");
@@ -428,6 +420,8 @@ describe("AuthService", () => {
         name: "New User",
         permissions: ["read"],
         password: "plainPassword",
+        isActive: true,
+        emailVerified: false,
       };
 
       const createdUser: Auth = {
@@ -436,6 +430,8 @@ describe("AuthService", () => {
         name: "New User",
         permissions: ["read"],
         password: "hashedPassword",
+        isActive: true,
+        emailVerified: false,
       };
 
       mockHashPassword.mockResolvedValue("hashedPassword");
@@ -466,6 +462,8 @@ describe("AuthService", () => {
         password: "newHashedPassword",
         name: "New Name",
         permissions: ["read", "write"],
+        isActive: true,
+        emailVerified: true,
       };
 
       mockHashPassword.mockResolvedValue("newHashedPassword");
@@ -495,6 +493,8 @@ describe("AuthService", () => {
         password: "originalPassword",
         name: "New Name",
         permissions: ["read"],
+        isActive: true,
+        emailVerified: true,
       };
 
       mockAuthRepository.update.mockResolvedValue(updatedUser);
@@ -521,6 +521,8 @@ describe("AuthService", () => {
         password: "originalPassword",
         name: "New Name",
         permissions: ["admin"],
+        isActive: true,
+        emailVerified: true,
       };
 
       mockAuthRepository.update.mockResolvedValue(updatedUser);
@@ -544,6 +546,8 @@ describe("AuthService", () => {
         password: "currentHashedPassword",
         name: "Test User",
         permissions: [],
+        emailVerified: true,
+        isActive: true,
       };
 
       const updatedUser: Auth = {
@@ -580,6 +584,8 @@ describe("AuthService", () => {
         password: "currentHashedPassword",
         name: "Test User",
         permissions: [],
+        emailVerified: true,
+        isActive: true,
       };
 
       mockAuthRepository.findById.mockResolvedValue(user);

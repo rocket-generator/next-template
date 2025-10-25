@@ -166,7 +166,7 @@ describe("PrismaRepository", () => {
     });
 
     it("should fetch data with both query and conditions", async () => {
-      const mockData = [];
+      const mockData: TestType[] = [];
 
       mockPrismaModel.findMany.mockResolvedValue(mockData);
       mockPrismaModel.count.mockResolvedValue(0);
@@ -198,11 +198,12 @@ describe("PrismaRepository", () => {
 
   describe("findById", () => {
     it("should find item by id successfully", async () => {
-      const mockData = {
+      const mockData: TestType = {
         id: "1",
         name: "Test User",
         email: "test@example.com",
         active: true,
+        age: undefined,
       };
 
       mockPrismaModel.findUnique.mockResolvedValue(mockData);
@@ -226,9 +227,10 @@ describe("PrismaRepository", () => {
 
   describe("create", () => {
     it("should create item successfully", async () => {
-      const itemData = {
+      const itemData: Omit<TestType, "id"> = {
         name: "New User",
         email: "new@example.com",
+        age: undefined,
         active: true,
       };
 
@@ -248,10 +250,11 @@ describe("PrismaRepository", () => {
     });
 
     it("should create item with optional fields", async () => {
-      const itemData = {
+      const itemData: Omit<TestType, "id"> = {
         name: "User with Age",
         email: "user@example.com",
         age: 25,
+        active: true,
       };
 
       const mockCreatedData = {
@@ -270,7 +273,7 @@ describe("PrismaRepository", () => {
 
   describe("update", () => {
     it("should update item successfully", async () => {
-      const updateData = {
+      const updateData: Partial<TestType> = {
         name: "Updated Name",
         email: "updated@example.com",
       };
@@ -293,7 +296,7 @@ describe("PrismaRepository", () => {
     });
 
     it("should update partial item data", async () => {
-      const updateData = {
+      const updateData: Partial<TestType> = {
         name: "Only Name Updated",
       };
 

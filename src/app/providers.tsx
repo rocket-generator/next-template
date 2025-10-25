@@ -1,6 +1,5 @@
 "use client";
 import { ReactNode } from "react";
-import { SessionProvider } from "next-auth/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { AbstractIntlMessages } from "use-intl";
 
@@ -16,14 +15,12 @@ export function Providers({
   //  const locale = await getLocale();
 
   return (
-    <SessionProvider>
-      <NextIntlClientProvider
-        messages={messages}
-        locale={locale}
-        timeZone="Asia/Tokyo"
-      >
-        {children}
-      </NextIntlClientProvider>
-    </SessionProvider>
+    <NextIntlClientProvider
+      messages={messages}
+      locale={locale}
+      timeZone="Asia/Tokyo"
+    >
+      {children}
+    </NextIntlClientProvider>
   );
 }

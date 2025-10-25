@@ -26,6 +26,8 @@ model User {
   
   passwordResets     PasswordReset[] // パスワードリセット関連のレコード（1対多）
   emailVerifications EmailVerification[] // メール認証関連のレコード（1対多）
+  sessions           Session[]
+  accounts           Account[]
   
   @@map("users")
 }
@@ -67,3 +69,57 @@ model PasswordReset {
   @@map("password_resets")
 }
 
+/// Better Auth のセッション情報を保持するテーブル
+model Session {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id") @db.Uuid
+  token       String   @unique
+  expiresAt   DateTime @map("expires_at")
+  accessToken String?  @map("access_token")
+  permissions Json?    @map("permissions")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Better Auth のアカウント情報（SNS連携やメール／パスワード認証）を保持するテーブル
+model Account {
+  id                   String    @id @default(cuid())
+  userId               String    @map("user_id") @db.Uuid
+  providerId           String    @map("provider_id")
+  accountId            String    @map("account_id")
+  accessToken          String?   @map("access_token")
+  refreshToken         String?   @map("refresh_token")
+  idToken              String?   @map("id_token")
+  accessTokenExpiresAt DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                String?   @map("scope")
+  password             String?   @map("password")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// Better Auth の汎用検証トークン（メール検証など）を保持するテーブル
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String   @map("token")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
+}

@@ -6,6 +6,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Start seeding...");
 
+  // Delete existing credential accounts before recreating users
+  await prisma.account.deleteMany({
+    where: {
+      providerId: "credential",
+    },
+  });
+  console.log("Deleted existing credential accounts");
+
   // Delete existing users
   await prisma.user.deleteMany();
   console.log("Deleted existing users");
@@ -40,6 +48,14 @@ async function main() {
         permissions: userData.permissions,
         isActive: userData.isActive,
         emailVerified: userData.emailVerified,
+      },
+    });
+    await prisma.account.create({
+      data: {
+        userId: user.id,
+        providerId: "credential",
+        accountId: userData.email.toLowerCase(),
+        password: hashedPassword,
       },
     });
     console.log(

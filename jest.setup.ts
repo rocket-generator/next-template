@@ -1,27 +1,80 @@
 import '@testing-library/jest-dom'
+import * as React from 'react';
 
 // Web Crypto API and Text encoding polyfills for testing
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
 
-// Mock next-auth to avoid ESM issues
-jest.mock('next-auth', () => ({
+// Mock better-auth to avoid ESM issues until actual implementation is in place
+jest.mock('better-auth', () => ({
   __esModule: true,
-  default: jest.fn(() => ({
-    auth: jest.fn(),
-    handlers: { GET: jest.fn(), POST: jest.fn() },
-    signIn: jest.fn(),
-    signOut: jest.fn(),
+  betterAuth: jest.fn(() => ({
+    handler: {},
+    api: {
+      getSession: jest.fn(),
+      signInEmail: jest.fn(),
+      signInPassword: jest.fn(),
+      signOut: jest.fn(),
+    },
   })),
 }));
 
-jest.mock('next-auth/providers/credentials', () => ({
+jest.mock('better-auth/next-js', () => ({
   __esModule: true,
-  default: jest.fn(() => ({
-    id: 'credentials',
-    name: 'credentials',
-    type: 'credentials',
-    authorize: jest.fn(),
+  toNextJsHandler: jest.fn(() => ({ GET: jest.fn(), POST: jest.fn() })),
+  nextCookies: jest.fn(() => ({})),
+}));
+
+jest.mock('better-auth/react', () => ({
+  __esModule: true,
+  createAuthClient: jest.fn(() => ({
+    signIn: {
+      email: jest.fn(),
+      password: jest.fn(),
+      social: jest.fn(),
+    },
+    signOut: jest.fn(),
+    useSession: jest.fn(() => ({ data: null, status: 'unauthenticated' })),
+    Provider: ({ children }: { children: React.ReactNode }) => children,
+  })),
+}));
+
+jest.mock('@better-fetch/fetch', () => ({
+  __esModule: true,
+  betterFetch: jest.fn(() => ({
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+  })),
+}));
+
+jest.mock('better-auth/adapters/prisma', () => ({
+  __esModule: true,
+  prismaAdapter: jest.fn(() => () => ({
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    findOne: jest.fn(),
+    findMany: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+    transaction: jest.fn(async (cb: (adapter: unknown) => Promise<unknown>) => {
+      if (cb) {
+        await cb({
+          create: jest.fn(),
+          update: jest.fn(),
+          updateMany: jest.fn(),
+          findOne: jest.fn(),
+          findMany: jest.fn(),
+          delete: jest.fn(),
+          deleteMany: jest.fn(),
+          count: jest.fn(),
+        });
+      }
+    }),
   })),
 }));
 

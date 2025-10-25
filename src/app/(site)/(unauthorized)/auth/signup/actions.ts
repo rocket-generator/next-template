@@ -1,7 +1,7 @@
 "use server";
 
 import { SignUpRequestSchema, SignUpRequest } from "@/requests/signup_request";
-import { signIn } from "@/libraries/auth";
+import { signIn, syncCredentialAccount } from "@/libraries/auth";
 import { AuthService } from "@/services/auth_service";
 import { UserRepository } from "@/repositories/user_repository";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
@@ -44,17 +44,30 @@ export async function signUpAction(
 
     // If we get an AccessToken, try to sign in with NextAuth using the signin provider
     if (result.access_token) {
-      const signInResult = await signIn("signin", {
-        email: validatedInput.data.email,
-        password: validatedInput.data.password,
-        redirect: false,
+      const user = await userRepository.getUserById(result.id);
+
+      await syncCredentialAccount({
+        userId: user.id,
+        email: user.email,
+        passwordHash: user.password,
       });
 
-      if (signInResult && !signInResult.error) {
+      const signInResult = await signIn({
+        email: validatedInput.data.email,
+        password: validatedInput.data.password,
+        accessToken: result.access_token,
+        permissions: result.permissions ?? [],
+      });
+
+      if (signInResult.success) {
         return Success;
-      } else {
-        return InvalidCredentials;
       }
+
+      if (signInResult.reason === "email_not_verified") {
+        return EmailVerificationRequired;
+      }
+
+      return InvalidCredentials;
     }
 
     return InvalidCredentials;

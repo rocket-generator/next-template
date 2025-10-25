@@ -9,7 +9,7 @@ type Props = {
 };
 
 export default async function SiteLayout({ children }: Props) {
-  const session = await auth();
+  const session = await auth({ disableRefresh: true });
   if (session) {
     let me: User | null = null;
     try {

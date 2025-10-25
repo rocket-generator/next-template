@@ -24,7 +24,7 @@ const config = {
   ],
   // ESM モジュールの変換を設定
   transformIgnorePatterns: [
-    "node_modules/(?!(next-auth|@auth/core)/)"
+    "node_modules/(?!(better-auth|@better-fetch/fetch)/)"
   ],
   // ESM サポートを有効化
   extensionsToTreatAsEsm: [".ts", ".tsx"],

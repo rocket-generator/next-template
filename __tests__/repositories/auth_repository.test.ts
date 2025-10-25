@@ -12,7 +12,7 @@ class TestAuthRepository extends AuthRepository {
   private mockData: Auth[] = [];
 
   constructor() {
-    super(AuthSchema, "user", (data) => data, ["name", "email"]);
+    super(AuthSchema, "user", (data) => data as Auth, ["name", "email"]);
   }
 
   // Override PrismaRepository methods for testing
@@ -58,6 +58,8 @@ class TestAuthRepository extends AuthRepository {
     const newItem: Auth = {
       ...item,
       id: String(this.mockData.length + 1),
+      isActive: item.isActive ?? true,
+      emailVerified: item.emailVerified ?? false,
     };
     this.mockData.push(newItem);
     return newItem;
@@ -83,7 +85,11 @@ class TestAuthRepository extends AuthRepository {
 
   // Helper method to add mock data
   addMockUser(user: Auth): void {
-    this.mockData.push(user);
+    this.mockData.push({
+      ...user,
+      isActive: user.isActive ?? true,
+      emailVerified: user.emailVerified ?? false,
+    });
   }
 
   clearMockData(): void {
@@ -97,7 +103,7 @@ describe("AuthRepository", () => {
 
   beforeEach(() => {
     repository = new TestAuthRepository();
-    mockAuth = auth as jest.MockedFunction<typeof auth>;
+    mockAuth = auth as unknown as jest.MockedFunction<typeof auth>;
 
     // Reset all mocks
     jest.clearAllMocks();
@@ -111,11 +117,22 @@ describe("AuthRepository", () => {
         password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"],
+         isActive: true,
+         emailVerified: true,
       };
       repository.addMockUser(user);
 
       mockAuth.mockResolvedValue({
-        user: { id: "user-1" },
+        user: {
+          id: "user-1",
+          permissions: ["read", "write"],
+          email: "test@example.com",
+          name: "Test User",
+          isActive: true,
+          emailVerified: true,
+        },
+        permissions: ["read", "write"],
+        access_token: "token",
       } as any);
 
       const result = await repository.getMe();
@@ -134,6 +151,7 @@ describe("AuthRepository", () => {
     it("should throw error when session has no user", async () => {
       mockAuth.mockResolvedValue({
         user: null,
+        permissions: [],
       } as any);
 
       await expect(repository.getMe()).rejects.toThrow("Unauthorized");
@@ -142,7 +160,8 @@ describe("AuthRepository", () => {
 
     it("should throw error when session user has no id", async () => {
       mockAuth.mockResolvedValue({
-        user: { email: "test@example.com" },
+        user: { email: "test@example.com", permissions: [] },
+        permissions: [],
       } as any);
 
       await expect(repository.getMe()).rejects.toThrow("Unauthorized");
@@ -151,7 +170,8 @@ describe("AuthRepository", () => {
 
     it("should throw error when user not found by id", async () => {
       mockAuth.mockResolvedValue({
-        user: { id: "nonexistent-user" },
+        user: { id: "nonexistent-user", permissions: [] },
+        permissions: [],
       } as any);
 
       await expect(repository.getMe()).rejects.toThrow(

@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import * as React from "react";
 import HeaderUserMenu from "@/components/molecules/HeaderUserMenu";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 // Mock lucide-react icons
 jest.mock("lucide-react", () => ({
@@ -32,14 +33,27 @@ const mockUser = {
   password: "hashed-password",
   permissions: ["read", "write"],
   avatarKey: undefined,
+  isActive: true,
+  emailVerified: true,
+  language: "en",
 };
 
 describe("HeaderUserMenu", () => {
   const mockOnSignOut = jest.fn();
+  const mockUseAuthSession = useAuthSession as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockPush.mockClear();
+    mockUseAuthSession.mockReturnValue({
+      session: null,
+      user: null,
+      permissions: [],
+      accessToken: undefined,
+      isPending: false,
+      error: null,
+      refetch: jest.fn(),
+    });
   });
 
   it("should render user menu when user is signed in", () => {
@@ -156,6 +170,32 @@ describe("HeaderUserMenu", () => {
     expect(dropdown).toHaveClass("absolute", "right-0", "mt-2", "w-48", "bg-white", "rounded-md", "shadow-lg", "py-1", "border");
   });
 
+  it("should display permissions from session hook when available", () => {
+    mockUseAuthSession.mockReturnValue({
+      session: {
+        permissions: ["admin", "editor"],
+      },
+      user: {
+        name: "Jane",
+        permissions: ["viewer"],
+      },
+      permissions: ["admin", "editor"],
+      accessToken: "token",
+      isPending: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<HeaderUserMenu signInUser={mockUser} onSignOut={mockOnSignOut} />);
+
+    const menuButton = screen.getByTestId("user-menu-button");
+    fireEvent.click(menuButton);
+
+    expect(screen.getByTestId("user-permissions")).toHaveTextContent(
+      "admin, editor"
+    );
+  });
+
   it("should handle user with different name", () => {
     const differentUser = {
       ...mockUser,
@@ -261,3 +301,14 @@ describe("HeaderUserMenu", () => {
     expect(mockOnSignOut).toHaveBeenCalled();
   });
 });
+jest.mock("@/hooks/useAuthSession", () => ({
+  useAuthSession: jest.fn(() => ({
+    session: null,
+    user: null,
+    permissions: [],
+    accessToken: undefined,
+    isPending: false,
+    error: null,
+    refetch: jest.fn(),
+  })),
+}));

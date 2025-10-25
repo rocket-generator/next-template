@@ -245,6 +245,8 @@ describe("Auth Model", () => {
         password: "hashedPassword",
         name: "Test User",
         permissions: ["read"],
+        isActive: true,
+        emailVerified: false,
       };
 
       // TypeScript will ensure this compiles
@@ -262,15 +264,19 @@ describe("Auth Model", () => {
         password: "completePassword",
         name: "Complete User",
         permissions: ["all"],
+        isActive: true,
+        emailVerified: true,
       };
 
       // All fields should be present
-      expect(Object.keys(auth)).toHaveLength(5);
+      expect(Object.keys(auth)).toHaveLength(7);
       expect(auth).toHaveProperty("id");
       expect(auth).toHaveProperty("email");
       expect(auth).toHaveProperty("password");
       expect(auth).toHaveProperty("name");
       expect(auth).toHaveProperty("permissions");
+      expect(auth).toHaveProperty("isActive");
+      expect(auth).toHaveProperty("emailVerified");
     });
   });
 });

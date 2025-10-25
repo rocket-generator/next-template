@@ -265,7 +265,7 @@ describe("DataLinkItem", () => {
   it("should handle options as null", () => {
     const props = {
       ...defaultProps,
-      options: null,
+      options: null as unknown as Record<string, unknown>,
     };
 
     render(<DataLinkItem {...props} />);

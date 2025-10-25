@@ -17,7 +17,7 @@ type Props = {
 };
 
 export default async function SiteLayout({ children }: Props) {
-  const session = await auth();
+  const session = await auth({ disableRefresh: true });
   if (!session) {
     redirect("/auth/signin");
   }

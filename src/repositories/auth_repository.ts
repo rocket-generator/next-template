@@ -23,7 +23,7 @@ export abstract class AuthRepository
   }
 
   async getMe(): Promise<z.infer<typeof AuthSchema>> {
-    const session = await auth();
+    const session = await auth({ disableRefresh: true });
     if (!session || !session?.user?.id) {
       throw new Error("Unauthorized");
     }

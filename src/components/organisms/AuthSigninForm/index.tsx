@@ -9,7 +9,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
-import { InvalidCredentials, InvalidInput } from "@/constants/auth";
+import {
+  InvalidCredentials,
+  InvalidInput,
+  EmailVerificationRequired,
+} from "@/constants/auth";
 import { cn } from "@/libraries/css";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
@@ -44,6 +48,9 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
           setIsLoading(false);
         } else if (message === InvalidCredentials) {
           setError(tAuth("invalid_credentials"));
+          setIsLoading(false);
+        } else if (message === EmailVerificationRequired) {
+          setError(tAuth("email_verification_required"));
           setIsLoading(false);
         }
         // Success case: ローディング状態を維持し、親コンポーネントのリダイレクトを待つ

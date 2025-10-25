@@ -13,6 +13,7 @@ describe("User Model", () => {
         avatarKey: undefined,
         isActive: true,
         emailVerified: true,
+        language: "ja",
       };
 
       const result = UserSchema.parse(validUser);
@@ -30,6 +31,7 @@ describe("User Model", () => {
         avatarKey: undefined,
         isActive: true,
         emailVerified: false,
+        language: "en",
       };
 
       const result = UserSchema.parse(validUser);
@@ -57,6 +59,10 @@ describe("User Model", () => {
         password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"], // This will be a JSON value from Prisma
+        isActive: true,
+        emailVerified: true,
+        language: "ja",
+        avatarKey: null,
         createdAt: new Date("2024-01-01"),
         updatedAt: new Date("2024-01-02"),
       };
@@ -78,6 +84,10 @@ describe("User Model", () => {
         password: "anotherPassword",
         name: "Another User",
         permissions: [],
+        isActive: true,
+        emailVerified: false,
+        language: "",
+        avatarKey: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -98,6 +108,10 @@ describe("User Model", () => {
         password: "emptyPassword",
         name: "Empty Permissions User",
         permissions: [],
+        isActive: true,
+        emailVerified: true,
+        language: "",
+        avatarKey: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -113,6 +127,10 @@ describe("User Model", () => {
         password: "adminPassword",
         name: "Admin User",
         permissions: ["read", "write", "delete", "admin", "super-admin"],
+        isActive: true,
+        emailVerified: true,
+        language: "",
+        avatarKey: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -129,6 +147,10 @@ describe("User Model", () => {
         password: "metaPassword",
         name: "Meta User",
         permissions: ["read"],
+        isActive: true,
+        emailVerified: true,
+        language: "",
+        avatarKey: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -148,6 +170,10 @@ describe("User Model", () => {
         password: "jsonPassword",
         name: "JSON User",
         permissions: JSON.parse('["read","write"]') as any, // Simulating JSON from DB
+        isActive: true,
+        emailVerified: false,
+        language: "",
+        avatarKey: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -165,6 +191,10 @@ describe("User Model", () => {
         password: "typePassword",
         name: "Type User",
         permissions: ["read"],
+        isActive: true,
+        emailVerified: false,
+        language: "",
+        avatarKey: undefined,
       };
 
       // TypeScript will ensure this compiles
@@ -183,10 +213,24 @@ describe("User Model", () => {
         password: "authPassword",
         name: "Auth Compatible User",
         permissions: ["all"],
+        isActive: true,
+        emailVerified: true,
+        language: "",
+        avatarKey: undefined,
       };
 
       // All Auth fields should be present
-      expect(Object.keys(user)).toHaveLength(5);
+      expect(Object.keys(user)).toEqual(
+        expect.arrayContaining([
+          "id",
+          "email",
+          "password",
+          "name",
+          "permissions",
+          "isActive",
+          "emailVerified",
+        ])
+      );
     });
   });
 });

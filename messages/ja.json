@@ -9,6 +9,7 @@
     "if_forgot_password": "パスワードをお忘れですか？",
     "invalid_input": "入力内容が不正です",
     "invalid_credentials": "メールアドレスまたはパスワードが不正です",
+    "email_verification_required": "ログインする前にメールアドレスを確認してください",
     "system_error": "システムエラー",
     "name": "名前",
     "confirm_password": "パスワード（確認）",

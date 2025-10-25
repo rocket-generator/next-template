@@ -141,7 +141,7 @@ describe("DataSelectSingleInputField", () => {
   it("should handle null/undefined options", () => {
     const props = {
       ...defaultProps,
-      options: null,
+      options: null as unknown as Record<string, unknown>,
     };
 
     render(<DataSelectSingleInputField {...props} />);

@@ -9,6 +9,7 @@
     "if_forgot_password": "Forgot your password?",
     "invalid_input": "Invalid input",
     "invalid_credentials": "Invalid credentials",
+    "email_verification_required": "Please verify your email address before signing in.",
     "system_error": "System error",
     "name": "Name",
     "confirm_password": "Confirm Password",

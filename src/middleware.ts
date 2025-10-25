@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
-import { auth } from "@/libraries/auth";
-
-const PUBLIC_PAGES = [
+const PUBLIC_PATHS = new Set([
   "/",
   "/auth/signin",
   "/auth/signup",
@@ -11,36 +11,32 @@ const PUBLIC_PAGES = [
   "/auth/verify-email",
   "/auth/verify-email/resend",
   "/auth/verify-email/pending",
-];
+]);
 
-export default auth((request: { nextUrl: URL; auth: unknown; url: string }) => {
-  const { nextUrl } = request;
-  const isAuthenticated = !!request.auth;
-  let isPublicPage = PUBLIC_PAGES.includes(nextUrl.pathname);
-  if (
-    nextUrl.pathname.startsWith("/data/") ||
-    nextUrl.pathname.startsWith("/images/")
-  ) {
-    isPublicPage = true;
+function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_PATHS.has(pathname)) {
+    return true;
   }
-  if (!isPublicPage && !isAuthenticated) {
-    const url = new URL("/auth/signin", request.url);
-    url.searchParams.append("callback_url", encodeURI(request.url));
-    return Response.redirect(url);
+  if (pathname.startsWith("/data/") || pathname.startsWith("/images/")) {
+    return true;
+  }
+  return false;
+}
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const publicPage = isPublicPath(pathname);
+  const sessionCookie = getSessionCookie(request);
+
+  if (!publicPage && !sessionCookie) {
+    const redirectUrl = new URL("/auth/signin", request.url);
+    redirectUrl.searchParams.set("callback_url", request.url);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
 };

@@ -65,13 +65,29 @@ class TestRepository extends BaseRepository<typeof TestSchema> {
                 .toLowerCase()
                 .includes(String(condition.value).toLowerCase());
             case ">":
-              return value > (condition.value as number);
+              return (
+                typeof value === "number" &&
+                typeof condition.value === "number" &&
+                value > condition.value
+              );
             case ">=":
-              return value >= (condition.value as number);
+              return (
+                typeof value === "number" &&
+                typeof condition.value === "number" &&
+                value >= condition.value
+              );
             case "<":
-              return value < (condition.value as number);
+              return (
+                typeof value === "number" &&
+                typeof condition.value === "number" &&
+                value < condition.value
+              );
             case "<=":
-              return value <= (condition.value as number);
+              return (
+                typeof value === "number" &&
+                typeof condition.value === "number" &&
+                value <= condition.value
+              );
             case "in":
               return Array.isArray(condition.value)
                 ? condition.value.includes(value)

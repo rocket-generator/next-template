@@ -205,9 +205,9 @@ describe('EmailVerificationForm', () => {
     it('should show error on resend failure', async () => {
       const user = userEvent.setup();
       const mockOnVerifyEmail = jest.fn();
-      const mockOnResendEmail = jest.fn(() => 
+      const mockOnResendEmail = (jest.fn(() =>
         Promise.resolve({ success: false, message: 'Failed to send email' })
-      );
+      ) as unknown) as (email: string) => Promise<{ success: boolean; message: string }>;
 
       renderWithIntl(
         <EmailVerificationForm
@@ -234,9 +234,12 @@ describe('EmailVerificationForm', () => {
     it('should disable resend button while processing', async () => {
       const user = userEvent.setup();
       const mockOnVerifyEmail = jest.fn();
-      const mockOnResendEmail = jest.fn(() => 
-        new Promise(resolve => setTimeout(() => resolve({ success: true, message: 'Email sent' }), 100))
-      );
+      const mockOnResendEmail = (jest.fn(
+        () =>
+          new Promise<{ success: boolean; message: string }>((resolve) =>
+            setTimeout(() => resolve({ success: true, message: 'Email sent' }), 100)
+          )
+      ) as unknown) as (email: string) => Promise<{ success: boolean; message: string }>;
 
       renderWithIntl(
         <EmailVerificationForm
