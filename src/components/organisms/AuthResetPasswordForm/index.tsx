@@ -91,7 +91,7 @@ export default function AuthResetPasswordForm({
           {!token && (
             <div className="mt-2">
               <Link
-                href="/auth/forgot-password"
+                href="/forgot-password"
                 className="text-blue-600 hover:text-blue-800 underline"
               >
                 {tAuth("go_to_forgot_password")}

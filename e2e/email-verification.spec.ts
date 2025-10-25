@@ -10,7 +10,7 @@ test.describe('メール認証機能', () => {
   test('有効なトークンでメール認証ページにアクセスできる', async ({ page }) => {
     const validToken = 'valid-test-token';
     
-    await page.goto(`/auth/verify-email?token=${validToken}`);
+    await page.goto(`/verify-email?token=${validToken}`);
     
     // ページが正常に読み込まれることを確認
     await expect(page).toHaveURL(/\/auth\/verify-email/);
@@ -20,7 +20,7 @@ test.describe('メール認証機能', () => {
   });
 
   test('トークンなしでメール認証ページにアクセスした場合エラーが表示される', async ({ page }) => {
-    await page.goto('/auth/verify-email');
+    await page.goto('/verify-email');
     
     // ページが正常に読み込まれることを確認
     await expect(page).toHaveURL(/\/auth\/verify-email/);
@@ -37,7 +37,7 @@ test.describe('メール認証機能', () => {
   test('無効なトークンでアクセスした場合エラーが表示される', async ({ page }) => {
     const invalidToken = 'invalid-test-token';
     
-    await page.goto(`/auth/verify-email?token=${invalidToken}`);
+    await page.goto(`/verify-email?token=${invalidToken}`);
     
     // ページが正常に読み込まれることを確認
     await expect(page).toHaveURL(/\/auth\/verify-email/);
@@ -55,7 +55,7 @@ test.describe('メール認証機能', () => {
   });
 
   test('メール再送信機能が動作する', async ({ page }) => {
-    await page.goto('/auth/verify-email');
+    await page.goto('/verify-email');
     
     // エラーメッセージが表示されるまで待つ
     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
@@ -82,7 +82,7 @@ test.describe('メール認証機能', () => {
   });
 
   test('メール再送信で空のメールアドレスを送信するとエラーが表示される', async ({ page }) => {
-    await page.goto('/auth/verify-email');
+    await page.goto('/verify-email');
     
     // エラーメッセージが表示されるまで待つ
     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
@@ -99,7 +99,7 @@ test.describe('メール認証機能', () => {
   });
 
   test('メール再送信で無効なメールアドレスを送信するとエラーが表示される', async ({ page }) => {
-    await page.goto('/auth/verify-email');
+    await page.goto('/verify-email');
     
     // エラーメッセージが表示されるまで待つ
     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
@@ -126,7 +126,7 @@ test.describe('メール認証機能', () => {
     // モックまたは有効なトークンを使用
     const validToken = 'test-valid-token';
     
-    await page.goto(`/auth/verify-email?token=${validToken}`);
+    await page.goto(`/verify-email?token=${validToken}`);
     
     // 認証成功メッセージまたはエラーメッセージを待つ（タイムアウトを長めに設定）
     await Promise.race([
@@ -149,7 +149,7 @@ test.describe('メール認証機能', () => {
     // 注意: この項目は環境変数の設定によってテスト結果が変わる
     // 開発環境で ENABLE_EMAIL_VERIFICATION=false に設定している場合のテスト
     
-    await page.goto('/auth/verify-email');
+    await page.goto('/verify-email');
     
     // ページが正常に読み込まれることを確認（機能が無効でもページは存在する）
     await expect(page).toHaveURL(/\/auth\/verify-email/);

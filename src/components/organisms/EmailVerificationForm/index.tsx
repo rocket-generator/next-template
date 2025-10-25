@@ -63,7 +63,7 @@ export default function EmailVerificationForm({
   useEffect(() => {
     if (status === "success") {
       const timer = setTimeout(() => {
-        router.push("/auth/signin");
+        router.push("/signin");
       }, 3000);
 
       return () => clearTimeout(timer);
@@ -146,7 +146,7 @@ export default function EmailVerificationForm({
           <div className="mt-6">
             <Link
               data-testid="signin-link"
-              href="/auth/signin"
+              href="/signin"
               className={cn(buttonVariants({ variant: "default" }), "w-full")}
             >
               {t("go_to_signin")}
@@ -188,7 +188,7 @@ export default function EmailVerificationForm({
           <div className="mt-6">
             <Link
               data-testid="signin-link"
-              href="/auth/signin"
+              href="/signin"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
               {t("back_to_signin")}
@@ -261,7 +261,7 @@ export default function EmailVerificationForm({
           {t("already_have_account")}{" "}
           <Link
             data-testid="signin-link"
-            href="/auth/signin"
+            href="/signin"
             className="font-medium text-gray-700 hover:underline"
           >
             {t("signin")}

@@ -10,8 +10,8 @@ test.describe('認証機能', () => {
     expect(title).toBeTruthy();
   });
 
-  test('/auth/signin でサインインフォームが表示される', async ({ page }) => {
-    await page.goto('/auth/signin');
+  test('/signin でサインインフォームが表示される', async ({ page }) => {
+    await page.goto('/signin');
 
     await expect(page).toHaveURL(/\/auth\/signin$/);
 
@@ -21,7 +21,7 @@ test.describe('認証機能', () => {
   });
 
   test('admin@example.com / password でダッシュボードに遷移する', async ({ page }) => {
-    await page.goto('/auth/signin');
+    await page.goto('/signin');
 
     await expect(page).toHaveURL(/\/auth\/signin$/);
 
@@ -29,7 +29,7 @@ test.describe('認証機能', () => {
     await page.fill('[data-testid="password-input"]', 'password');
 
     await Promise.all([
-      page.waitForURL((url) => url.pathname !== '/auth/signin', {
+      page.waitForURL((url) => url.pathname !== '/signin', {
         timeout: 10000,
       }),
       page.click('[data-testid="signin-submit-button"]'),

@@ -121,7 +121,7 @@ export default function ResendVerificationForm({
 
                 <Link
                   data-testid="signin-link"
-                  href="/auth/signin"
+                  href="/signin"
                   className="font-medium text-gray-700 hover:underline"
                 >
                   {t("back_to_signin")}
@@ -203,7 +203,7 @@ export default function ResendVerificationForm({
           {t("already_have_account")}{" "}
           <Link
             data-testid="signin-link"
-            href="/auth/signin"
+            href="/signin"
             className="font-medium text-blue-600 hover:underline"
           >
             {t("signin")}

@@ -15,7 +15,7 @@ const meta = {
     layout: "centered",
     nextjs: {
       navigation: {
-        pathname: "/auth/verify-email",
+        pathname: "/verify-email",
         query: { token: "mock-verification-token" },
       },
     },

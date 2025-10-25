@@ -22,7 +22,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
         redirect("/dashboard");
       }
     } else if (result === EmailVerificationRequired) {
-      redirect("/auth/verify-email/pending");
+      redirect("/verify-email/pending");
     }
     return result;
   };

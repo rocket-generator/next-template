@@ -18,14 +18,14 @@ export default async function ForgotPasswordPage({
     "use server";
     const result = await forgotPasswordAction(formData);
     if (result === Success) {
-      redirect("/auth/forgot-password?sent=true");
+      redirect("/forgot-password?sent=true");
     }
     return result;
   };
 
   const handleTryAgain = async () => {
     "use server";
-    redirect("/auth/forgot-password");
+    redirect("/forgot-password");
   };
 
   return (

@@ -19,7 +19,7 @@ export default async function ResetPasswordPage({
     "use server";
     const result = await resetPasswordAction(formData);
     if (result === Success) {
-      redirect("/auth/signin");
+      redirect("/signin");
     }
     return result;
   };

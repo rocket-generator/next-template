@@ -48,7 +48,7 @@ export default async function Page(props: Props) {
       const protocol = (await heads.get("x-forwarded-proto")) || "http";
       const pathname = `/admin/users?offset=${offset}&limit=${limit}&order=${order}&direction=${direction}&query=${query}`;
       const fullUrl = `${protocol}://${host}${pathname}`;
-      redirect("/auth/signin?callback_url=" + encodeURIComponent(fullUrl));
+      redirect("/signin?callback_url=" + encodeURIComponent(fullUrl));
     }
     console.log(error);
   }

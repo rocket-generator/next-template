@@ -23,7 +23,7 @@ export default async function SiteLayout({ children }: Props) {
   } catch (error) {
     console.log(error);
     if (error instanceof AuthError) {
-      redirect("/auth/signin");
+      redirect("/signin");
     }
   }
   if (!me || !me.permissions.includes("admin")) {

@@ -107,7 +107,7 @@ describe('EmailVerificationForm', () => {
 
       // Wait for redirect timer
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/auth/signin');
+        expect(mockPush).toHaveBeenCalledWith('/signin');
       }, { timeout: 4000 });
     });
 

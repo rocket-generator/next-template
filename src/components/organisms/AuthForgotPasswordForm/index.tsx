@@ -149,7 +149,7 @@ export default function AuthForgotPasswordForm({
         <p className="text-sm text-gray-600">
           {tAuth("remembered_password")}{" "}
           <Link
-            href="/auth/signin"
+            href="/signin"
             className="font-medium text-blue-600 hover:underline"
           >
             {tAuth("signin")}

@@ -20,7 +20,7 @@ export default async function SettingsPage() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/auth/signin");
+    redirect("/signin");
   }
 
   const breadcrumbLinks = [

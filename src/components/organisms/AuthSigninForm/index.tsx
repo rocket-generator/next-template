@@ -139,7 +139,7 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
 
         <div className="flex items-center justify-between">
           <Link
-            href="/auth/forgot-password"
+            href="/forgot-password"
             className="text-sm text-blue-600 hover:underline"
           >
             {tAuth("if_forgot_password")}
@@ -167,7 +167,7 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
         <p className="text-sm text-gray-600">
           {tAuth("if_you_do_not_have_an_account")}{" "}
           <Link
-            href="/auth/signup"
+            href="/signup"
             className="font-medium text-blue-600 hover:underline"
           >
             {tAuth("signup")}

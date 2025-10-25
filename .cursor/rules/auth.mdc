@@ -17,8 +17,8 @@ alwaysApply: false
   - [サーバー実装](#サーバー実装)
   - [クライアント実装](#クライアント実装)
   - [サーバーアクションとフロー](#サーバーアクションとフロー)
-    - [サインイン (`src/app/(site)/(unauthorized)/auth/signin/actions.ts`)](#サインイン-srcappsiteunauthorizedauthsigninactionsts)
-    - [サインアップ (`src/app/(site)/(unauthorized)/auth/signup/actions.ts`)](#サインアップ-srcappsiteunauthorizedauthsignupactionsts)
+    - [サインイン (`src/app/(site)/(unauthorized)/(auth)/signin/actions.ts`)](#サインイン-srcappsiteunauthorizedauthsigninactionsts)
+    - [サインアップ (`src/app/(site)/(unauthorized)/(auth)/signup/actions.ts`)](#サインアップ-srcappsiteunauthorizedauthsignupactionsts)
     - [サインアウト (`src/app/(site)/(authorized)/(app)/actions.ts` など)](#サインアウト-srcappsiteauthorizedappactionsts-など)
   - [ミドルウェアとルーティング制御](#ミドルウェアとルーティング制御)
   - [セキュリティと監査ポイント](#セキュリティと監査ポイント)
@@ -146,14 +146,14 @@ const authInstance = betterAuth({
 
 ## サーバーアクションとフロー
 
-### サインイン (`src/app/(site)/(unauthorized)/auth/signin/actions.ts`)
+### サインイン (`src/app/(site)/(unauthorized)/(auth)/signin/actions.ts`)
 
 1. `AuthService.signIn()` で資格情報の検証とアクセストークン発行。
 2. `syncCredentialAccount()` で `Account` テーブルを更新し Better Auth と認証情報を合わせる。
 3. `signIn()` で Better Auth セッションを確立し、`Session` レコードに `accessToken` / `permissions` を保存。
 4. エラー時は `invalid_credentials` や `email_not_verified` にマッピングして UI に返却。
 
-### サインアップ (`src/app/(site)/(unauthorized)/auth/signup/actions.ts`)
+### サインアップ (`src/app/(site)/(unauthorized)/(auth)/signup/actions.ts`)
 
 - `AuthService.signUp()` によりドメインルールに沿ってユーザー作成。
 - `ENABLE_EMAIL_VERIFICATION` が有効な場合はアクセストークンを返さずメール検証を要求。
@@ -184,7 +184,7 @@ const authInstance = betterAuth({
 
 - Jest のセットアップ (`jest.setup.ts`) で better-auth の主要モジュールをモックし、ESM 由来の取り込み問題を回避しています。構造を変える場合はモックの戻り値 (`useSession` の shape など) を同時に更新してください。
 - ユニットテストでは `@/libraries/auth` を直接モックするケースが多いので、`signIn`/`auth` など新しいヘルパーを追加した場合はモックも拡張する必要があります。
-- Playwright の E2E (`e2e/auth.spec.ts`) は `/auth/signin` → `/dashboard` のフローで Better Auth のクッキーを検証します。リダイレクト先を変更した場合はテストも合わせて更新してください。
+- Playwright の E2E (`e2e/auth.spec.ts`) は `/signin` → `/dashboard` のフローで Better Auth のクッキーを検証します。リダイレクト先を変更した場合はテストも合わせて更新してください。
 
 ---
 

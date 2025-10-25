@@ -196,7 +196,7 @@ export default function AuthSignupForm({ onSubmit }: AuthSignupFormProps) {
         <p className="text-sm text-gray-600">
           {tAuth("already_have_account")}{" "}
           <Link
-            href="/auth/signin"
+            href="/signin"
             className="font-medium text-blue-600 hover:underline"
           >
             {tAuth("signin")}

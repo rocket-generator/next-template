@@ -7,7 +7,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('再送信ページが正常に表示される', async ({ page }) => {
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれることを確認
     await expect(page).toHaveURL(/\/auth\/verify-email\/resend/);
@@ -19,7 +19,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('メールアドレスを入力して再送信できる', async ({ page }) => {
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれるまで待つ
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();
@@ -46,7 +46,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('空のメールアドレスで送信するとエラーが表示される', async ({ page }) => {
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれるまで待つ
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();
@@ -59,7 +59,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('無効なメールアドレスで送信するとエラーが表示される', async ({ page }) => {
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれるまで待つ
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();
@@ -75,7 +75,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('成功時に成功画面が表示される', async ({ page }) => {
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれるまで待つ
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();
@@ -101,7 +101,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('サインインページへのリンクが機能する', async ({ page }) => {
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれるまで待つ
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();
@@ -114,7 +114,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('pendingページから再送信ページにアクセスできる', async ({ page }) => {
-    await page.goto('/auth/verify-email/pending');
+    await page.goto('/verify-email/pending');
     
     // ページが正常に読み込まれることを確認
     await expect(page).toHaveURL(/\/auth\/verify-email\/pending/);
@@ -131,7 +131,7 @@ test.describe('メール認証再送信機能', () => {
   });
 
   test('送信中はボタンが無効化される', async ({ page }) => {
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれるまで待つ
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();
@@ -150,7 +150,7 @@ test.describe('メール認証再送信機能', () => {
   test('レスポンシブデザインが機能する', async ({ page }) => {
     // モバイルサイズでテスト
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/auth/verify-email/resend');
+    await page.goto('/verify-email/resend');
     
     // ページが正常に表示されることを確認
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();

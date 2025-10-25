@@ -19,7 +19,7 @@ type Props = {
 export default async function SiteLayout({ children }: Props) {
   const session = await auth({ disableRefresh: true });
   if (!session) {
-    redirect("/auth/signin");
+    redirect("/signin");
   }
 
   let me: User | null = null;
@@ -29,7 +29,7 @@ export default async function SiteLayout({ children }: Props) {
   } catch (error) {
     console.log(error);
     if (error instanceof AuthError) {
-      redirect("/auth/signin");
+      redirect("/signin");
     }
   }
 

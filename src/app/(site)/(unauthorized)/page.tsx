@@ -42,13 +42,13 @@ export default async function LandingPage() {
             </div>
             <div className="flex items-center space-x-4">
               <Link
-                href="/auth/signin"
+                href="/signin"
                 className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 data-testid="login-link"
               >
                 {t("navigation.login")}
               </Link>
-              <Link href="/auth/signup" data-testid="signup-link">
+              <Link href="/signup" data-testid="signup-link">
                 <Button className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
                   {t("navigation.get_started")}
                 </Button>
@@ -88,7 +88,7 @@ export default async function LandingPage() {
               {t("hero.description")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth/signup" data-testid="hero-cta-primary">
+              <Link href="/signup" data-testid="hero-cta-primary">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
@@ -491,8 +491,8 @@ export default async function LandingPage() {
                     plan.name === "Enterprise"
                       ? "/contact"
                       : plan.name === "Pro"
-                      ? "/auth/signup?plan=pro"
-                      : "/auth/signup"
+                      ? "/signup?plan=pro"
+                      : "/signup"
                   }
                   className="block"
                   data-testid={`${plan.testId}-cta`}
@@ -620,7 +620,7 @@ export default async function LandingPage() {
             {t("cta.description")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signup" data-testid="cta-button">
+            <Link href="/signup" data-testid="cta-button">
               <Button
                 size="lg"
                 className="bg-white text-blue-600 hover:bg-gray-100"

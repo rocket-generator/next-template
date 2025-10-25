@@ -1,4 +1,4 @@
-import { verifyEmailAction, resendVerificationEmailAction } from '@/app/(site)/(unauthorized)/auth/verify-email/actions';
+import { verifyEmailAction, resendVerificationEmailAction } from '@/app/(site)/(unauthorized)/(auth)/verify-email/actions';
 import { AuthService } from '@/services/auth_service';
 import { UserRepository } from '@/repositories/user_repository';
 import { PasswordResetRepository } from '@/repositories/password_reset_repository';

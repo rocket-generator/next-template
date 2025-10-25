@@ -46,14 +46,14 @@ export default function EmailVerificationPendingPage() {
 
             <div className="flex justify-center space-x-4">
               <Link
-                href="/auth/verify-email/resend"
+                href="/verify-email/resend"
                 className="font-medium text-gray-700 hover:underline"
               >
                 {t("resend_verification_email")}
               </Link>
 
               <Link
-                href="/auth/signin"
+                href="/signin"
                 className="font-medium text-gray-700 hover:underline"
               >
                 {t("back_to_signin")}

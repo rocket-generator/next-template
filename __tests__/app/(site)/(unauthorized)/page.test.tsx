@@ -145,13 +145,13 @@ describe("Landing Page", () => {
     it("renders login link with correct href", () => {
       const loginLink = screen.getByTestId("login-link");
       expect(loginLink).toBeInTheDocument();
-      expect(loginLink).toHaveAttribute("href", "/auth/signin");
+      expect(loginLink).toHaveAttribute("href", "/signin");
     });
 
     it("renders signup button with correct href", () => {
       const signupLink = screen.getByTestId("signup-link");
       expect(signupLink).toBeInTheDocument();
-      expect(signupLink).toHaveAttribute("href", "/auth/signup");
+      expect(signupLink).toHaveAttribute("href", "/signup");
     });
   });
 

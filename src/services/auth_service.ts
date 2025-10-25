@@ -403,7 +403,7 @@ export class AuthService {
 
       // Send email with reset link
       const appUrl = process.env.APP_URL || "http://localhost:3000";
-      const resetUrl = `${appUrl}/auth/reset-password?token=${resetToken.token}`;
+      const resetUrl = `${appUrl}/reset-password?token=${resetToken.token}`;
 
       const emailService = createEmailServiceInstance();
       await emailService.sendPasswordResetEmail(user.email, resetUrl);

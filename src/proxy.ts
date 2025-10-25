@@ -4,13 +4,13 @@ import { getSessionCookie } from "better-auth/cookies";
 
 const PUBLIC_PATHS = new Set([
   "/",
-  "/auth/signin",
-  "/auth/signup",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-  "/auth/verify-email",
-  "/auth/verify-email/resend",
-  "/auth/verify-email/pending",
+  "/signin",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+  "/verify-email/resend",
+  "/verify-email/pending",
 ]);
 
 function isPublicPath(pathname: string): boolean {
@@ -29,7 +29,7 @@ export function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
 
   if (!publicPage && !sessionCookie) {
-    const redirectUrl = new URL("/auth/signin", request.url);
+    const redirectUrl = new URL("/signin", request.url);
     redirectUrl.searchParams.set("callback_url", request.url);
     return NextResponse.redirect(redirectUrl);
   }
