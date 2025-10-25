@@ -122,7 +122,7 @@
         },
         "auth": {
           "title": "認証システム",
-          "description": "NextAuth.jsによる完全な認証システム。ログイン、登録、パスワードリセット対応。"
+          "description": "Better Authによる完全な認証システム。ログイン、登録、パスワードリセットに対応。"
         },
         "database": {
           "title": "データベース",
@@ -162,7 +162,7 @@
         },
         "auth": {
           "title": "認証",
-          "description": "NextAuth.js、メール認証"
+          "description": "Better Auth、メール認証"
         },
         "deployment": {
           "title": "デプロイ",

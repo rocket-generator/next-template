@@ -25,7 +25,7 @@ export async function signUpAction(
     const validatedInput = SignUpRequestSchema.safeParse(rawInput);
     if (!validatedInput.success) return InvalidInput;
 
-    // Use AuthService directly instead of NextAuth signIn
+    // Use AuthService directly to create the account and return session info
     const userRepository = new UserRepository();
     const passwordResetRepository = new PasswordResetRepository();
     const emailVerificationRepository = new EmailVerificationRepository();
@@ -42,7 +42,7 @@ export async function signUpAction(
       return EmailVerificationRequired;
     }
 
-    // If we get an AccessToken, try to sign in with NextAuth using the signin provider
+    // If we receive an access token, establish the Better Auth session on behalf of the user
     if (result.access_token) {
       const user = await userRepository.getUserById(result.id);
 

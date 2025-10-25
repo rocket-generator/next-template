@@ -15,11 +15,7 @@ const baseURL =
   process.env.NEXT_PUBLIC_APP_URL ??
   "http://localhost:3000";
 
-const secret =
-  process.env.BETTER_AUTH_SECRET ??
-  process.env.AUTH_SECRET ??
-  process.env.NEXT_AUTH_SECRET ??
-  process.env.NEXTAUTH_SECRET;
+const secret = process.env.BETTER_AUTH_SECRET ?? process.env.AUTH_SECRET;
 
 if (!secret) {
   throw new Error(

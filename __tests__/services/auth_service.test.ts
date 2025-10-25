@@ -43,6 +43,8 @@ describe("AuthService", () => {
     // Reset all mocks
     jest.clearAllMocks();
 
+    delete process.env.ENABLE_EMAIL_VERIFICATION;
+
     // Create mock repositories
     mockAuthRepository = {
       get: jest.fn(),
@@ -197,7 +199,7 @@ describe("AuthService", () => {
         password: "hashedPassword",
         name: "New User",
         permissions: [],
-        emailVerified: false,
+        emailVerified: true,
         isActive: true,
       };
 
@@ -223,7 +225,7 @@ describe("AuthService", () => {
         password: "hashedPassword",
         name: "New User",
         permissions: [],
-        emailVerified: false,
+        emailVerified: true,
         isActive: true,
       });
       expect(result).toEqual({
@@ -605,6 +607,14 @@ describe("AuthService", () => {
   });
 
   describe("sendVerificationEmail", () => {
+    beforeEach(() => {
+      process.env.ENABLE_EMAIL_VERIFICATION = "true";
+    });
+
+    afterEach(() => {
+      delete process.env.ENABLE_EMAIL_VERIFICATION;
+    });
+
     it("should send verification email for user", async () => {
       const userId = "user-1";
       const user: Auth = {
@@ -663,6 +673,14 @@ describe("AuthService", () => {
   });
 
   describe("verifyEmailToken", () => {
+    beforeEach(() => {
+      process.env.ENABLE_EMAIL_VERIFICATION = "true";
+    });
+
+    afterEach(() => {
+      delete process.env.ENABLE_EMAIL_VERIFICATION;
+    });
+
     it("should verify email token and activate user", async () => {
       const token = "verification-token";
       const userId = "user-1";

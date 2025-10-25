@@ -6,6 +6,16 @@ jest.mock("@/libraries/auth", () => ({
   auth: jest.fn(),
 }));
 
+jest.mock("@/libraries/storage", () => ({
+  createStorageServiceInstance: jest.fn(() => ({
+    uploadFile: jest.fn(),
+    downloadFile: jest.fn(),
+    generateSignedUrl: jest.fn(),
+    deleteFile: jest.fn(),
+    listFiles: jest.fn(),
+  })),
+}));
+
 // Mock Prisma client
 jest.mock("@/libraries/prisma", () => ({
   prisma: {
@@ -76,6 +86,7 @@ describe("UserRepository", () => {
         avatarKey: undefined,
         isActive: true,
         emailVerified: false,
+        language: "",
       });
     });
 

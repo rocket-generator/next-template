@@ -56,8 +56,9 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/myapp
-      - AUTH_URL=http://localhost:3000/api/auth
-      - AUTH_SECRET=FwpgXc8ejZgsKUQ5qXh7L7ftCBuhuOYig9GqKkdrXNI=
+      - BETTER_AUTH_BASE_URL=http://localhost:3000
+      - BETTER_AUTH_SECRET=FwpgXc8ejZgsKUQ5qXh7L7ftCBuhuOYig9GqKkdrXNI=
+      - NEXT_PUBLIC_BETTER_AUTH_BASE_PATH=/api/auth
       - NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=http://web:3000/api
       - NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:3000/api
       # LocalStack S3 Configuration

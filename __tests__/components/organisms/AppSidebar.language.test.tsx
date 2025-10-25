@@ -2,6 +2,25 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import AppSidebar from "@/components/organisms/AppSidebar";
+import { SidebarProvider } from "@/components/atoms/sidebar";
+
+jest.mock("@/components/molecules/LanguageSwitcher", () => ({
+  __esModule: true,
+  default: ({
+    userLanguage,
+    onSelect,
+  }: {
+    userLanguage?: string;
+    onSelect: (locale: "ja" | "en") => void;
+  }) => (
+    <button
+      data-testid="language-switcher-button"
+      onClick={() => onSelect(userLanguage === "ja" ? "ja" : "en")}
+    >
+      {userLanguage === "ja" ? "日本語" : "English"}
+    </button>
+  ),
+}));
 import { User } from "@/models/user";
 
 // Mock next/navigation
@@ -27,6 +46,7 @@ jest.mock("next-intl", () => ({
     };
     return t[`Common.${key}`] || key;
   },
+  useLocale: () => "en",
 }));
 
 // Mock server actions import to avoid calling server-side code in tests
@@ -57,7 +77,9 @@ describe("AppSidebar Language Switcher", () => {
   it("should render language switcher with Japanese when user language is ja", () => {
     const user = { ...baseUser, language: "ja" } as User;
     render(
-      <AppSidebar {...commonProps} signInUser={user} />
+      <SidebarProvider>
+        <AppSidebar {...commonProps} signInUser={user} />
+      </SidebarProvider>
     );
 
     const btn = screen.getByTestId("language-switcher-button");
@@ -68,7 +90,9 @@ describe("AppSidebar Language Switcher", () => {
   it("should render language switcher with English when user language is en", () => {
     const user = { ...baseUser, language: "en" } as User;
     render(
-      <AppSidebar {...commonProps} signInUser={user} />
+      <SidebarProvider>
+        <AppSidebar {...commonProps} signInUser={user} />
+      </SidebarProvider>
     );
 
     const btn = screen.getByTestId("language-switcher-button");
@@ -76,5 +100,3 @@ describe("AppSidebar Language Switcher", () => {
     expect(btn).toHaveTextContent("English");
   });
 });
-
-

@@ -7,7 +7,7 @@ This is a [Next.js](https://nextjs.org) project with TypeScript, using App Route
 - **Framework**: Next.js 15.3.3 with App Router
 - **Language**: TypeScript
 - **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js v5 (beta)
+- **Authentication**: Better Auth (with cookie-backed sessions)
 - **UI Components**: Radix UI + shadcn/ui
 - **Styling**: Tailwind CSS
 - **Forms**: React Hook Form + Zod validation
@@ -21,7 +21,7 @@ src/
 ├── app/                 # Next.js App Router
 │   ├── (site)/(authorized)/    # Protected routes
 │   ├── (site)/(unauthorized)/  # Public auth routes
-│   └── api/auth/               # NextAuth.js API routes
+│   └── api/auth/               # Better Auth handler
 ├── components/          # UI components (Atomic Design)
 │   ├── atoms/          # Basic UI elements
 │   ├── molecules/      # Composite components
@@ -194,7 +194,8 @@ cp .env.docker .env
 
 Key environment variables for Docker:
 - `DATABASE_URL`: PostgreSQL connection (automatically configured)
-- `AUTH_URL`: NextAuth.js URL
+- `BETTER_AUTH_BASE_URL`: Base URL used by Better Auth
+- `BETTER_AUTH_SECRET`: Secret key for Better Auth session encryption
 - `AWS_S3_REGION`: AWS S3 region (us-east-1 for LocalStack)
 - `AWS_ACCESS_KEY_ID`: AWS access key (test for LocalStack)
 - `AWS_SECRET_ACCESS_KEY`: AWS secret key (test for LocalStack)
@@ -255,7 +256,7 @@ npm run build-storybook # Build Storybook for production
 - **Atomic Design**: Component organization for scalability
 - **Form Validation**: Consistent Zod schemas for client/server validation
 - **Internationalization**: Built-in Japanese/English support
-- **Authentication**: Secure NextAuth.js implementation
+- **Authentication**: Secure Better Auth implementation
 
 ## Learn More
 

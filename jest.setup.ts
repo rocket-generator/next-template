@@ -34,7 +34,13 @@ jest.mock('better-auth/react', () => ({
       social: jest.fn(),
     },
     signOut: jest.fn(),
-    useSession: jest.fn(() => ({ data: null, status: 'unauthenticated' })),
+    useSession: jest.fn(() => ({
+      data: null,
+      status: 'unauthenticated',
+      isPending: false,
+      error: null,
+      refetch: jest.fn(),
+    })),
     Provider: ({ children }: { children: React.ReactNode }) => children,
   })),
 }));

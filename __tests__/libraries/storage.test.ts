@@ -391,6 +391,9 @@ describe("Storage Library", () => {
         process.env.SYSTEM_AWS_ACCESS_KEY_ID = "prod-key";
         process.env.SYSTEM_AWS_SECRET_ACCESS_KEY = "prod-secret";
         process.env.SYSTEM_AWS_S3_BUCKET = "prod-bucket";
+        process.env.USE_LOCALSTACK = "false";
+        delete process.env.LOCALSTACK_ENDPOINT;
+        delete process.env.LOCALSTACK_PUBLIC_ENDPOINT;
 
         const config = createS3ProviderConfig();
 
@@ -408,6 +411,8 @@ describe("Storage Library", () => {
         process.env.SYSTEM_AWS_SECRET_ACCESS_KEY = "dev-secret";
         process.env.SYSTEM_AWS_S3_BUCKET = "dev-bucket";
         process.env.LOCALSTACK_ENDPOINT = "http://localhost:4566";
+        process.env.LOCALSTACK_PUBLIC_ENDPOINT = "http://localhost:4566";
+        process.env.USE_LOCALSTACK = "true";
 
         const config = createS3ProviderConfig();
 

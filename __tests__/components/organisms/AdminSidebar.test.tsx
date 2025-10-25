@@ -6,17 +6,67 @@ import { SidebarProvider } from "@/components/atoms/sidebar";
 import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
 
 // next-intlモック
-const mockTranslation = jest.fn((key: string) => {
-  const translations: Record<string, string> = {
-    "Menu.Admin.administration": "Administration",
-    "Common.settings": "Settings",
-    "Common.signout": "Sign Out",
-  };
-  return translations[key] || key;
-});
-
 jest.mock("next-intl", () => ({
-  useTranslations: jest.fn(() => mockTranslation),
+  useTranslations: jest.fn((namespace?: string) => (key: string) => {
+    const translations: Record<string, string> = {
+      "Menu.Admin.administration": "Administration",
+      "Common.settings": "Settings",
+      "Common.signout": "Sign Out",
+    };
+    const fullKey = namespace ? `${namespace}.${key}` : key;
+    return translations[fullKey] || fullKey;
+  }),
+  useLocale: jest.fn(() => "ja"),
+}));
+
+jest.mock("@/components/molecules/LanguageSwitcher", () => ({
+  __esModule: true,
+  default: ({
+    userLanguage,
+    onSelect,
+  }: {
+    userLanguage?: string;
+    onSelect: (locale: "ja" | "en") => void;
+  }) => (
+    <button
+      data-testid="language-switcher"
+      onClick={() => onSelect(userLanguage === "ja" ? "ja" : "en")}
+    >
+      Lang
+    </button>
+  ),
+}));
+
+jest.mock("@/components/atoms/dropdown-menu", () => ({
+  __esModule: true,
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="admin-dropdown-menu">{children}</div>
+  ),
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  DropdownMenuContent: ({
+    children,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <div {...rest}>{children}</div>
+  ),
+  DropdownMenuItem: ({
+    children,
+    onClick,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    [key: string]: unknown;
+  }) => (
+    <button type="button" onClick={onClick} {...rest}>
+      {children}
+    </button>
+  ),
 }));
 
 // next/navigationモック
@@ -33,14 +83,26 @@ jest.mock("next/navigation", () => ({
 }));
 
 // lucide-reactアイコンのモック
-jest.mock("lucide-react", () => ({
-  Users: () => <div data-testid="users-icon">Users Icon</div>,
-  Settings: () => <div data-testid="settings-icon">Settings Icon</div>,
-  Home: () => <div data-testid="home-icon">Home Icon</div>,
-  BarChart2: () => <div data-testid="barchart2-icon">BarChart2 Icon</div>,
-  CheckCircle: () => <div data-testid="checkcircle-icon">CheckCircle Icon</div>,
-  LogOut: () => <div data-testid="logout-icon">LogOut Icon</div>,
-}));
+jest.mock("lucide-react", () => {
+  const createIcon = (fallbackId: string) => ({
+    ["data-testid"]: dataTestId,
+    ...rest
+  }: Record<string, unknown>) => (
+    <div data-testid={(dataTestId as string) ?? fallbackId} {...rest}>
+      {`${fallbackId} Icon`}
+    </div>
+  );
+
+  return {
+    __esModule: true,
+    Users: createIcon("users-icon"),
+    Settings: createIcon("settings-icon"),
+    Home: createIcon("home-icon"),
+    BarChart2: createIcon("barchart2-icon"),
+    CheckCircle: createIcon("checkcircle-icon"),
+    LogOut: createIcon("logout-icon"),
+  };
+});
 
 describe("AdminSidebar", () => {
   const mockMenuItems = [
@@ -138,6 +200,7 @@ describe("AdminSidebar", () => {
       expect(screen.getByTestId("users-icon")).toBeInTheDocument();
       expect(screen.getByTestId("barchart2-icon")).toBeInTheDocument();
       expect(screen.getByTestId("settings-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("admin-settings-icon")).toBeInTheDocument();
     });
 
     it("should render user information", () => {
@@ -193,7 +256,7 @@ describe("AdminSidebar", () => {
       const settingsMenuItem = screen.getByTestId("admin-settings-menu-item");
       fireEvent.click(settingsMenuItem);
 
-      expect(mockPush).toHaveBeenCalledWith("/admin/settings");
+      expect(mockPush).toHaveBeenCalledWith("/settings");
     });
 
     it("should call onSignOut when signout menu item is clicked", () => {

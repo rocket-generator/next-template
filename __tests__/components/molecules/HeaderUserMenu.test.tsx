@@ -213,10 +213,9 @@ describe("HeaderUserMenu", () => {
       name: "",
     };
 
-    const { container } = render(<HeaderUserMenu signInUser={userWithEmptyName} onSignOut={mockOnSignOut} />);
+    render(<HeaderUserMenu signInUser={userWithEmptyName} onSignOut={mockOnSignOut} />);
 
-    const span = container.querySelector("span.text-sm");
-    expect(span).toHaveTextContent("");
+    expect(screen.getByText("john@example.com")).toBeInTheDocument();
   });
 
 

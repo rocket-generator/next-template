@@ -65,18 +65,18 @@
 
 #### 8. Prisma / データ層の対応
 - [x] Better Auth 標準スキーマに合わせて `Session` / `Account` / `Verification` モデルを Prisma へ追加し、既存 `User` モデルとのリレーションを定義する。
-- [ ] 生成された Prisma Client の差分を確認し、`prisma migrate dev` でマイグレーションを作成・ドキュメント化する（本番移行手順に含める）。
-- [ ] 既存データ（ユーザーの `permissions`, `password` など）が新しい Prisma モデルと矛盾しないことを確認し、必要であればデータ移行スクリプトを計画する。
+- [x] 生成された Prisma Client の差分を確認し、`prisma migrate dev` でマイグレーションを作成・ドキュメント化する（本番移行手順に含める）。
+- [x] 既存データ（ユーザーの `permissions`, `password` など）が新しい Prisma モデルと矛盾しないことを確認し、必要であればデータ移行スクリプトを計画する。
 
 #### 9. テスト更新
-- [ ] `jest.setup.ts` の NextAuth モックを削除し、Better Auth の API（`auth.api.*` やカスタムモジュール）をモックする仕組みに差し替える。
-- [ ] `__tests__/repositories/auth_repository.test.ts` や `__tests__/components/molecules/HeaderUserMenu.test.tsx` など、`@/libraries/auth` をモックしているテストを新しいエクスポート構造に合わせて更新する。
-- [ ] Playwright シナリオ（`e2e/auth.spec.ts`）を Better Auth のログインフローに追従させ、リダイレクト先やフォーム操作の期待値を見直す。
+- [x] `jest.setup.ts` の NextAuth モックを削除し、Better Auth の API（`auth.api.*` やカスタムモジュール）をモックする仕組みに差し替える。
+- [x] `__tests__/repositories/auth_repository.test.ts` や `__tests__/components/molecules/HeaderUserMenu.test.tsx` など、`@/libraries/auth` をモックしているテストを新しいエクスポート構造に合わせて更新する。
+- [x] Playwright シナリオ（`e2e/auth.spec.ts`）を Better Auth のログインフローに追従させ、リダイレクト先やフォーム操作の期待値を見直す。
 
 #### 10. 不要資産の整理
-- [ ] `src/types/next-auth.d.ts` や NextAuth 固有のユーティリティ・コメントを削除し、Better Auth 版ドキュメントへ差し替える。
-- [ ] `AuthError`（`next-auth` から import していたもの）に依存しているコードを `better-auth` のエラー型もしくは独自例外クラスへ置換する。
-- [ ] 旧 `.env` キー（例: `NEXT_AUTH_SECRET`）や README / ドキュメンテーション内の NextAuth 記述を Better Auth 向けに更新する。
+- [x] `src/types/next-auth.d.ts` や NextAuth 固有のユーティリティ・コメントを削除し、Better Auth 版ドキュメントへ差し替える。
+- [x] `AuthError`（`next-auth` から import していたもの）に依存しているコードを `better-auth` のエラー型もしくは独自例外クラスへ置換する。
+- [x] 旧 `.env` キー（例: `NEXT_AUTH_SECRET`）や README / ドキュメンテーション内の NextAuth 記述を Better Auth 向けに更新する。
 
 #### 11. 動作確認とリリース準備
 - [ ] `npm run lint`, `npm run test`, `npm run test:e2e`, `npm run build` を実行し、Better Auth への置換後も CI パイプラインが通ることを確認する。

@@ -59,7 +59,7 @@ This is a Next.js 15.3.3 web system template with TypeScript, using App Router a
 - **`/src/app`** - Next.js App Router pages and layouts
   - `/(site)/(authorized)` - Protected routes (dashboard, admin, settings)
   - `/(site)/(unauthorized)` - Public auth routes (sign-in, sign-up, password reset)
-  - `/api/auth` - NextAuth.js API routes
+  - `/api/auth` - Better Auth handler
 - **`/src/components`** - Atomic Design UI components using Radix UI and shadcn/ui
 - **`/src/models`** - TypeScript interfaces and data models
 - **`/src/repositories`** - Data access layer with multiple adapters:
@@ -73,7 +73,7 @@ This is a Next.js 15.3.3 web system template with TypeScript, using App Router a
 
 ### Key Technologies
 
-- **Authentication**: NextAuth.js v5 (beta) with custom credentials provider
+- **Authentication**: Better Auth with credential-based sign-in
 - **Database**: PostgreSQL with Prisma ORM (client output to `/src/generated/prisma`)
 - **Forms**: React Hook Form + Zod validation
 - **Styling**: Tailwind CSS + CSS Modules + Radix UI
@@ -84,8 +84,8 @@ This is a Next.js 15.3.3 web system template with TypeScript, using App Router a
 Copy `.env.sample` to `.env` and configure:
 
 - `DATABASE_URL` - PostgreSQL connection string
-- `AUTH_URL` - NextAuth URL (http://localhost:3000/api/auth in development)
-- `AUTH_SECRET` - NextAuth secret key
+- `BETTER_AUTH_BASE_URL` - Better Auth base URL (http://localhost:3000 in development)
+- `BETTER_AUTH_SECRET` - Better Auth secret key
 - Backend API URLs and optional Airtable credentials
 
 ### Repository Pattern
