@@ -335,6 +335,7 @@
   "/* [MODEL_MESSAGES] */": "",
   "Common": {
     "settings": "Settings",
+    "admin_console": "Admin Console",
     "signout": "Sign Out",
     "language": "Language",
     "japanese": "Japanese",

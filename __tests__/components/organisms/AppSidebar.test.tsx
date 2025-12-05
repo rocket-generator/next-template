@@ -16,6 +16,7 @@ jest.mock("next-intl", () => ({
     const translations: Record<string, string> = {
       "Common.application": "アプリケーション",
       "Common.settings": "設定",
+       "Common.admin_console": "管理画面",
       "Common.signout": "ログアウト",
     };
     const fullKey = namespace ? `${namespace}.${key}` : key;
@@ -175,5 +176,27 @@ describe("AppSidebar", () => {
   it("renders empty menu items without crashing", () => {
     renderSidebar({ menuItems: [] });
     expect(screen.getByText("アプリケーション")).toBeInTheDocument();
+  });
+
+  it("shows admin link when user has admin permission and navigates to admin dashboard", () => {
+    renderSidebar({
+      signInUser: { ...mockUser, permissions: ["admin"] },
+    });
+    const menuTrigger = screen.getByText("山田太郎");
+    fireEvent.click(menuTrigger);
+
+    const adminLink = screen.getByText("管理画面");
+    expect(adminLink).toBeInTheDocument();
+    fireEvent.click(adminLink);
+    expect(mockPush).toHaveBeenCalledWith("/admin/dashboard");
+  });
+
+  it("hides admin link when user is not admin", () => {
+    renderSidebar();
+    const menuTrigger = screen.getByText("山田太郎");
+    fireEvent.click(menuTrigger);
+
+    const adminLink = screen.queryByText("管理画面");
+    expect(adminLink).not.toBeInTheDocument();
   });
 });

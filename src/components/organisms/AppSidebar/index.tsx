@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Settings, LogOut } from "lucide-react";
+import { Settings, LogOut, ShieldCheck } from "lucide-react";
 import { User as UserModel } from "@/models/user";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -50,9 +50,16 @@ export default function AppSidebar({
 }: Props) {
   const router = useRouter();
   const t = useTranslations("Common");
+  const hasAdminPermission =
+    Array.isArray(signInUser?.permissions) &&
+    signInUser?.permissions.includes("admin");
 
   const handleSettings = () => {
     router.push("/settings");
+  };
+
+  const handleAdmin = () => {
+    router.push("/admin/dashboard");
   };
 
   return (
@@ -121,6 +128,12 @@ export default function AppSidebar({
                   <Settings className="w-4 h-4 mr-2" />
                   <span>{t("settings")}</span>
                 </DropdownMenuItem>
+                {hasAdminPermission && (
+                  <DropdownMenuItem onClick={handleAdmin}>
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    <span>{t("admin_console")}</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={onSignOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   <span>{t("signout")}</span>

@@ -89,3 +89,15 @@ export const WithManyMenuItems: Story = {
     onSignOut: () => console.log("Sign out clicked"),
   },
 };
+
+export const AdminUser: Story = {
+  args: {
+    signInUser: {
+      ...mockUser,
+      permissions: ["admin"],
+    },
+    menuItems: mockMenuItems,
+    title: "アプリケーション",
+    onSignOut: () => console.log("Sign out clicked"),
+  },
+};
