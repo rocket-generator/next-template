@@ -3,6 +3,16 @@ import { redirect } from "next/navigation";
 import { forgotPasswordAction } from "./actions";
 import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
 import { Success } from "@/constants/auth";
+import { getTranslations } from "next-intl/server";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("forgot_password.title"),
+    description: t("forgot_password.description"),
+  });
+}
 
 interface ForgotPasswordPageProps {
   searchParams: Promise<{ sent?: string }>;

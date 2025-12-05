@@ -85,6 +85,69 @@
       "token_min_length": "Token must be at least 1 character"
     }
   },
+  "Meta": {
+    "service_description": "Full-stack template built with TypeScript, Next.js, and Tailwind CSS. Auth, database, and i18n are included out of the box.",
+    "landing": {
+      "title": "Home",
+      "description": "Landing page that introduces the TypeScript Next Template."
+    },
+    "signin": {
+      "title": "Sign In",
+      "description": "Sign in to your registered account."
+    },
+    "signup": {
+      "title": "Sign Up",
+      "description": "Create a new account."
+    },
+    "forgot_password": {
+      "title": "Forgot Password",
+      "description": "Send a password reset email to your registered address."
+    },
+    "reset_password": {
+      "title": "Reset Password",
+      "description": "Set a new password using the link from your email."
+    },
+    "verify_email": {
+      "title": "Verify Email",
+      "description": "Verify your email address to activate your account."
+    },
+    "verify_email_resend": {
+      "title": "Resend Verification Email",
+      "description": "Send the verification email again."
+    },
+    "verify_email_pending": {
+      "title": "Verification Pending",
+      "description": "Check your inbox and click the verification link."
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "View app overview and the latest updates."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your profile and security settings."
+    },
+    "admin_dashboard": {
+      "title": "Admin Dashboard",
+      "description": "Overview page for administrators."
+    },
+    "admin_users": {
+      "title": "Users",
+      "description": "Manage users from the admin console."
+    },
+    "admin_user_detail": {
+      "title": "User Detail",
+      "description": "View detailed information of a user."
+    },
+    "admin_user_create": {
+      "title": "Create User",
+      "description": "Create a new user account."
+    },
+    "admin_user_edit": {
+      "title": "Edit User",
+      "description": "Edit existing user information."
+    }
+  },
   "Landing": {
     "navigation": {
       "brand_name": "TypeScript Next Template",

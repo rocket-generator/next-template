@@ -14,6 +14,15 @@ import {
   Server,
   Globe,
 } from "lucide-react";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("landing.title"),
+    description: t("landing.description"),
+  });
+}
 
 export default async function LandingPage() {
   const t = await getTranslations("Landing");

@@ -3,6 +3,16 @@ import { redirect } from "next/navigation";
 import { resetPasswordAction } from "./actions";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { Success } from "@/constants/auth";
+import { getTranslations } from "next-intl/server";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("reset_password.title"),
+    description: t("reset_password.description"),
+  });
+}
 
 interface ResetPasswordPageProps {
   searchParams: Promise<{ token?: string; email?: string }>;

@@ -1,3 +1,14 @@
+import { getTranslations } from "next-intl/server";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("admin_dashboard.title"),
+    description: t("admin_dashboard.description"),
+  });
+}
+
 const Page = () => {
   return (
     <div className="mb-6">

@@ -11,6 +11,7 @@ import { getTranslations } from "next-intl/server";
 import { signOutAction } from "./actions";
 import { auth } from "@/libraries/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
+import { SERVICE_NAME } from "@/constants/site";
 
 type Props = {
   children: React.ReactNode;
@@ -47,7 +48,7 @@ export default async function SiteLayout({ children }: Props) {
       <Suspense fallback={<div>Loading...</div>}>
         <AppSidebar
           menuItems={menuItems}
-          title="TaskMaster"
+          title={SERVICE_NAME}
           icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
           signInUser={me}
           onSignOut={signOutAction}

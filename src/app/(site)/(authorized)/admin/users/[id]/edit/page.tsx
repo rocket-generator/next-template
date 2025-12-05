@@ -8,6 +8,15 @@ import { User } from "@/models/user";
 import { updateUser } from "./actions";
 import { UserUpdateRequest } from "@/requests/admin/user_update_request";
 import { redirect } from "next/navigation";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("admin_user_edit.title"),
+    description: t("admin_user_edit.description"),
+  });
+}
 
 type Props = {
   params: Promise<{ id: string }>;

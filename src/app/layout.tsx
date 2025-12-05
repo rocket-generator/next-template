@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { Providers } from "./providers";
+import { createMetadata } from "@/libraries/metadata";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,10 +15,7 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "Great App",
-  description: "The best app in the world",
-};
+export const metadata = createMetadata();
 
 export default async function RootLayout({
   children,

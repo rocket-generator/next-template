@@ -9,6 +9,15 @@ import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataTable from "@/components/organisms/DataTable";
 import { Plus } from "lucide-react";
 import DataTableSkeleton from "@/components/molecules/DataTableSkeleton";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("admin_users.title"),
+    description: t("admin_users.description"),
+  });
+}
 
 type SearchParams = {
   offset?: string;

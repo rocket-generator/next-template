@@ -8,6 +8,15 @@ import { User } from "@/models/user";
 import { deleteUser } from "./actions";
 import { Pencil, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("admin_user_detail.title"),
+    description: t("admin_user_detail.description"),
+  });
+}
 
 type Props = {
   params: Promise<{ id: string }>;

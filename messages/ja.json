@@ -85,6 +85,69 @@
       "token_min_length": "トークンは1文字以上で入力してください"
     }
   },
+  "Meta": {
+    "service_description": "TypeScript、Next.js、Tailwind CSS を備えたフルスタックテンプレート。認証・データベース・国際化が標準搭載。",
+    "landing": {
+      "title": "ホーム",
+      "description": "TypeScript Next Template の概要と特徴を紹介するランディングページ。"
+    },
+    "signin": {
+      "title": "ログイン",
+      "description": "登録済みアカウントにログインします。"
+    },
+    "signup": {
+      "title": "新規登録",
+      "description": "新しいアカウントを作成します。"
+    },
+    "forgot_password": {
+      "title": "パスワードをお忘れですか",
+      "description": "登録メールアドレス宛にパスワードリセットメールを送信します。"
+    },
+    "reset_password": {
+      "title": "パスワードリセット",
+      "description": "メールのリンクから遷移し、新しいパスワードを設定します。"
+    },
+    "verify_email": {
+      "title": "メール認証",
+      "description": "メールアドレスを認証してアカウントを有効化します。"
+    },
+    "verify_email_resend": {
+      "title": "認証メール再送",
+      "description": "認証メールを再送信します。"
+    },
+    "verify_email_pending": {
+      "title": "メール認証待ち",
+      "description": "受信した認証メールを確認し、リンクをクリックしてください。"
+    },
+    "dashboard": {
+      "title": "ダッシュボード",
+      "description": "アプリケーションの概要や最新情報を確認します。"
+    },
+    "settings": {
+      "title": "設定",
+      "description": "プロフィールやセキュリティ設定を管理します。"
+    },
+    "admin_dashboard": {
+      "title": "管理ダッシュボード",
+      "description": "管理者向けの概要ページです。"
+    },
+    "admin_users": {
+      "title": "ユーザー一覧",
+      "description": "管理画面でユーザーの一覧と管理を行います。"
+    },
+    "admin_user_detail": {
+      "title": "ユーザー詳細",
+      "description": "ユーザーの詳細情報を表示します。"
+    },
+    "admin_user_create": {
+      "title": "ユーザー作成",
+      "description": "新しいユーザーを作成します。"
+    },
+    "admin_user_edit": {
+      "title": "ユーザー編集",
+      "description": "既存ユーザーの情報を編集します。"
+    }
+  },
   "Landing": {
     "navigation": {
       "brand_name": "TypeScript Next Template",

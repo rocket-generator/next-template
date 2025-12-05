@@ -3,6 +3,16 @@ import { redirect } from "next/navigation";
 import { signInAction } from "./actions";
 import { SignInRequest } from "@/requests/signin_request";
 import { Success } from "@/constants/auth";
+import { getTranslations } from "next-intl/server";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("signin.title"),
+    description: t("signin.description"),
+  });
+}
 
 interface SignInPageProps {
   searchParams: Promise<{ callback_url?: string }>;

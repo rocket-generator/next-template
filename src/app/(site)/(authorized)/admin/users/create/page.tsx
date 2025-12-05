@@ -6,6 +6,15 @@ import { User } from "@/models/user";
 import { createUser } from "./actions";
 import { redirect } from "next/navigation";
 import { UserCreateRequest } from "@/requests/admin/user_create_request";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("admin_user_create.title"),
+    description: t("admin_user_create.description"),
+  });
+}
 
 export default async function Page() {
   const tMenu = await getTranslations("Menu.Admin");

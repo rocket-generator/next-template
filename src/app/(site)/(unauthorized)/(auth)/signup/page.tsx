@@ -3,6 +3,16 @@ import { redirect } from "next/navigation";
 import { signUpAction } from "./actions";
 import { SignUpRequest } from "@/requests/signup_request";
 import { Success, EmailVerificationRequired } from "@/constants/auth";
+import { getTranslations } from "next-intl/server";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("signup.title"),
+    description: t("signup.description"),
+  });
+}
 
 interface SignUpPageProps {
   searchParams: Promise<{ callback_url?: string }>;

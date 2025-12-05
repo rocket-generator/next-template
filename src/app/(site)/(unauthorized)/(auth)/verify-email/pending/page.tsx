@@ -1,5 +1,15 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { createMetadata } from "@/libraries/metadata";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("verify_email_pending.title"),
+    description: t("verify_email_pending.description"),
+  });
+}
 
 export default function EmailVerificationPendingPage() {
   const t = useTranslations("Auth");

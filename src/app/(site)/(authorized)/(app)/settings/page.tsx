@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { createMetadata } from "@/libraries/metadata";
 import { getCurrentUser } from "./actions";
 import AppPageHeader from "@/components/molecules/AppPageHeader";
 import { ProfileForm } from "@/components/organisms/ProfileForm";
@@ -11,6 +12,14 @@ import {
   TabsTrigger,
 } from "@/components/atoms/tabs";
 import { redirect } from "next/navigation";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Meta");
+  return createMetadata({
+    title: t("settings.title"),
+    description: t("settings.description"),
+  });
+}
 
 export default async function SettingsPage() {
   const tSettings = await getTranslations("Settings");

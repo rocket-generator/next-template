@@ -10,6 +10,7 @@ import { User } from "@/models/user";
 import { getTranslations } from "next-intl/server";
 import { signOutAction } from "./actions";
 import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
+import { SERVICE_NAME } from "@/constants/site";
 
 type Props = {
   children: React.ReactNode;
@@ -58,7 +59,7 @@ export default async function SiteLayout({ children }: Props) {
       <Suspense fallback={<div>Loading...</div>}>
         <AdminSidebar
           menuItems={menuItems}
-          title="Admin Panel"
+          title={`${SERVICE_NAME} Admin`}
           icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
           signInUser={me}
           onSignOut={signOutAction}
