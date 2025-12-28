@@ -1,4 +1,4 @@
-import { AuthService } from "@/services/auth_service";
+import { AuthService, EmailNotVerifiedError } from "@/services/auth_service";
 import { AuthRepositoryInterface } from "@/repositories/auth_repository";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
 import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
@@ -176,7 +176,7 @@ describe("AuthService", () => {
       mockVerifyPassword.mockResolvedValue(true);
 
       await expect(authService.signIn(request)).rejects.toThrow(
-        "Email not verified. Please check your email and verify your account."
+        EmailNotVerifiedError
       );
 
       // Clean up

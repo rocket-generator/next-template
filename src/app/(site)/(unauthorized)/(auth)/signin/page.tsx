@@ -2,7 +2,7 @@ import AuthSigninForm from "@/components/organisms/AuthSigninForm";
 import { redirect } from "next/navigation";
 import { signInAction } from "./actions";
 import { SignInRequest } from "@/requests/signin_request";
-import { Success } from "@/constants/auth";
+import { Success, EmailVerificationRequired } from "@/constants/auth";
 import { getTranslations } from "next-intl/server";
 import { createMetadata } from "@/libraries/metadata";
 
@@ -31,6 +31,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       } else {
         redirect("/dashboard");
       }
+    } else if (result === EmailVerificationRequired) {
+      redirect("/verify-email/pending");
     }
     return result;
   };

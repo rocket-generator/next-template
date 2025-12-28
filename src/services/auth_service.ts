@@ -21,6 +21,15 @@ import { PasswordReset } from "@/models/password_reset";
 import { EmailVerification } from "@/models/email_verification";
 import { getTranslations } from "next-intl/server";
 
+export class EmailNotVerifiedError extends Error {
+  constructor(
+    message: string = "Email not verified. Please check your email and verify your account."
+  ) {
+    super(message);
+    this.name = "EmailNotVerifiedError";
+  }
+}
+
 export class AuthService {
   constructor(
     private authRepository: AuthRepositoryInterface,
@@ -61,9 +70,7 @@ export class AuthService {
     // Check email verification if enabled
     console.log(user);
     if (this.isEmailVerificationEnabled() && !user.emailVerified) {
-      throw new Error(
-        "Email not verified. Please check your email and verify your account."
-      );
+      throw new EmailNotVerifiedError();
     }
 
     // Generate access token

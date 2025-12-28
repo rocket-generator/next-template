@@ -13,7 +13,7 @@ test.describe('認証機能', () => {
   test('/signin でサインインフォームが表示される', async ({ page }) => {
     await page.goto('/signin');
 
-    await expect(page).toHaveURL(/\/auth\/signin$/);
+    await expect(page).toHaveURL(/\/signin$/);
 
     await expect(page.locator('[data-testid="email-input"]')).toBeVisible();
     await expect(page.locator('[data-testid="password-input"]')).toBeVisible();
@@ -23,7 +23,7 @@ test.describe('認証機能', () => {
   test('admin@example.com / password でダッシュボードに遷移する', async ({ page }) => {
     await page.goto('/signin');
 
-    await expect(page).toHaveURL(/\/auth\/signin$/);
+    await expect(page).toHaveURL(/\/signin$/);
 
     await page.fill('[data-testid="email-input"]', 'admin@example.com');
     await page.fill('[data-testid="password-input"]', 'password');

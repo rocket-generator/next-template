@@ -11,7 +11,7 @@ import {
 import { UserRepository } from "@/repositories/user_repository";
 import { PasswordResetRepository } from "@/repositories/password_reset_repository";
 import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
-import { AuthService } from "@/services/auth_service";
+import { AuthService, EmailNotVerifiedError } from "@/services/auth_service";
 
 export async function signInAction(
   rawInput: SignInRequest
@@ -64,6 +64,9 @@ export async function signInAction(
 
     return InvalidCredentials;
   } catch (error) {
+    if (error instanceof EmailNotVerifiedError) {
+      return EmailVerificationRequired;
+    }
     console.error("Sign in error:", error);
     // 予期せぬエラーの場合も InvalidCredentials を返す
     return InvalidCredentials;

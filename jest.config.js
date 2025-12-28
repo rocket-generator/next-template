@@ -13,6 +13,7 @@ const config = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^next-intl/server$": "<rootDir>/__mocks__/next-intl-server.js",
   },
   collectCoverage: true,
   coverageDirectory: "coverage",
@@ -24,7 +25,7 @@ const config = {
   ],
   // ESM モジュールの変換を設定
   transformIgnorePatterns: [
-    "node_modules/(?!(better-auth|@better-fetch/fetch)/)"
+    "node_modules/(?!(better-auth|@better-fetch/fetch|next-intl)/)",
   ],
   // ESM サポートを有効化
   extensionsToTreatAsEsm: [".ts", ".tsx"],

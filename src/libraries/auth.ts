@@ -303,6 +303,13 @@ function mapErrorMessage(message: string): SignInErrorCode {
   if (upper.includes("EMAIL AND PASSWORD IS NOT ENABLED")) {
     return "configuration";
   }
+  if (
+    upper.includes("FAILED_TO_GET_SESSION") ||
+    upper.includes("SESSION_NOT_FOUND") ||
+    upper.includes("USER_NOT_FOUND")
+  ) {
+    return "configuration";
+  }
   return "unknown";
 }
 
@@ -429,12 +436,36 @@ export async function syncCredentialAccount(params: {
   });
 }
 
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+async function findSessionByToken(
+  token: string,
+  attempts: number = 3,
+  delayMs: number = 50
+) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const session = await prisma.session.findUnique({
+      where: { token },
+    });
+    if (session) {
+      return session;
+    }
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return null;
+}
+
 export async function establishSession(
   options: EstablishSessionOptions
 ): Promise<AppSession | null> {
   const headers = await buildHeaders(options.headers);
 
-  await authInstance.api.signInEmail({
+  const signInResponse = await authInstance.api.signInEmail({
     headers,
     body: {
       email: options.email,
@@ -443,19 +474,70 @@ export async function establishSession(
     },
   });
 
-  const session = await auth({ headers });
-  if (session?.sessionToken) {
-    try {
-      await prisma.session.update({
-        where: { token: session.sessionToken },
-        data: {
-          accessToken: options.accessToken ?? null,
-          permissions: options.permissions ?? [],
-        },
-      });
-    } catch (error) {
-      console.error("Failed to persist session metadata", error);
-    }
+  const sessionToken = signInResponse?.token;
+  if (!sessionToken) {
+    console.warn("[better-auth] signInEmail response missing token", {
+      userId: signInResponse?.user?.id,
+      email: options.email,
+    });
+    throw new Error("FAILED_TO_GET_SESSION");
+  }
+
+  const sessionRecord = await findSessionByToken(sessionToken);
+  if (!sessionRecord) {
+    console.warn("[better-auth] session not found after signInEmail", {
+      token: sessionToken,
+      userId: signInResponse?.user?.id,
+    });
+    throw new Error("SESSION_NOT_FOUND");
+  }
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: sessionRecord.userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      permissions: true,
+    },
+  });
+
+  if (!userRecord) {
+    console.warn("[better-auth] user not found for session", {
+      userId: sessionRecord.userId,
+      token: sessionToken,
+    });
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  const sessionPermissions = normalizeStringArray(options.permissions ?? []);
+  const userPermissions = normalizeStringArray(userRecord.permissions);
+  const combinedPermissions = Array.from(
+    new Set([...sessionPermissions, ...userPermissions])
+  );
+
+  const session: AppSession = {
+    user: {
+      id: userRecord.id,
+      email: userRecord.email ?? undefined,
+      name: userRecord.name ?? undefined,
+      permissions: combinedPermissions,
+    },
+    accessToken: options.accessToken ?? sessionRecord.accessToken ?? undefined,
+    expiresAt: sessionRecord.expiresAt,
+    sessionToken: sessionRecord.token,
+  };
+
+  try {
+    await prisma.session.update({
+      where: { token: sessionRecord.token },
+      data: {
+        accessToken: options.accessToken ?? null,
+        permissions: sessionPermissions,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to persist session metadata", error);
   }
 
   return session;
