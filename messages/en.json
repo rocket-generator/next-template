@@ -371,7 +371,7 @@
   "Settings": {
     "title": "Settings",
     "profile": "Profile",
-    "security": "Security",
+    "password": "Password",
     "avatar": "Avatar",
     "profile_updated": "Profile updated successfully",
     "password_updated": "Password updated successfully",

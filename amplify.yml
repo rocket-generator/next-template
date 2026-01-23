@@ -1,0 +1,28 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci --cache .npm --prefer-offline
+        build:
+          commands:
+            - rm -rf amplify-compute-bundle-output
+            - echo "BETTER_AUTH_BASE_URL=$BETTER_AUTH_BASE_URL" >> .env
+            - echo "BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET" >> .env
+            - echo "NEXT_PUBLIC_BETTER_AUTH_BASE_PATH=$NEXT_PUBLIC_BETTER_AUTH_BASE_PATH" >> .env
+            - echo "NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=$NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL" >> .env
+            - echo "NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=$NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL" >> .env
+            - echo "DATABASE_URL=$DATABASE_URL" >> .env
+            - echo "ENABLE_EMAIL_VERIFICATION=$ENABLE_EMAIL_VERIFICATION" >> .env
+            - rm -rf .next
+            - npx prisma generate        
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - .npm/**/*
+    appRoot: code

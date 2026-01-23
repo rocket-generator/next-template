@@ -1,5 +1,5 @@
 import Pagination from "@/components/molecules/Pagination";
-import { Pencil, Eye, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
+import { Pencil, Eye, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/libraries/css";
 import Link from "next/link";
 import DataTextItem from "@/components/molecules/DataTextItem";
@@ -42,6 +42,47 @@ export default function CRUDTable({
   query = "",
   ...props
 }: Props) {
+  const getAlignment = (column: ColumnStructure) => {
+    const optionAlign = column.options?.align;
+    if (
+      optionAlign === "left" ||
+      optionAlign === "center" ||
+      optionAlign === "right"
+    ) {
+      return optionAlign;
+    }
+    switch (column.type) {
+      case "number":
+        return "right";
+      case "boolean":
+        return "center";
+      default:
+        return "left";
+    }
+  };
+
+  const getTextAlignClass = (align: string) => {
+    switch (align) {
+      case "right":
+        return "text-right";
+      case "center":
+        return "text-center";
+      default:
+        return "text-left";
+    }
+  };
+
+  const getJustifyClass = (align: string) => {
+    switch (align) {
+      case "right":
+        return "justify-end";
+      case "center":
+        return "justify-center";
+      default:
+        return "justify-start";
+    }
+  };
+
   const getSortLink = (key: string) => {
     const newDirection = order === key && direction === "asc" ? "desc" : "asc";
     const params = new URLSearchParams({
@@ -69,8 +110,10 @@ export default function CRUDTable({
                     {props.structure.map((column, index) => {
                       const isSortable = column.isSortable ?? false;
                       const isSorted = order === column.key;
+                      const align = getAlignment(column);
                       const className = cn(
-                        "py-3.5 px-3 text-left text-sm font-semibold text-gray-900",
+                        "py-3.5 px-3 text-sm font-semibold text-gray-900",
+                        getTextAlignClass(align),
                         index === 0 ? "pl-4 sm:pl-6" : "",
                         isSortable ? "cursor-pointer hover:bg-gray-100" : ""
                       );
@@ -79,23 +122,39 @@ export default function CRUDTable({
                           scope="col"
                           className={className}
                           key={"head-" + column.key}
+                          data-testid={`datatable-header-${column.key}`}
                         >
                           {isSortable ? (
                             <Link
                               href={getSortLink(column.key)}
-                              className="flex items-center group"
+                              className={cn(
+                                "flex items-center gap-1 group w-full",
+                                getJustifyClass(align)
+                              )}
                             >
                               {column.name}
-                              <span className="ml-2">
-                                {isSorted ? (
-                                  direction === "asc" ? (
-                                    <ChevronUp className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4" />
-                                  )
-                                ) : (
-                                  <ArrowUpDown className="h-4 w-4 text-gray-400 group-hover:text-gray-500" />
-                                )}
+                              <span
+                                className="ml-1 inline-flex flex-col items-center -space-y-1"
+                                data-testid={`datatable-sort-${column.key}`}
+                              >
+                                <ArrowUp
+                                  data-testid={`datatable-sort-up-${column.key}`}
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    isSorted && direction === "asc"
+                                      ? "text-gray-900"
+                                      : "text-gray-400"
+                                  )}
+                                />
+                                <ArrowDown
+                                  data-testid={`datatable-sort-down-${column.key}`}
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    isSorted && direction === "desc"
+                                      ? "text-gray-900"
+                                      : "text-gray-400"
+                                  )}
+                                />
                               </span>
                             </Link>
                           ) : (
@@ -121,8 +180,10 @@ export default function CRUDTable({
                         className="divide-x divide-gray-200"
                       >
                         {props.structure.map((column, colIndex) => {
+                          const align = getAlignment(column);
                           const className = cn(
                             "whitespace-nowrap py-1 text-sm text-gray-500",
+                            getTextAlignClass(align),
                             colIndex === 0 ? "pl-4 pr-3 sm:pl-6" : "px-3"
                           );
                           if (column.type == "link") {
@@ -130,6 +191,7 @@ export default function CRUDTable({
                               <td
                                 className={className}
                                 key={"column-" + column.key}
+                                data-testid={`datatable-cell-${record.id}-${column.key}`}
                               >
                                 <DataLinkItem
                                   className={className}
@@ -146,6 +208,7 @@ export default function CRUDTable({
                               <td
                                 className={className}
                                 key={"column-" + column.key}
+                                data-testid={`datatable-cell-${record.id}-${column.key}`}
                               >
                                 <DataDateTimeItem
                                   className={className}
@@ -162,6 +225,7 @@ export default function CRUDTable({
                               <td
                                 className={className}
                                 key={"column-" + column.key}
+                                data-testid={`datatable-cell-${record.id}-${column.key}`}
                               >
                                 <div
                                   className={`text-${
@@ -177,6 +241,7 @@ export default function CRUDTable({
                               <td
                                 className={className}
                                 key={"column-" + column.key}
+                                data-testid={`datatable-cell-${record.id}-${column.key}`}
                               >
                                 <DataTextItem
                                   className={className}

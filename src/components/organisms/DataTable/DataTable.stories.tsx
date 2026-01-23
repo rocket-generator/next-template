@@ -80,7 +80,7 @@ const userTableStructure = [
     options: {},
     isSortable: false,
   },
-  { name: "年齢", key: "age", type: "text", options: {}, isSortable: true },
+  { name: "年齢", key: "age", type: "number", options: {}, isSortable: true },
   {
     name: "入社日",
     key: "joinDate",
@@ -161,7 +161,7 @@ const productTableStructure = [
   {
     name: "価格",
     key: "price",
-    type: "text",
+    type: "number",
     options: { suffix: "円" },
     isSortable: true,
   },

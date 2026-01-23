@@ -4,8 +4,12 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
-  serverExternalPackages: ['nodemailer'],
+  serverExternalPackages: [],
+  transpilePackages: [
+    '@aws-sdk/client-s3',
+    '@aws-sdk/client-ses',
+    '@aws-sdk/s3-request-presigner',
+  ],
   images: {
     remotePatterns: [
       // LocalStack (Development)
@@ -38,6 +42,20 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/admin',
+        destination: '/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/admin/:path*',
+        destination: '/:path*',
+        permanent: true,
+      },
+    ];
   },
 };
 

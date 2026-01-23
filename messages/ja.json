@@ -371,7 +371,7 @@
   "Settings": {
     "title": "設定",
     "profile": "プロフィール",
-    "security": "セキュリティ",
+    "password": "パスワード",
     "avatar": "アバター画像",
     "profile_updated": "プロフィールが更新されました",
     "password_updated": "パスワードが更新されました",

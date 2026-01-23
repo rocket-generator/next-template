@@ -24,6 +24,7 @@ export async function generateMetadata() {
 export default async function SettingsPage() {
   const tSettings = await getTranslations("Settings");
   const tMenu = await getTranslations("Menu.App");
+  const showAvatarSetting = process.env.ENABLE_AVATAR_SETTING === "true";
 
   // 現在のユーザー情報を取得
   const user = await getCurrentUser();
@@ -46,10 +47,16 @@ export default async function SettingsPage() {
 
       <main className="mx-auto max-w-4xl px-4 pb-8">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList
+            className={`grid w-full ${
+              showAvatarSetting ? "grid-cols-3" : "grid-cols-2"
+            }`}
+          >
             <TabsTrigger value="profile">{tSettings("profile")}</TabsTrigger>
-            <TabsTrigger value="security">{tSettings("security")}</TabsTrigger>
-            <TabsTrigger value="avatar">{tSettings("avatar")}</TabsTrigger>
+            <TabsTrigger value="password">{tSettings("password")}</TabsTrigger>
+            {showAvatarSetting && (
+              <TabsTrigger value="avatar">{tSettings("avatar")}</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -61,26 +68,28 @@ export default async function SettingsPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="security" className="space-y-6">
+          <TabsContent value="password" className="space-y-6">
             <div className="rounded-lg bg-white p-6 shadow-sm">
               <h2 className="mb-6 text-lg font-semibold text-gray-900">
-                {tSettings("security")}
+                {tSettings("password")}
               </h2>
               <PasswordChangeForm />
             </div>
           </TabsContent>
 
-          <TabsContent value="avatar" className="space-y-6">
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="mb-6 text-lg font-semibold text-gray-900">
-                {tSettings("avatar")}
-              </h2>
-              <AvatarUpload
-                initialAvatarUrl={user.avatarUrl}
-                userName={user.name}
-              />
-            </div>
-          </TabsContent>
+          {showAvatarSetting && (
+            <TabsContent value="avatar" className="space-y-6">
+              <div className="rounded-lg bg-white p-6 shadow-sm">
+                <h2 className="mb-6 text-lg font-semibold text-gray-900">
+                  {tSettings("avatar")}
+                </h2>
+                <AvatarUpload
+                  initialAvatarUrl={user.avatarUrl}
+                  userName={user.name}
+                />
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>
