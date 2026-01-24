@@ -134,7 +134,7 @@ export default function CRUDTable({
                             >
                               {column.name}
                               <span
-                                className="ml-1 inline-flex flex-col items-center -space-y-1"
+                                className="ml-1 inline-flex items-center -space-x-2"
                                 data-testid={`datatable-sort-${column.key}`}
                               >
                                 <ArrowUp

@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
+import { Users, Home, CheckCircle } from "lucide-react";
 
 import AdminSidebar from "@/components/organisms/AdminSidebar";
 import AdminFooter from "@/components/organisms/AdminFooter";
@@ -44,16 +44,6 @@ export default async function SiteLayout({ children }: Props) {
       href: "/admin/users",
     },
     /* [REGISTER_MENU_ITEMS] */
-    {
-      icon: <BarChart2 className="h-4 w-4" />,
-      label: t("statistics"),
-      href: "/admin/statistics",
-    },
-    {
-      icon: <Settings className="h-4 w-4" />,
-      label: t("settings"),
-      href: "/admin/settings",
-    },
   ];
   return (
     <SidebarProvider>

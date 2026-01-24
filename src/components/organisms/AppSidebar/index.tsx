@@ -3,7 +3,7 @@
 import React from "react";
 import { Settings, LogOut, ShieldCheck, User as UserIcon } from "lucide-react";
 import { User as UserModel } from "@/models/user";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Sidebar,
@@ -30,6 +30,24 @@ import { Avatar, AvatarFallback } from "@/components/atoms/avatar";
 import { CheckCircle } from "lucide-react";
 import LanguageSwitcher from "@/components/molecules/LanguageSwitcher";
 
+const normalizePath = (path: string) => {
+  if (!path || path === "/") {
+    return "/";
+  }
+  return path.replace(/\/+$/, "");
+};
+
+const isActivePath = (pathname: string, href: string) => {
+  const currentPath = normalizePath(pathname);
+  const targetPath = normalizePath(href);
+
+  if (targetPath === "/") {
+    return currentPath === "/";
+  }
+
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+};
+
 export type MenuItem = {
   icon: React.ReactNode;
   label: string;
@@ -52,6 +70,7 @@ export default function AppSidebar({
   onSignOut,
 }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations("Common");
   const { state } = useSidebar();
   const hasAdminPermission =
@@ -95,16 +114,22 @@ export default function AppSidebar({
           <SidebarGroupLabel>{t("application")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.href}>
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const active = isActivePath(pathname, item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <a
+                        href={item.href}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

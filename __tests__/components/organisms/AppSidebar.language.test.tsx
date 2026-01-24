@@ -4,6 +4,8 @@ import "@testing-library/jest-dom";
 import AppSidebar from "@/components/organisms/AppSidebar";
 import { SidebarProvider } from "@/components/atoms/sidebar";
 
+const mockUsePathname = jest.fn();
+
 jest.mock("@/components/molecules/LanguageSwitcher", () => ({
   __esModule: true,
   default: ({
@@ -33,6 +35,7 @@ jest.mock("next/navigation", () => ({
     replace: jest.fn(),
     prefetch: jest.fn(),
   }),
+  usePathname: mockUsePathname,
 }));
 
 // Mock next-intl
@@ -73,6 +76,10 @@ describe("AppSidebar Language Switcher", () => {
     icon: undefined as React.ReactNode | undefined,
     onSignOut: jest.fn(),
   };
+
+  beforeEach(() => {
+    mockUsePathname.mockReturnValue("/");
+  });
 
   it("should render language switcher with Japanese when user language is ja", () => {
     const user = { ...baseUser, language: "ja" } as User;

@@ -2279,6 +2279,62 @@ alwaysApply: true
 
 このガイドラインに従って、一貫性があり、メンテナンスしやすく、パフォーマンスの高いアプリケーションを構築してください。
 
+## 7. サイドメニューの選択項目を太字にする方法
+
+-   **対象コンポーネント**: `src/components/organisms/AppSidebar/index.tsx` / `src/components/organisms/AdminSidebar/index.tsx`
+-   **基本方針**: `next/navigation` の `usePathname()` で現在パスを取得し、`href` との前方一致でアクティブ判定を行う。配下ページ（例: `/admin/users/123`）でも親メニューをアクティブにする。
+
+### 7.1. アクティブ判定の実装例
+
+```ts
+const normalizePath = (path: string) => {
+  if (!path || path === "/") return "/";
+  return path.replace(/\/+$/, "");
+};
+
+const isActivePath = (pathname: string, href: string) => {
+  const currentPath = normalizePath(pathname);
+  const targetPath = normalizePath(href);
+
+  if (targetPath === "/") {
+    return currentPath === "/";
+  }
+
+  return (
+    currentPath === targetPath || currentPath.startsWith(`${targetPath}/`)
+  );
+};
+```
+
+### 7.2. メニュー描画側での利用例
+
+```tsx
+const pathname = usePathname();
+
+{menuItems.map((item) => {
+  const active = isActivePath(pathname, item.href);
+  return (
+    <SidebarMenuItem key={item.href}>
+      <SidebarMenuButton asChild isActive={active}>
+        <a href={item.href} aria-current={active ? "page" : undefined}>
+          {item.icon}
+          <span>{item.label}</span>
+        </a>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+})}
+```
+
+### 7.3. 太字スタイルの付与ルール
+
+-   `src/components/atoms/sidebar.tsx` の `SidebarMenuButton` / `SidebarMenuSubButton` に対し、`data-[active=true]:font-semibold` を付与する。
+-   既存の `data-[active=true]` スタイル（背景色など）に追加する形で運用し、レイアウト崩れがないか確認する。
+
+### 7.4. テスト更新の注意
+
+-   `usePathname` をモックする必要があるため、`__tests__/components/organisms/AppSidebar.test.tsx` / `__tests__/components/organisms/AdminSidebar.test.tsx` などの `next/navigation` モックに `usePathname` を追加する。
+-   `/settings` と `/settings/profile` のように「完全一致」と「配下ページ」の両方で `data-active` が付くことを検証する。
 
 ---
 

@@ -5,6 +5,8 @@ import AdminSidebar from "@/components/organisms/AdminSidebar";
 import { SidebarProvider } from "@/components/atoms/sidebar";
 import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
 
+const mockUsePathname = jest.fn();
+
 // next-intlモック
 jest.mock("next-intl", () => ({
   useTranslations: jest.fn((namespace?: string) => (key: string) => {
@@ -80,6 +82,7 @@ jest.mock("next/navigation", () => ({
     replace: jest.fn(),
     prefetch: jest.fn(),
   }),
+  usePathname: mockUsePathname,
 }));
 
 // lucide-reactアイコンのモック
@@ -156,6 +159,7 @@ describe("AdminSidebar", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUsePathname.mockReturnValue("/admin/dashboard");
   });
 
   describe("Rendering", () => {
@@ -364,6 +368,26 @@ describe("AdminSidebar", () => {
 
       expect(screen.getByTestId("admin-settings-menu-item")).toHaveTextContent("Settings");
       expect(screen.getByTestId("admin-signout-menu-item")).toHaveTextContent("Sign Out");
+    });
+  });
+
+  describe("Active states", () => {
+    it("should mark active item on exact match", () => {
+      mockUsePathname.mockReturnValue("/admin/users");
+      renderWithProvider();
+
+      const usersLink = screen.getByTestId("admin-menu-button-users").closest("a");
+      const dashboardLink = screen.getByTestId("admin-menu-button-dashboard").closest("a");
+      expect(usersLink).toHaveAttribute("data-active", "true");
+      expect(dashboardLink).not.toHaveAttribute("data-active", "true");
+    });
+
+    it("should keep active on nested path", () => {
+      mockUsePathname.mockReturnValue("/admin/users/123");
+      renderWithProvider();
+
+      const usersLink = screen.getByTestId("admin-menu-button-users").closest("a");
+      expect(usersLink).toHaveAttribute("data-active", "true");
     });
   });
 });

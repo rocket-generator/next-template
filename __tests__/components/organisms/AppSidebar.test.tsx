@@ -7,8 +7,11 @@ import { SidebarProvider } from "@/components/atoms/sidebar";
 import { User } from "@/models/user";
 import { useRouter } from "next/navigation";
 
+const mockUsePathname = jest.fn();
+
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
+  usePathname: mockUsePathname,
 }));
 
 jest.mock("next-intl", () => ({
@@ -107,6 +110,7 @@ describe("AppSidebar", () => {
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
     mockPush.mockClear();
     mockOnSignOut.mockClear();
+    mockUsePathname.mockReturnValue("/dashboard");
     delete (window as any).location;
     (window as any).location = {
       ...originalLocation,
@@ -176,6 +180,24 @@ describe("AppSidebar", () => {
   it("renders empty menu items without crashing", () => {
     renderSidebar({ menuItems: [] });
     expect(screen.getByText("アプリケーション")).toBeInTheDocument();
+  });
+
+  it("marks menu item active on exact match", () => {
+    mockUsePathname.mockReturnValue("/settings");
+    renderSidebar();
+
+    const settingsLink = screen.getByRole("link", { name: "設定" });
+    const dashboardLink = screen.getByRole("link", { name: "ダッシュボード" });
+    expect(settingsLink).toHaveAttribute("data-active", "true");
+    expect(dashboardLink).not.toHaveAttribute("data-active", "true");
+  });
+
+  it("marks parent menu item active on nested path", () => {
+    mockUsePathname.mockReturnValue("/settings/profile");
+    renderSidebar();
+
+    const settingsLink = screen.getByRole("link", { name: "設定" });
+    expect(settingsLink).toHaveAttribute("data-active", "true");
   });
 
   it("shows admin link when user has admin permission and navigates to admin dashboard", () => {

@@ -3,7 +3,7 @@
 import React from "react";
 import { CheckCircle, Settings, LogOut, User as UserIcon } from "lucide-react";
 import { User as UserModel } from "@/models/user";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Sidebar,
@@ -29,6 +29,24 @@ import {
 import { Avatar, AvatarFallback } from "@/components/atoms/avatar";
 import LanguageSwitcher from "@/components/molecules/LanguageSwitcher";
 
+const normalizePath = (path: string) => {
+  if (!path || path === "/") {
+    return "/";
+  }
+  return path.replace(/\/+$/, "");
+};
+
+const isActivePath = (pathname: string, href: string) => {
+  const currentPath = normalizePath(pathname);
+  const targetPath = normalizePath(href);
+
+  if (targetPath === "/") {
+    return currentPath === "/";
+  }
+
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+};
+
 export type AdminMenuItem = {
   icon: React.ReactNode;
   label: string;
@@ -51,6 +69,7 @@ export default function AdminSidebar({
   onSignOut,
 }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations("Menu.Admin");
   const tCommon = useTranslations("Common");
   const { state } = useSidebar();
@@ -98,36 +117,34 @@ export default function AdminSidebar({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu data-testid="admin-sidebar-menu">
-              {menuItems.map((item) => (
-                <SidebarMenuItem
-                  key={item.href}
-                  data-testid={`admin-menu-item-${item.href.split("/").pop()}`}
-                >
-                  <SidebarMenuButton
-                    asChild
-                    data-testid={`admin-menu-button-${item.href
-                      .split("/")
-                      .pop()}`}
+              {menuItems.map((item) => {
+                const active = isActivePath(pathname, item.href);
+                const itemKey = item.href.split("/").pop();
+                return (
+                  <SidebarMenuItem
+                    key={item.href}
+                    data-testid={`admin-menu-item-${itemKey}`}
                   >
-                    <a href={item.href}>
-                      <span
-                        data-testid={`admin-menu-icon-${item.href
-                          .split("/")
-                          .pop()}`}
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      data-testid={`admin-menu-button-${itemKey}`}
+                    >
+                      <a
+                        href={item.href}
+                        aria-current={active ? "page" : undefined}
                       >
-                        {item.icon}
-                      </span>
-                      <span
-                        data-testid={`admin-menu-label-${item.href
-                          .split("/")
-                          .pop()}`}
-                      >
-                        {item.label}
-                      </span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                        <span data-testid={`admin-menu-icon-${itemKey}`}>
+                          {item.icon}
+                        </span>
+                        <span data-testid={`admin-menu-label-${itemKey}`}>
+                          {item.label}
+                        </span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
