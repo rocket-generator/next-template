@@ -31,25 +31,26 @@ export default async function SiteLayout({ children }: Props) {
     return notFound();
   }
   const t = await getTranslations("Menu.Admin");
+  const tCommon = await getTranslations("Common");
   const menuItems = [
     {
-      icon: <Home className="w-5 h-5" />,
+      icon: <Home className="h-4 w-4" />,
       label: t("dashboard"),
       href: "/admin/dashboard",
     },
     {
-      icon: <Users className="w-5 h-5" />,
+      icon: <Users className="h-4 w-4" />,
       label: t("users"),
       href: "/admin/users",
     },
     /* [REGISTER_MENU_ITEMS] */
     {
-      icon: <BarChart2 className="w-5 h-5" />,
+      icon: <BarChart2 className="h-4 w-4" />,
       label: t("statistics"),
       href: "/admin/statistics",
     },
     {
-      icon: <Settings className="w-5 h-5" />,
+      icon: <Settings className="h-4 w-4" />,
       label: t("settings"),
       href: "/admin/settings",
     },
@@ -60,15 +61,19 @@ export default async function SiteLayout({ children }: Props) {
         <AdminSidebar
           menuItems={menuItems}
           title={`${SERVICE_NAME} Admin`}
-          icon={<CheckCircle className="w-8 h-8 text-blue-600" />}
+          icon={<CheckCircle className="h-4 w-4 text-blue-600" />}
           signInUser={me}
           onSignOut={signOutAction}
         />
       </Suspense>
       <div className="flex-1 flex flex-col">
-        <div className="p-4 border-b">
-          <SidebarTrigger />
-        </div>
+        <header className="flex items-center gap-3 border-b px-4 py-3">
+          <SidebarTrigger
+            className="md:hidden"
+            label={tCommon("open_sidebar")}
+          />
+          <span className="text-lg font-semibold">{`${SERVICE_NAME} Admin`}</span>
+        </header>
         <main className="p-6 flex-grow">{children}</main>
         <AdminFooter />
       </div>

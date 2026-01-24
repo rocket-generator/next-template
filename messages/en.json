@@ -403,7 +403,9 @@
     "language": "Language",
     "japanese": "Japanese",
     "english": "English",
-    "application": "Application"
+    "application": "Application",
+    "open_sidebar": "Open sidebar",
+    "close_sidebar": "Close sidebar"
   },
   "Components": {
     "Pagination": {

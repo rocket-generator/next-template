@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Settings, LogOut } from "lucide-react";
+import { CheckCircle, Settings, LogOut, User as UserIcon } from "lucide-react";
 import { User as UserModel } from "@/models/user";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -16,7 +16,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/atoms/sidebar";
+import { cn } from "@/libraries/css";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,25 +53,41 @@ export default function AdminSidebar({
   const router = useRouter();
   const t = useTranslations("Menu.Admin");
   const tCommon = useTranslations("Common");
+  const { state } = useSidebar();
+  const triggerLabel =
+    state === "collapsed" ? tCommon("open_sidebar") : tCommon("close_sidebar");
+  const triggerTooltip =
+    state === "collapsed" ? tCommon("open_sidebar") : undefined;
 
   const handleSettings = () => {
     router.push("/settings");
   };
 
   return (
-    <Sidebar data-testid="admin-sidebar">
-      <SidebarHeader data-testid="admin-sidebar-header">
+    <Sidebar data-testid="admin-sidebar" collapsible="icon">
+      <SidebarHeader data-testid="admin-sidebar-header" className="p-2">
         <div
-          className="flex items-center gap-2 px-2"
+          className="group/header relative flex items-center gap-2 px-2"
           data-testid="admin-sidebar-title"
         >
-          {icon && <span data-testid="admin-sidebar-icon">{icon}</span>}
-          <span
-            className="text-xl font-semibold"
-            data-testid="admin-sidebar-title-text"
-          >
-            {title}
-          </span>
+          <div className="flex items-center gap-2">
+            <span data-testid="admin-sidebar-icon">
+              {icon || <CheckCircle className="h-4 w-4 text-blue-600" />}
+            </span>
+            <span className="sr-only" data-testid="admin-sidebar-title-text">
+              {title}
+            </span>
+          </div>
+          <SidebarTrigger
+            className={cn(
+              "absolute right-1 top-1/2 hidden -translate-y-1/2 md:inline-flex transition-opacity",
+              state === "collapsed"
+                ? "opacity-0 pointer-events-none group-hover/header:opacity-100 group-hover/header:pointer-events-auto"
+                : "opacity-100"
+            )}
+            label={triggerLabel}
+            tooltip={triggerTooltip}
+          />
         </div>
       </SidebarHeader>
 
@@ -134,14 +153,23 @@ export default function AdminSidebar({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton data-testid="admin-user-menu-trigger">
-                  <Avatar className="w-6 h-6" data-testid="admin-user-avatar">
-                    <AvatarFallback data-testid="admin-user-avatar-fallback">
-                      {signInUser?.name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span data-testid="admin-user-name">
-                    {signInUser?.name || "User"}
-                  </span>
+                  {state === "collapsed" ? (
+                    <UserIcon className="h-4 w-4" />
+                  ) : (
+                    <>
+                      <Avatar
+                        className="h-6 w-6"
+                        data-testid="admin-user-avatar"
+                      >
+                        <AvatarFallback data-testid="admin-user-avatar-fallback">
+                          {signInUser?.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span data-testid="admin-user-name">
+                        {signInUser?.name || "User"}
+                      </span>
+                    </>
+                  )}
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent

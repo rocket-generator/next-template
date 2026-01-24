@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
 import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
 import AdminSidebar from "./index";
-import { SidebarProvider } from "@/components/atoms/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
+import { SERVICE_NAME } from "@/constants/site";
 
 const meta = {
   title: "Organisms/AdminSidebar",
@@ -15,11 +16,19 @@ const meta = {
       <SidebarProvider>
         <div className="flex h-screen">
           <Story />
-          <div className="flex-1 p-4 bg-gray-50">
-            <h1>Main Content Area</h1>
-            <p>
-              This is the main content area to demonstrate the sidebar layout.
-            </p>
+          <div className="flex-1 bg-gray-50">
+            <header className="flex items-center gap-3 border-b px-4 py-3">
+              <SidebarTrigger className="md:hidden" label="サイドバーを開く" />
+              <span className="text-lg font-semibold">
+                {`${SERVICE_NAME} Admin`}
+              </span>
+            </header>
+            <div className="p-4">
+              <h1>Main Content Area</h1>
+              <p>
+                This is the main content area to demonstrate the sidebar layout.
+              </p>
+            </div>
           </div>
         </div>
       </SidebarProvider>
@@ -42,22 +51,22 @@ type Story = StoryObj<typeof meta>;
 
 const mockMenuItems = [
   {
-    icon: <Home className="w-5 h-5" />,
+    icon: <Home className="h-4 w-4" />,
     label: "ダッシュボード",
     href: "/admin/dashboard",
   },
   {
-    icon: <Users className="w-5 h-5" />,
+    icon: <Users className="h-4 w-4" />,
     label: "ユーザー",
     href: "/admin/users",
   },
   {
-    icon: <BarChart2 className="w-5 h-5" />,
+    icon: <BarChart2 className="h-4 w-4" />,
     label: "統計",
     href: "/admin/statistics",
   },
   {
-    icon: <Settings className="w-5 h-5" />,
+    icon: <Settings className="h-4 w-4" />,
     label: "設定",
     href: "/admin/settings",
   },
@@ -78,7 +87,7 @@ export const Default: Story = {
   args: {
     menuItems: mockMenuItems,
     title: "Admin Panel",
-    icon: <CheckCircle className="w-8 h-8 text-blue-600" />,
+    icon: <CheckCircle className="h-4 w-4 text-blue-600" />,
     signInUser: mockUser,
     onSignOut: () => console.log("Sign out clicked"),
   },
@@ -110,7 +119,7 @@ export const MinimalUser: Story = {
   args: {
     menuItems: mockMenuItems,
     title: "Admin Panel",
-    icon: <CheckCircle className="w-8 h-8 text-blue-600" />,
+    icon: <CheckCircle className="h-4 w-4 text-blue-600" />,
     signInUser: {
       id: "2",
       name: "A",
@@ -129,7 +138,7 @@ export const NoUser: Story = {
   args: {
     menuItems: mockMenuItems,
     title: "Admin Panel",
-    icon: <CheckCircle className="w-8 h-8 text-blue-600" />,
+    icon: <CheckCircle className="h-4 w-4 text-blue-600" />,
     signInUser: null,
     onSignOut: () => console.log("Sign out clicked"),
   },
@@ -140,18 +149,18 @@ export const FewMenuItems: Story = {
   args: {
     menuItems: [
       {
-        icon: <Home className="w-5 h-5" />,
+        icon: <Home className="h-4 w-4" />,
         label: "ダッシュボード",
         href: "/admin/dashboard",
       },
       {
-        icon: <Users className="w-5 h-5" />,
+        icon: <Users className="h-4 w-4" />,
         label: "ユーザー",
         href: "/admin/users",
       },
     ],
     title: "Simple Admin",
-    icon: <CheckCircle className="w-8 h-8 text-blue-600" />,
+    icon: <CheckCircle className="h-4 w-4 text-blue-600" />,
     signInUser: mockUser,
     onSignOut: () => console.log("Sign out clicked"),
   },
@@ -162,38 +171,38 @@ export const ManyMenuItems: Story = {
   args: {
     menuItems: [
       {
-        icon: <Home className="w-5 h-5" />,
+        icon: <Home className="h-4 w-4" />,
         label: "ダッシュボード",
         href: "/admin/dashboard",
       },
       {
-        icon: <Users className="w-5 h-5" />,
+        icon: <Users className="h-4 w-4" />,
         label: "ユーザー管理",
         href: "/admin/users",
       },
       {
-        icon: <BarChart2 className="w-5 h-5" />,
+        icon: <BarChart2 className="h-4 w-4" />,
         label: "統計とレポート",
         href: "/admin/statistics",
       },
       {
-        icon: <Settings className="w-5 h-5" />,
+        icon: <Settings className="h-4 w-4" />,
         label: "システム設定",
         href: "/admin/settings",
       },
       {
-        icon: <CheckCircle className="w-5 h-5" />,
+        icon: <CheckCircle className="h-4 w-4" />,
         label: "監査ログ",
         href: "/admin/audit",
       },
       {
-        icon: <Users className="w-5 h-5" />,
+        icon: <Users className="h-4 w-4" />,
         label: "権限管理",
         href: "/admin/permissions",
       },
     ],
     title: "Full Admin Panel",
-    icon: <CheckCircle className="w-8 h-8 text-blue-600" />,
+    icon: <CheckCircle className="h-4 w-4 text-blue-600" />,
     signInUser: mockUser,
     onSignOut: () => console.log("Sign out clicked"),
   },
@@ -204,7 +213,7 @@ export const LongTitle: Story = {
   args: {
     menuItems: mockMenuItems,
     title: "非常に長いタイトルの管理パネル",
-    icon: <CheckCircle className="w-8 h-8 text-blue-600" />,
+    icon: <CheckCircle className="h-4 w-4 text-blue-600" />,
     signInUser: mockUser,
     onSignOut: () => console.log("Sign out clicked"),
   },
@@ -215,7 +224,7 @@ export const LongUserName: Story = {
   args: {
     menuItems: mockMenuItems,
     title: "Admin Panel",
-    icon: <CheckCircle className="w-8 h-8 text-blue-600" />,
+    icon: <CheckCircle className="h-4 w-4 text-blue-600" />,
     signInUser: {
       id: "3",
       name: "非常に長い名前のユーザーさん",

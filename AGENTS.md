@@ -1,8 +1,7 @@
+日本語で回答すること
+通常タスクで該当 Skill/Subagent を積極的に探して使うこと
 
 # add-email-provider
-
-日本語で回答すること
-
 ---
 description: メール送信で、新しい送信プロバイダを追加する時に参照する
 alwaysApply: false

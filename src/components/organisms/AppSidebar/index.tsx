@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Settings, LogOut, ShieldCheck } from "lucide-react";
+import { Settings, LogOut, ShieldCheck, User as UserIcon } from "lucide-react";
 import { User as UserModel } from "@/models/user";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -16,7 +16,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/atoms/sidebar";
+import { cn } from "@/libraries/css";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,9 +53,13 @@ export default function AppSidebar({
 }: Props) {
   const router = useRouter();
   const t = useTranslations("Common");
+  const { state } = useSidebar();
   const hasAdminPermission =
     Array.isArray(signInUser?.permissions) &&
     signInUser?.permissions.includes("admin");
+  const triggerLabel =
+    state === "collapsed" ? t("open_sidebar") : t("close_sidebar");
+  const triggerTooltip = state === "collapsed" ? t("open_sidebar") : undefined;
 
   const handleSettings = () => {
     router.push("/settings");
@@ -63,11 +70,23 @@ export default function AppSidebar({
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-2">
-          {icon || <CheckCircle className="w-8 h-8 text-blue-600" />}
-          <span className="text-xl font-semibold">{title}</span>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="p-2">
+        <div className="group/header relative flex items-center gap-2 px-2">
+          <div className="flex items-center gap-2">
+            {icon || <CheckCircle className="h-4 w-4 text-blue-600" />}
+            <span className="sr-only">{title}</span>
+          </div>
+          <SidebarTrigger
+            className={cn(
+              "absolute right-1 top-1/2 hidden -translate-y-1/2 md:inline-flex transition-opacity",
+              state === "collapsed"
+                ? "opacity-0 pointer-events-none group-hover/header:opacity-100 group-hover/header:pointer-events-auto"
+                : "opacity-100"
+            )}
+            label={triggerLabel}
+            tooltip={triggerTooltip}
+          />
         </div>
       </SidebarHeader>
 
@@ -112,12 +131,18 @@ export default function AppSidebar({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <Avatar className="w-6 h-6">
-                    <AvatarFallback>
-                      {signInUser?.name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span>{signInUser?.name || "User"}</span>
+                  {state === "collapsed" ? (
+                    <UserIcon className="h-4 w-4" />
+                  ) : (
+                    <>
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback>
+                          {signInUser?.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{signInUser?.name || "User"}</span>
+                    </>
+                  )}
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
