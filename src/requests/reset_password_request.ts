@@ -72,7 +72,7 @@ export const passwordSchema = createPasswordSchema((key) => {
     "validation.password_min_length": "Password must be at least 8 characters",
     "validation.password_max_length": "Password must be at most 256 characters",
     "validation.password_complexity":
-      "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+      "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character (!@#$%^&*)",
   };
   return messages[key] || key;
 });
@@ -96,7 +96,7 @@ export const ResetPasswordRequestSchema = createResetPasswordRequestSchema(
       "validation.password_max_length":
         "Password must be at most 256 characters",
       "validation.password_complexity":
-        "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+        "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character (!@#$%^&*)",
       "validation.passwords_do_not_match": "Passwords do not match",
       "validation.token_required": "Token is required",
       "validation.token_min_length": "Token must be at least 1 character",

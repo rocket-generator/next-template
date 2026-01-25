@@ -74,7 +74,7 @@
       "password_required": "Password is required",
       "password_min_length": "Password must be at least 8 characters",
       "password_max_length": "Password must be at most 256 characters",
-      "password_complexity": "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+      "password_complexity": "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character (!@#$%^&*)",
       "passwords_do_not_match": "Passwords do not match",
       "new_passwords_do_not_match": "New passwords do not match",
       "current_password_required": "Current password is required",
@@ -389,6 +389,10 @@
       "current_password_required": "Current password is required",
       "new_password_required": "New password is required",
       "confirm_password_required": "Password confirmation is required",
+      "name_min_length": "Name must be at least 1 character",
+      "name_max_length": "Name must be at most 100 characters",
+      "email_required": "Email is required",
+      "email_invalid": "Please enter a valid email address",
       "new_passwords_do_not_match": "New passwords do not match",
       "invalid_current_password": "Current password is incorrect",
       "avatar_too_large": "File size too large (max 2MB)",
@@ -418,7 +422,10 @@
     "DataForm": {
       "cancel": "Cancel",
       "save": "Save",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "validation": {
+        "required": "{field} is required"
+      }
     }
   }
 }

@@ -3,7 +3,10 @@ import * as React from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { SignInRequest, SignInRequestSchema } from "@/requests/signin_request";
+import {
+  SignInRequest,
+  createSignInRequestSchema,
+} from "@/requests/signin_request";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,12 +27,20 @@ interface AuthSigninFormProps {
 export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
   const [, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
+  const tAuth = useTranslations("Auth");
+
+  // 国際化されたバリデーションスキーマを作成
+  const signInSchema = React.useMemo(
+    () => createSignInRequestSchema(tAuth),
+    [tAuth]
+  );
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignInRequest>({
-    resolver: zodResolver(SignInRequestSchema),
+    resolver: zodResolver(signInSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -65,8 +76,6 @@ export default function AuthSigninForm({ onSubmit }: AuthSigninFormProps) {
       }
     });
   };
-
-  const tAuth = useTranslations("Auth");
 
   return (
     <div className="w-full max-w-md space-y-8 p-10 bg-white rounded-xl shadow-md">

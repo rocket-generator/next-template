@@ -60,119 +60,124 @@ export default function DataForm<T extends Record<string, unknown>>({
       <div className="space-y-12">
         <div className="border-b border-gray-900/10 pb-12">
           <div className="mt-10 space-y-6">
-            {structure.map((field) => (
-              <div key={field.key} className="sm:col-span-6">
-                <Controller
-                  name={field.key as Path<T>}
-                  control={control}
-                  defaultValue={field.value as PathValue<T, Path<T>>}
-                  rules={{
-                    required:
-                      field.required && field.type !== "checkbox_multi"
-                        ? `${field.name}は必須です`
-                        : false,
-                  }}
-                  render={({
-                    field: { onChange, value },
-                    fieldState: { error },
-                  }) => {
-                    if (
-                      field.type === "text" ||
-                      field.type === "string" ||
-                      field.type === "number"
-                    ) {
-                      return (
-                        <DataTextInputField
-                          data_key={field.key}
-                          name={field.name}
-                          type="text"
-                          value={value as string}
-                          onChange={(e) => onChange(e.target.value)}
-                          placeholder={field.placeholder}
-                          required={field.required}
-                          disabled={isLoading}
-                          options={field.options}
-                          className={cn(
-                            error && "border-red-500 focus:ring-red-500"
-                          )}
-                        />
-                      );
-                    } else if (field.type === "password") {
-                      return (
-                        <DataTextInputField
-                          data_key={field.key}
-                          name={field.name}
-                          type="password"
-                          value={value as string}
-                          onChange={(e) => onChange(e.target.value)}
-                          placeholder={field.placeholder}
-                          required={field.required}
-                          disabled={isLoading}
-                          options={field.options}
-                          className={cn(
-                            error && "border-red-500 focus:ring-red-500"
-                          )}
-                        />
-                      );
-                    } else if (field.type === "select_single") {
-                      return (
-                        <DataSelectInputField
-                          data_key={field.key}
-                          name={field.name}
-                          value={value as string}
-                          onChange={onChange}
-                          placeholder={field.placeholder}
-                          required={field.required}
-                          options={field.options}
-                          disabled={isLoading}
-                          className={cn(
-                            error && "border-red-500 focus:ring-red-500"
-                          )}
-                        />
-                      );
-                    } else if (field.type === "checkbox_multi") {
-                      return (
-                        <DataCheckboxMultiInputField
-                          data_key={field.key}
-                          name={field.name}
-                          value={Array.isArray(value) ? value : []}
-                          onChange={(newValue) => {
-                            onChange(newValue.length === 0 ? [] : newValue);
-                          }}
-                          placeholder={field.placeholder}
-                          required={field.required}
-                          options={field.options}
-                          disabled={isLoading}
-                          className={cn(
-                            error && "border-red-500 focus:ring-red-500"
-                          )}
-                        />
-                      );
-                    } else if (field.type === "datetime") {
-                      return (
-                        <DataDateTimeInputField
-                          data_key={field.key}
-                          name={field.name}
-                          value={value as number}
-                          onChange={(e) => onChange(e.target.value)}
-                          placeholder={field.placeholder}
-                          required={field.required}
-                          disabled={isLoading}
-                          options={field.options}
-                        />
-                      );
-                    }
-                    return <div>Invalid field type</div>;
-                  }}
-                />
-                {errors[field.key as string] && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {((errors[field.key as string] as FieldError)
-                      ?.message as string) || `${field.name}は必須です`}
-                  </p>
-                )}
-              </div>
-            ))}
+            {structure.map((field) => {
+              const requiredMessage = t("validation.required", {
+                field: field.name,
+              });
+              return (
+                <div key={field.key} className="sm:col-span-6">
+                  <Controller
+                    name={field.key as Path<T>}
+                    control={control}
+                    defaultValue={field.value as PathValue<T, Path<T>>}
+                    rules={{
+                      required:
+                        field.required && field.type !== "checkbox_multi"
+                          ? requiredMessage
+                          : false,
+                    }}
+                    render={({
+                      field: { onChange, value },
+                      fieldState: { error },
+                    }) => {
+                      if (
+                        field.type === "text" ||
+                        field.type === "string" ||
+                        field.type === "number"
+                      ) {
+                        return (
+                          <DataTextInputField
+                            data_key={field.key}
+                            name={field.name}
+                            type="text"
+                            value={value as string}
+                            onChange={(e) => onChange(e.target.value)}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            disabled={isLoading}
+                            options={field.options}
+                            className={cn(
+                              error && "border-red-500 focus:ring-red-500"
+                            )}
+                          />
+                        );
+                      } else if (field.type === "password") {
+                        return (
+                          <DataTextInputField
+                            data_key={field.key}
+                            name={field.name}
+                            type="password"
+                            value={value as string}
+                            onChange={(e) => onChange(e.target.value)}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            disabled={isLoading}
+                            options={field.options}
+                            className={cn(
+                              error && "border-red-500 focus:ring-red-500"
+                            )}
+                          />
+                        );
+                      } else if (field.type === "select_single") {
+                        return (
+                          <DataSelectInputField
+                            data_key={field.key}
+                            name={field.name}
+                            value={value as string}
+                            onChange={onChange}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            options={field.options}
+                            disabled={isLoading}
+                            className={cn(
+                              error && "border-red-500 focus:ring-red-500"
+                            )}
+                          />
+                        );
+                      } else if (field.type === "checkbox_multi") {
+                        return (
+                          <DataCheckboxMultiInputField
+                            data_key={field.key}
+                            name={field.name}
+                            value={Array.isArray(value) ? value : []}
+                            onChange={(newValue) => {
+                              onChange(newValue.length === 0 ? [] : newValue);
+                            }}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            options={field.options}
+                            disabled={isLoading}
+                            className={cn(
+                              error && "border-red-500 focus:ring-red-500"
+                            )}
+                          />
+                        );
+                      } else if (field.type === "datetime") {
+                        return (
+                          <DataDateTimeInputField
+                            data_key={field.key}
+                            name={field.name}
+                            value={value as number}
+                            onChange={(e) => onChange(e.target.value)}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            disabled={isLoading}
+                            options={field.options}
+                          />
+                        );
+                      }
+                      return <div>Invalid field type</div>;
+                    }}
+                  />
+                  {errors[field.key as string] && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {((errors[field.key as string] as FieldError)
+                        ?.message as string) || requiredMessage}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

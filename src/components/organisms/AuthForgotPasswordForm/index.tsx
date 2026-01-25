@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ForgotPasswordRequest,
-  ForgotPasswordRequestSchema,
+  createForgotPasswordRequestSchema,
 } from "@/requests/forgot_password_request";
 import { InvalidInput } from "@/constants/auth";
 import { cn } from "@/libraries/css";
@@ -31,12 +31,18 @@ export default function AuthForgotPasswordForm({
   const [isLoading, setIsLoading] = React.useState(false);
   const tAuth = useTranslations("Auth");
 
+  // 国際化されたバリデーションスキーマを作成
+  const forgotPasswordSchema = React.useMemo(
+    () => createForgotPasswordRequestSchema(tAuth),
+    [tAuth]
+  );
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<ForgotPasswordRequest>({
-    resolver: zodResolver(ForgotPasswordRequestSchema),
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: "",
     },

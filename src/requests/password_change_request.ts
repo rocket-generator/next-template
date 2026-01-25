@@ -34,7 +34,7 @@ export const PasswordChangeRequestSchema = createPasswordChangeRequestSchema(
       "validation.password_min_length": "password_min_length",
       "validation.password_max_length": "password_max_length",
       "validation.password_complexity":
-        "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+        "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character (!@#$%^&*)",
       "validation.confirm_password_required": "confirm_password_required",
       "validation.new_passwords_do_not_match": "new_passwords_do_not_match",
     };

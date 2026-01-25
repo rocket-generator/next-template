@@ -70,7 +70,7 @@ export const passwordSchema = createPasswordSchema((key) => {
     "validation.password_min_length": "Password must be at least 8 characters",
     "validation.password_max_length": "Password must be at most 256 characters",
     "validation.password_complexity":
-      "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+      "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character (!@#$%^&*)",
   };
   return messages[key] || key;
 });
@@ -91,7 +91,7 @@ export const SignUpRequestSchema = createSignUpRequestSchema((key) => {
     "validation.password_min_length": "Password must be at least 8 characters",
     "validation.password_max_length": "Password must be at most 256 characters",
     "validation.password_complexity":
-      "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character",
+      "Password must contain at least 8 characters, including one uppercase, one lowercase, one number and one special character (!@#$%^&*)",
     "validation.passwords_do_not_match": "Passwords do not match",
     "validation.name_required": "Name is required",
     "validation.name_min_length": "Name must be at least 1 character",

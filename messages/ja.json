@@ -74,7 +74,7 @@
       "password_required": "パスワードは必須です",
       "password_min_length": "パスワードは8文字以上で入力してください",
       "password_max_length": "パスワードは256文字以内で入力してください", 
-      "password_complexity": "パスワードは8文字以上で、大文字・小文字・数字・特殊文字をそれぞれ1文字以上含む必要があります",
+      "password_complexity": "パスワードは8文字以上で、大文字・小文字・数字・特殊文字（!@#$%^&*）をそれぞれ1文字以上含む必要があります",
       "passwords_do_not_match": "パスワードが一致しません",
       "new_passwords_do_not_match": "新しいパスワードが一致しません",
       "current_password_required": "現在のパスワードは必須です",
@@ -389,6 +389,10 @@
       "current_password_required": "現在のパスワードは必須です",
       "new_password_required": "新しいパスワードは必須です",
       "confirm_password_required": "パスワード確認は必須です",
+      "name_min_length": "名前は1文字以上で入力してください",
+      "name_max_length": "名前は100文字以内で入力してください",
+      "email_required": "メールアドレスは必須です",
+      "email_invalid": "有効なメールアドレスを入力してください",
       "new_passwords_do_not_match": "新しいパスワードが一致しません",
       "invalid_current_password": "現在のパスワードが正しくありません",
       "avatar_too_large": "ファイルサイズが大きすぎます（2MB以下）",
@@ -418,7 +422,10 @@
     "DataForm": {
       "save": "保存",
       "cancel": "キャンセル",
-      "saving": "保存中..."
+      "saving": "保存中...",
+      "validation": {
+        "required": "{field}は必須です"
+      }
     }
   }
 }
