@@ -8,6 +8,7 @@ applications:
         build:
           commands:
             - rm -rf amplify-compute-bundle-output
+            - echo "AUTH_SECRET=$AUTH_SECRET" >> .env
             - echo "BETTER_AUTH_BASE_URL=$BETTER_AUTH_BASE_URL" >> .env
             - echo "BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET" >> .env
             - echo "NEXT_PUBLIC_BETTER_AUTH_BASE_PATH=$NEXT_PUBLIC_BETTER_AUTH_BASE_PATH" >> .env
@@ -15,6 +16,10 @@ applications:
             - echo "NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=$NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL" >> .env
             - echo "DATABASE_URL=$DATABASE_URL" >> .env
             - echo "ENABLE_EMAIL_VERIFICATION=$ENABLE_EMAIL_VERIFICATION" >> .env
+            - echo "NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL" >> .env
+            - echo "APP_URL=$APP_URL" >> .env
+            - echo "ENABLE_AUTH_PAGE_REDIRECT=$ENABLE_AUTH_PAGE_REDIRECT" >> .env
+            - echo "ENABLE_AVATAR_SETTING=$ENABLE_AVATAR_SETTING" >> .env
             - rm -rf .next
             - npx prisma generate        
             - npm run build

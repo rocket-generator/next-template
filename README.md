@@ -204,6 +204,7 @@ Key environment variables for Docker:
 - `LOCALSTACK_PUBLIC_ENDPOINT`: LocalStack endpoint for browser access to uploaded files (defaults to localhost:4566)
 - `AWS_SES_REGION`: AWS SES region (us-east-1 for LocalStack)
 - `SES_FROM_EMAIL`: Default sender email address
+- `ENABLE_AUTH_PAGE_REDIRECT`: Redirect authenticated users away from auth pages (true/false, default true)
 
 #### For Production Deployment
 This Docker Compose setup is for local development only. For production deployment:
