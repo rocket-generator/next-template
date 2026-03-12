@@ -95,6 +95,16 @@ export default function CRUDTable({
     return `${props.basePath}?${params.toString()}`;
   };
 
+  const getStickyHeaderClass = (index: number) =>
+    index === 0
+      ? "sticky left-0 z-20 bg-gray-50"
+      : "";
+
+  const getStickyCellClass = (index: number) =>
+    index === 0
+      ? "sticky left-0 z-10 bg-white"
+      : "";
+
   return (
     <>
       <div
@@ -117,19 +127,21 @@ export default function CRUDTable({
                 className="inline-block min-w-full align-middle"
                 data-testid="datatable-width-wrapper"
               >
-                <table className="min-w-full w-max divide-y divide-gray-300">
+                <table className="min-w-full w-max border-separate border-spacing-0 divide-y divide-gray-300">
                   <thead className="bg-gray-50">
-                    <tr className="divide-x divide-gray-200">
+                    <tr>
                       {props.structure.map((column, index) => {
                         const isSortable = column.isSortable ?? false;
                         const isSorted = order === column.key;
                         const align = getAlignment(column);
                         const className = cn(
                           "py-3.5 px-3 text-sm font-semibold text-gray-900",
+                          "border-r border-gray-200",
                           getTextAlignClass(align),
                           index === 0 ? "pl-4 sm:pl-6" : "",
-                          isSortable ? "cursor-pointer hover:bg-gray-100" : ""
-                        );
+                          getStickyHeaderClass(index),
+                        isSortable ? "cursor-pointer hover:bg-gray-100" : ""
+                      );
                         return (
                           <th
                             scope="col"
@@ -188,29 +200,27 @@ export default function CRUDTable({
                     {props &&
                       props.data &&
                       props.data.map((record, index) => (
-                        <tr
-                          key={"row-" + index}
-                          className="divide-x divide-gray-200"
-                        >
+                        <tr key={"row-" + index}>
                           {props.structure.map((column, colIndex) => {
                             const align = getAlignment(column);
                             const className = cn(
                               "whitespace-nowrap py-1 text-sm text-gray-500",
+                              "border-r border-gray-200",
                               getTextAlignClass(align),
-                              colIndex === 0 ? "pl-4 pr-3 sm:pl-6" : "px-3"
+                              colIndex === 0 ? "pl-4 pr-3 sm:pl-6" : "px-3",
+                              getStickyCellClass(colIndex)
                             );
                             if (column.type == "link") {
                               return (
                                 <td
                                   className={className}
                                   key={"column-" + column.key}
-                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
-                                >
-                                  <DataLinkItem
-                                    className={className}
-                                    record={record}
-                                    name={column.name}
-                                    columnKey={column.key}
+                                data-testid={`datatable-cell-${record.id}-${column.key}`}
+                              >
+                                <DataLinkItem
+                                  record={record}
+                                  name={column.name}
+                                  columnKey={column.key}
                                     options={column.options}
                                     key={column.key}
                                   />
@@ -221,13 +231,12 @@ export default function CRUDTable({
                                 <td
                                   className={className}
                                   key={"column-" + column.key}
-                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
-                                >
-                                  <DataDateTimeItem
-                                    className={className}
-                                    record={record}
-                                    name={column.name}
-                                    columnKey={column.key}
+                                data-testid={`datatable-cell-${record.id}-${column.key}`}
+                              >
+                                <DataDateTimeItem
+                                  record={record}
+                                  name={column.name}
+                                  columnKey={column.key}
                                     options={column.options}
                                     key={column.key}
                                   />
@@ -254,13 +263,12 @@ export default function CRUDTable({
                                 <td
                                   className={className}
                                   key={"column-" + column.key}
-                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
-                                >
-                                  <DataTextItem
-                                    className={className}
-                                    record={record}
-                                    name={column.name}
-                                    columnKey={column.key}
+                                data-testid={`datatable-cell-${record.id}-${column.key}`}
+                              >
+                                <DataTextItem
+                                  record={record}
+                                  name={column.name}
+                                  columnKey={column.key}
                                     options={column.options}
                                     key={column.key}
                                   />

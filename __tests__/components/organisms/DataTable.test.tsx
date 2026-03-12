@@ -55,11 +55,21 @@ describe("DataTable", () => {
   it("should apply alignment classes based on column type", () => {
     render(<DataTable {...baseProps} />);
 
-    expect(screen.getByTestId("datatable-header-name")).toHaveClass("text-left");
+    expect(screen.getByTestId("datatable-header-name")).toHaveClass(
+      "text-left",
+      "sticky",
+      "left-0",
+      "bg-gray-50"
+    );
     expect(screen.getByTestId("datatable-header-age")).toHaveClass("text-right");
     expect(screen.getByTestId("datatable-header-isActive")).toHaveClass("text-center");
 
-    expect(screen.getByTestId("datatable-cell-user-1-name")).toHaveClass("text-left");
+    expect(screen.getByTestId("datatable-cell-user-1-name")).toHaveClass(
+      "text-left",
+      "sticky",
+      "left-0",
+      "bg-white"
+    );
     expect(screen.getByTestId("datatable-cell-user-1-age")).toHaveClass("text-right");
     expect(screen.getByTestId("datatable-cell-user-1-isActive")).toHaveClass("text-center");
   });
@@ -106,6 +116,8 @@ describe("DataTable", () => {
     expect(screen.getByRole("table")).toHaveClass(
       "min-w-full",
       "w-max",
+      "border-separate",
+      "border-spacing-0",
       "divide-y",
       "divide-gray-300"
     );
