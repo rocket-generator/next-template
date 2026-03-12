@@ -56,7 +56,7 @@ export default async function SiteLayout({ children }: Props) {
           onSignOut={signOutAction}
         />
       </Suspense>
-      <div className="flex-1 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-3 border-b px-4 py-3">
           <SidebarTrigger
             className="md:hidden"
@@ -64,7 +64,7 @@ export default async function SiteLayout({ children }: Props) {
           />
           <span className="text-lg font-semibold">{`${SERVICE_NAME} Admin`}</span>
         </header>
-        <main className="p-6 flex-grow">{children}</main>
+        <main className="min-w-0 flex-grow p-6">{children}</main>
         <AdminFooter />
       </div>
     </SidebarProvider>

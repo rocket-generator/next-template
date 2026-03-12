@@ -214,6 +214,28 @@ export const ProductTable: Story = {
   },
 };
 
+export const MobileFullBleedTable: Story = {
+  args: {
+    count: 25,
+    offset: 0,
+    limit: 10,
+    data: userTableData,
+    structure: userTableStructure,
+    basePath: "/admin/users",
+    showEyeIcon: true,
+    showPencilSquareIcon: true,
+  },
+  parameters: {
+    layout: "fullscreen",
+    docs: {
+      description: {
+        story:
+          "モバイル幅で、外枠は通常の余白を維持しつつ、表コンテンツだけを横スクロールさせる確認用。",
+      },
+    },
+  },
+};
+
 export const WithSearchQuery: Story = {
   args: {
     count: 12,

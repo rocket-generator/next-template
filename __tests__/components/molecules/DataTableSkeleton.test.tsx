@@ -114,6 +114,26 @@ describe("DataTableSkeleton", () => {
     expect(headerGrid).toHaveClass("grid", "gap-4");
   });
 
+  it("should keep the skeleton container aligned with the page content while allowing inner horizontal scroll", () => {
+    render(<DataTableSkeleton columnCount={3} />);
+
+    expect(
+      screen.getByTestId("datatable-skeleton-frame")
+    ).toHaveClass("overflow-hidden", "shadow", "ring-1");
+
+    expect(
+      screen.getByTestId("datatable-skeleton-scroll-container")
+    ).toHaveClass("overflow-x-auto", "scrollbar-hidden");
+
+    expect(
+      screen.getByTestId("datatable-skeleton-width-wrapper")
+    ).toHaveClass(
+      "inline-block",
+      "min-w-full",
+      "align-middle"
+    );
+  });
+
   it("should render rows with proper grid layout", () => {
     const { container } = render(<DataTableSkeleton columnCount={4} rowCount={2} />);
 

@@ -97,194 +97,208 @@ export default function CRUDTable({
 
   return (
     <>
-      <div className="mt-4 flex items-center justify-between">
+      <div
+        className="mt-4 flex items-center justify-between"
+        data-testid="datatable-toolbar"
+      >
         <SearchForm defaultValue={query} />
       </div>
       <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div className="overflow-hidden border border-gray-300 shadow ring-1 ring-black ring-opacity-5">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr className="divide-x divide-gray-200">
-                    {props.structure.map((column, index) => {
-                      const isSortable = column.isSortable ?? false;
-                      const isSorted = order === column.key;
-                      const align = getAlignment(column);
-                      const className = cn(
-                        "py-3.5 px-3 text-sm font-semibold text-gray-900",
-                        getTextAlignClass(align),
-                        index === 0 ? "pl-4 sm:pl-6" : "",
-                        isSortable ? "cursor-pointer hover:bg-gray-100" : ""
-                      );
-                      return (
-                        <th
-                          scope="col"
-                          className={className}
-                          key={"head-" + column.key}
-                          data-testid={`datatable-header-${column.key}`}
-                        >
-                          {isSortable ? (
-                            <Link
-                              href={getSortLink(column.key)}
-                              className={cn(
-                                "flex items-center gap-1 group w-full",
-                                getJustifyClass(align)
-                              )}
-                            >
-                              {column.name}
-                              <span
-                                className="ml-1 inline-flex items-center -space-x-2"
-                                data-testid={`datatable-sort-${column.key}`}
+        <div className="-my-2 py-2">
+          <div
+            className="overflow-hidden border border-gray-300 shadow ring-1 ring-black ring-opacity-5"
+            data-testid="datatable-frame"
+          >
+            <div
+              className="overflow-x-auto scrollbar-hidden"
+              data-testid="datatable-scroll-container"
+            >
+              <div
+                className="inline-block min-w-full align-middle"
+                data-testid="datatable-width-wrapper"
+              >
+                <table className="min-w-full w-max divide-y divide-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr className="divide-x divide-gray-200">
+                      {props.structure.map((column, index) => {
+                        const isSortable = column.isSortable ?? false;
+                        const isSorted = order === column.key;
+                        const align = getAlignment(column);
+                        const className = cn(
+                          "py-3.5 px-3 text-sm font-semibold text-gray-900",
+                          getTextAlignClass(align),
+                          index === 0 ? "pl-4 sm:pl-6" : "",
+                          isSortable ? "cursor-pointer hover:bg-gray-100" : ""
+                        );
+                        return (
+                          <th
+                            scope="col"
+                            className={className}
+                            key={"head-" + column.key}
+                            data-testid={`datatable-header-${column.key}`}
+                          >
+                            {isSortable ? (
+                              <Link
+                                href={getSortLink(column.key)}
+                                className={cn(
+                                  "flex items-center gap-1 group w-full",
+                                  getJustifyClass(align)
+                                )}
                               >
-                                <ArrowUp
-                                  data-testid={`datatable-sort-up-${column.key}`}
-                                  className={cn(
-                                    "h-3.5 w-3.5",
-                                    isSorted && direction === "asc"
-                                      ? "text-gray-900"
-                                      : "text-gray-400"
-                                  )}
-                                />
-                                <ArrowDown
-                                  data-testid={`datatable-sort-down-${column.key}`}
-                                  className={cn(
-                                    "h-3.5 w-3.5",
-                                    isSorted && direction === "desc"
-                                      ? "text-gray-900"
-                                      : "text-gray-400"
-                                  )}
-                                />
-                              </span>
-                            </Link>
-                          ) : (
-                            column.name
-                          )}
-                        </th>
-                      );
-                    })}
-                    <th
-                      scope="col"
-                      className="relative py-3.5 pl-3 pr-4 sm:pr-6 w-20"
-                    >
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {props &&
-                    props.data &&
-                    props.data.map((record, index) => (
-                      <tr
-                        key={"row-" + index}
-                        className="divide-x divide-gray-200"
-                      >
-                        {props.structure.map((column, colIndex) => {
-                          const align = getAlignment(column);
-                          const className = cn(
-                            "whitespace-nowrap py-1 text-sm text-gray-500",
-                            getTextAlignClass(align),
-                            colIndex === 0 ? "pl-4 pr-3 sm:pl-6" : "px-3"
-                          );
-                          if (column.type == "link") {
-                            return (
-                              <td
-                                className={className}
-                                key={"column-" + column.key}
-                                data-testid={`datatable-cell-${record.id}-${column.key}`}
-                              >
-                                <DataLinkItem
-                                  className={className}
-                                  record={record}
-                                  name={column.name}
-                                  columnKey={column.key}
-                                  options={column.options}
-                                  key={column.key}
-                                />
-                              </td>
-                            );
-                          } else if (column.type == "datetime") {
-                            return (
-                              <td
-                                className={className}
-                                key={"column-" + column.key}
-                                data-testid={`datatable-cell-${record.id}-${column.key}`}
-                              >
-                                <DataDateTimeItem
-                                  className={className}
-                                  record={record}
-                                  name={column.name}
-                                  columnKey={column.key}
-                                  options={column.options}
-                                  key={column.key}
-                                />
-                              </td>
-                            );
-                          } else if (column.type == "boolean") {
-                            return (
-                              <td
-                                className={className}
-                                key={"column-" + column.key}
-                                data-testid={`datatable-cell-${record.id}-${column.key}`}
-                              >
-                                <div
-                                  className={`text-${
-                                    record[column.key] ? "green" : "red"
-                                  }-600 font-medium`}
+                                {column.name}
+                                <span
+                                  className="ml-1 inline-flex items-center -space-x-2"
+                                  data-testid={`datatable-sort-${column.key}`}
                                 >
-                                  {record[column.key] ? "✔" : "✘"}
-                                </div>
-                              </td>
+                                  <ArrowUp
+                                    data-testid={`datatable-sort-up-${column.key}`}
+                                    className={cn(
+                                      "h-3.5 w-3.5",
+                                      isSorted && direction === "asc"
+                                        ? "text-gray-900"
+                                        : "text-gray-400"
+                                    )}
+                                  />
+                                  <ArrowDown
+                                    data-testid={`datatable-sort-down-${column.key}`}
+                                    className={cn(
+                                      "h-3.5 w-3.5",
+                                      isSorted && direction === "desc"
+                                        ? "text-gray-900"
+                                        : "text-gray-400"
+                                    )}
+                                  />
+                                </span>
+                              </Link>
+                            ) : (
+                              column.name
+                            )}
+                          </th>
+                        );
+                      })}
+                      <th
+                        scope="col"
+                        className="relative py-3.5 pl-3 pr-4 sm:pr-6 w-20"
+                      >
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {props &&
+                      props.data &&
+                      props.data.map((record, index) => (
+                        <tr
+                          key={"row-" + index}
+                          className="divide-x divide-gray-200"
+                        >
+                          {props.structure.map((column, colIndex) => {
+                            const align = getAlignment(column);
+                            const className = cn(
+                              "whitespace-nowrap py-1 text-sm text-gray-500",
+                              getTextAlignClass(align),
+                              colIndex === 0 ? "pl-4 pr-3 sm:pl-6" : "px-3"
                             );
-                          } else {
-                            return (
-                              <td
-                                className={className}
-                                key={"column-" + column.key}
-                                data-testid={`datatable-cell-${record.id}-${column.key}`}
-                              >
-                                <DataTextItem
+                            if (column.type == "link") {
+                              return (
+                                <td
                                   className={className}
-                                  record={record}
-                                  name={column.name}
-                                  columnKey={column.key}
-                                  options={column.options}
-                                  key={column.key}
-                                />
-                              </td>
-                            );
-                          }
-                        })}
-                        <td className="relative whitespace-nowrap py-1 pl-3 pr-4 sm:pr-6 text-sm font-medium text-center">
-                          <div className="flex justify-center space-x-2">
-                            {showEyeIcon && (
-                              <a href={props.basePath + "/" + record.id}>
-                                <Eye
-                                  aria-hidden="true"
-                                  className="text-indigo-900 group-hover:text-white h-6 w-6 shrink-0"
-                                />
-                                <span className="sr-only">View, {index}</span>
-                              </a>
-                            )}
-                            {showPencilSquareIcon && (
-                              <a
-                                href={
-                                  props.basePath + "/" + record.id + "/edit"
-                                }
-                              >
-                                <Pencil
-                                  aria-hidden="true"
-                                  className="text-indigo-900 hover:text-indigo-900 h-6 w-6 shrink-0"
-                                />
-                                <span className="sr-only">Edit, {index}</span>
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                                  key={"column-" + column.key}
+                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
+                                >
+                                  <DataLinkItem
+                                    className={className}
+                                    record={record}
+                                    name={column.name}
+                                    columnKey={column.key}
+                                    options={column.options}
+                                    key={column.key}
+                                  />
+                                </td>
+                              );
+                            } else if (column.type == "datetime") {
+                              return (
+                                <td
+                                  className={className}
+                                  key={"column-" + column.key}
+                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
+                                >
+                                  <DataDateTimeItem
+                                    className={className}
+                                    record={record}
+                                    name={column.name}
+                                    columnKey={column.key}
+                                    options={column.options}
+                                    key={column.key}
+                                  />
+                                </td>
+                              );
+                            } else if (column.type == "boolean") {
+                              return (
+                                <td
+                                  className={className}
+                                  key={"column-" + column.key}
+                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
+                                >
+                                  <div
+                                    className={`text-${
+                                      record[column.key] ? "green" : "red"
+                                    }-600 font-medium`}
+                                  >
+                                    {record[column.key] ? "✔" : "✘"}
+                                  </div>
+                                </td>
+                              );
+                            } else {
+                              return (
+                                <td
+                                  className={className}
+                                  key={"column-" + column.key}
+                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
+                                >
+                                  <DataTextItem
+                                    className={className}
+                                    record={record}
+                                    name={column.name}
+                                    columnKey={column.key}
+                                    options={column.options}
+                                    key={column.key}
+                                  />
+                                </td>
+                              );
+                            }
+                          })}
+                          <td className="relative whitespace-nowrap py-1 pl-3 pr-4 sm:pr-6 text-sm font-medium text-center">
+                            <div className="flex justify-center space-x-2">
+                              {showEyeIcon && (
+                                <a href={props.basePath + "/" + record.id}>
+                                  <Eye
+                                    aria-hidden="true"
+                                    className="text-indigo-900 group-hover:text-white h-6 w-6 shrink-0"
+                                  />
+                                  <span className="sr-only">View, {index}</span>
+                                </a>
+                              )}
+                              {showPencilSquareIcon && (
+                                <a
+                                  href={
+                                    props.basePath + "/" + record.id + "/edit"
+                                  }
+                                >
+                                  <Pencil
+                                    aria-hidden="true"
+                                    className="text-indigo-900 hover:text-indigo-900 h-6 w-6 shrink-0"
+                                  />
+                                  <span className="sr-only">Edit, {index}</span>
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

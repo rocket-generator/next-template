@@ -33,7 +33,7 @@ export default function SearchForm({ defaultValue = "" }: Props) {
   };
 
   return (
-    <div className="w-72">
+    <div className="w-full sm:w-72">
       <input
         ref={inputRef}
         type="text"

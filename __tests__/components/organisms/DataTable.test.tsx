@@ -73,4 +73,41 @@ describe("DataTable", () => {
     expect(screen.getByTestId("datatable-sort-up-name")).toHaveClass("text-gray-400");
     expect(screen.getByTestId("datatable-sort-down-name")).toHaveClass("text-gray-400");
   });
+
+  it("should keep toolbar and pagination visible after responsive layout changes", () => {
+    render(<DataTable {...baseProps} />);
+
+    expect(screen.getByTestId("datatable-toolbar")).toBeInTheDocument();
+    expect(screen.getByTestId("search-form")).toBeInTheDocument();
+    expect(screen.getByTestId("pagination")).toBeInTheDocument();
+  });
+
+  it("should keep the table container aligned with the page content while allowing inner horizontal scroll", () => {
+    render(<DataTable {...baseProps} />);
+
+    expect(screen.getByTestId("datatable-frame")).toHaveClass(
+      "overflow-hidden",
+      "border",
+      "border-gray-300",
+      "shadow"
+    );
+
+    expect(screen.getByTestId("datatable-scroll-container")).toHaveClass(
+      "overflow-x-auto",
+      "scrollbar-hidden"
+    );
+
+    expect(screen.getByTestId("datatable-width-wrapper")).toHaveClass(
+      "inline-block",
+      "min-w-full",
+      "align-middle"
+    );
+
+    expect(screen.getByRole("table")).toHaveClass(
+      "min-w-full",
+      "w-max",
+      "divide-y",
+      "divide-gray-300"
+    );
+  });
 });
