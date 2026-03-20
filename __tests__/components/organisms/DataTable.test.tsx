@@ -1,14 +1,33 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import type {
+  AnchorHTMLAttributes,
+  PropsWithChildren,
+} from "react";
 import DataTable from "@/components/organisms/DataTable";
+
+const mockPush = jest.fn();
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ children, href, ...props }: any) => (
+  default: ({
+    children,
+    href,
+    ...props
+  }: PropsWithChildren<AnchorHTMLAttributes<HTMLAnchorElement>> & {
+    href: string;
+  }) => (
     <a href={href} {...props}>
       {children}
     </a>
   ),
+}));
+
+jest.mock("next/navigation", () => ({
+  __esModule: true,
+  useRouter: () => ({
+    push: mockPush,
+  }),
 }));
 
 jest.mock("@/components/molecules/SearchForm", () => ({
@@ -22,6 +41,10 @@ jest.mock("@/components/molecules/Pagination", () => ({
 }));
 
 describe("DataTable", () => {
+  beforeEach(() => {
+    mockPush.mockReset();
+  });
+
   const structure = [
     { name: "Name", key: "name", type: "text", options: {}, isSortable: true },
     { name: "Age", key: "age", type: "number", options: {}, isSortable: true },
@@ -59,7 +82,9 @@ describe("DataTable", () => {
       "text-left",
       "sticky",
       "left-0",
-      "bg-gray-50"
+      "bg-gray-50",
+      "border-b",
+      "border-gray-300"
     );
     expect(screen.getByTestId("datatable-header-age")).toHaveClass("text-right");
     expect(screen.getByTestId("datatable-header-isActive")).toHaveClass("text-center");
@@ -68,7 +93,9 @@ describe("DataTable", () => {
       "text-left",
       "sticky",
       "left-0",
-      "bg-white"
+      "bg-white",
+      "group-hover:bg-sky-50",
+      "group-focus-within:bg-sky-50"
     );
     expect(screen.getByTestId("datatable-cell-user-1-age")).toHaveClass("text-right");
     expect(screen.getByTestId("datatable-cell-user-1-isActive")).toHaveClass("text-center");
@@ -121,5 +148,77 @@ describe("DataTable", () => {
       "divide-y",
       "divide-gray-300"
     );
+  });
+
+  it("should navigate to the detail page when a row is clicked and remove action links", () => {
+    const { container } = render(<DataTable {...baseProps} />);
+
+    fireEvent.click(screen.getByTestId("datatable-row-user-1"));
+
+    expect(mockPush).toHaveBeenCalledWith("/admin/users/user-1");
+    expect(
+      container.querySelector('a[href="/admin/users/user-1"]')
+    ).not.toBeInTheDocument();
+    expect(
+      container.querySelector('a[href="/admin/users/user-1/edit"]')
+    ).not.toBeInTheDocument();
+  });
+
+  it("should navigate to the detail page when Enter or Space is pressed on a row", () => {
+    render(<DataTable {...baseProps} />);
+
+    const row = screen.getByTestId("datatable-row-user-1");
+
+    fireEvent.keyDown(row, { key: "Enter" });
+    expect(mockPush).toHaveBeenLastCalledWith("/admin/users/user-1");
+
+    fireEvent.keyDown(row, { key: " " });
+    expect(mockPush).toHaveBeenLastCalledWith("/admin/users/user-1");
+    expect(mockPush).toHaveBeenCalledTimes(2);
+  });
+
+  it("should prioritize nested link interactions over row navigation", () => {
+    render(
+      <DataTable
+        {...baseProps}
+        structure={[
+          {
+            name: "Name",
+            key: "name",
+            type: "text",
+            options: {},
+            isSortable: true,
+          },
+          {
+            name: "Profile",
+            key: "profile",
+            type: "link",
+            options: {
+              base_url: "/admin/users/",
+              key: "id",
+              display: "name",
+            },
+            isSortable: false,
+          },
+        ]}
+        data={[
+          {
+            id: "user-1",
+            name: "Alice",
+            profile: {
+              id: "profile-1",
+              name: "Open profile",
+            },
+          },
+        ]}
+      />
+    );
+
+    const nestedLink = screen.getByRole("link", { name: "Open profile" });
+
+    fireEvent.click(nestedLink);
+
+    expect(nestedLink).toHaveAttribute("href", "/admin/users/profile-1");
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

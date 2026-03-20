@@ -26,7 +26,10 @@ const userTableData = [
     age: 32,
     joinDate: 1640991600, // 2022-01-01
     isActive: true,
-    profileUrl: "https://example.com/profile/tanaka",
+    profile: {
+      id: "1",
+      name: "プロフィールを見る",
+    },
   },
   {
     id: "2",
@@ -37,7 +40,10 @@ const userTableData = [
     age: 28,
     joinDate: 1609459200, // 2021-01-01
     isActive: true,
-    profileUrl: "https://example.com/profile/yamada",
+    profile: {
+      id: "2",
+      name: "プロフィールを見る",
+    },
   },
   {
     id: "3",
@@ -48,7 +54,10 @@ const userTableData = [
     age: 25,
     joinDate: 1672531200, // 2023-01-01
     isActive: false,
-    profileUrl: "https://example.com/profile/sato",
+    profile: {
+      id: "3",
+      name: "プロフィールを見る",
+    },
   },
   {
     id: "4",
@@ -59,7 +68,10 @@ const userTableData = [
     age: 35,
     joinDate: 1577836800, // 2020-01-01
     isActive: true,
-    profileUrl: "https://example.com/profile/suzuki",
+    profile: {
+      id: "4",
+      name: "プロフィールを見る",
+    },
   },
 ];
 
@@ -97,9 +109,13 @@ const userTableStructure = [
   },
   {
     name: "プロフィール",
-    key: "profileUrl",
+    key: "profile",
     type: "link",
-    options: {},
+    options: {
+      base_url: "/admin/users/",
+      key: "id",
+      display: "name",
+    },
     isSortable: false,
   },
 ];
@@ -196,8 +212,14 @@ export const UserTable: Story = {
     data: userTableData,
     structure: userTableStructure,
     basePath: "/admin/users",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "各行は詳細ページへのクリック対象。プロフィール列のリンクのようなセル内リンクは、行クリックよりもセル自身の操作を優先する。",
+      },
+    },
   },
 };
 
@@ -209,8 +231,6 @@ export const ProductTable: Story = {
     data: productTableData,
     structure: productTableStructure,
     basePath: "/admin/products",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
   },
 };
 
@@ -222,8 +242,6 @@ export const MobileFullBleedTable: Story = {
     data: userTableData,
     structure: userTableStructure,
     basePath: "/admin/users",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
   },
   parameters: {
     layout: "fullscreen",
@@ -245,8 +263,6 @@ export const WithSearchQuery: Story = {
     data: [userTableData[0]], // 検索結果として1件のみ表示
     structure: userTableStructure,
     basePath: "/admin/users",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
   },
 };
 
@@ -260,34 +276,6 @@ export const SortedByAge: Story = {
     data: [...userTableData].sort((a, b) => b.age - a.age),
     structure: userTableStructure,
     basePath: "/admin/users",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
-  },
-};
-
-export const WithoutActions: Story = {
-  args: {
-    count: 25,
-    offset: 0,
-    limit: 10,
-    data: userTableData,
-    structure: userTableStructure,
-    basePath: "/admin/users",
-    showEyeIcon: false,
-    showPencilSquareIcon: false,
-  },
-};
-
-export const ViewOnlyActions: Story = {
-  args: {
-    count: 25,
-    offset: 0,
-    limit: 10,
-    data: userTableData,
-    structure: userTableStructure,
-    basePath: "/admin/users",
-    showEyeIcon: true,
-    showPencilSquareIcon: false,
   },
 };
 
@@ -299,8 +287,6 @@ export const EmptyTable: Story = {
     data: [],
     structure: userTableStructure,
     basePath: "/admin/users",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
   },
 };
 
@@ -331,8 +317,6 @@ export const MinimalTable: Story = {
       },
     ],
     basePath: "/admin/simple",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
   },
 };
 
@@ -344,7 +328,5 @@ export const SecondPage: Story = {
     data: userTableData,
     structure: userTableStructure,
     basePath: "/admin/users",
-    showEyeIcon: true,
-    showPencilSquareIcon: true,
   },
 };

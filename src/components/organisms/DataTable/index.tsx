@@ -1,11 +1,12 @@
 import Pagination from "@/components/molecules/Pagination";
-import { Pencil, Eye, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/libraries/css";
 import Link from "next/link";
 import DataTextItem from "@/components/molecules/DataTextItem";
 import DataLinkItem from "@/components/molecules/DataLinkItem";
 import DataDateTimeItem from "@/components/molecules/DataDateTimeItem";
 import SearchForm from "@/components/molecules/SearchForm";
+import ClickableRow from "./ClickableRow";
 
 type DataRecord = {
   id: string;
@@ -30,13 +31,9 @@ type Props = {
   data: DataRecord[];
   structure: ColumnStructure[];
   basePath: string;
-  showEyeIcon?: boolean;
-  showPencilSquareIcon?: boolean;
 };
 
 export default function CRUDTable({
-  showEyeIcon = true,
-  showPencilSquareIcon = true,
   order,
   direction,
   query = "",
@@ -101,6 +98,8 @@ export default function CRUDTable({
   const getStickyCellClass = (index: number) =>
     index === 0 ? "sticky left-0 z-10 bg-white" : "";
 
+  const getRowHref = (record: DataRecord) => `${props.basePath}/${record.id}`;
+
   return (
     <>
       <div
@@ -132,7 +131,7 @@ export default function CRUDTable({
                         const align = getAlignment(column);
                         const className = cn(
                           "py-3.5 px-3 text-sm font-semibold text-gray-900",
-                          "border-r border-gray-200",
+                          "border-r border-b border-gray-300",
                           getTextAlignClass(align),
                           index === 0 ? "pl-4 sm:pl-6" : "",
                           getStickyHeaderClass(index),
@@ -184,24 +183,24 @@ export default function CRUDTable({
                           </th>
                         );
                       })}
-                      <th
-                        scope="col"
-                        className="relative py-3.5 pl-3 pr-4 sm:pr-6 w-20"
-                      >
-                        <span className="sr-only">Actions</span>
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {props &&
                       props.data &&
-                      props.data.map((record, index) => (
-                        <tr key={"row-" + index}>
+                      props.data.map((record) => (
+                        <ClickableRow
+                          key={"row-" + record.id}
+                          href={getRowHref(record)}
+                          className="group cursor-pointer focus-visible:outline-none"
+                          testId={`datatable-row-${record.id}`}
+                        >
                           {props.structure.map((column, colIndex) => {
                             const align = getAlignment(column);
                             const className = cn(
                               "whitespace-nowrap py-1 text-sm text-gray-500",
                               "border-r border-gray-200",
+                              "group-hover:bg-sky-50 group-focus-within:bg-sky-50 transition-colors",
                               getTextAlignClass(align),
                               colIndex === 0 ? "pl-4 pr-3 sm:pl-6" : "px-3",
                               getStickyCellClass(colIndex)
@@ -272,33 +271,7 @@ export default function CRUDTable({
                               );
                             }
                           })}
-                          <td className="relative whitespace-nowrap py-1 pl-3 pr-4 sm:pr-6 text-sm font-medium text-center">
-                            <div className="flex justify-center space-x-2">
-                              {showEyeIcon && (
-                                <a href={props.basePath + "/" + record.id}>
-                                  <Eye
-                                    aria-hidden="true"
-                                    className="text-indigo-900 group-hover:text-white h-6 w-6 shrink-0"
-                                  />
-                                  <span className="sr-only">View, {index}</span>
-                                </a>
-                              )}
-                              {showPencilSquareIcon && (
-                                <a
-                                  href={
-                                    props.basePath + "/" + record.id + "/edit"
-                                  }
-                                >
-                                  <Pencil
-                                    aria-hidden="true"
-                                    className="text-indigo-900 hover:text-indigo-900 h-6 w-6 shrink-0"
-                                  />
-                                  <span className="sr-only">Edit, {index}</span>
-                                </a>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
+                        </ClickableRow>
                       ))}
                   </tbody>
                 </table>

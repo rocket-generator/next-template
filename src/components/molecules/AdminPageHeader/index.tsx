@@ -51,7 +51,9 @@ export default function AdminPageHeader({
                   )}
                   <Link
                     href={link.href}
-                    className="ml-1 text-sm font-medium text-gray-500 hover:text-blue-600 md:ml-2"
+                    className={`text-sm font-medium text-gray-500 hover:text-blue-600 ${
+                      index > 0 ? "ml-1 md:ml-2" : ""
+                    }`}
                   >
                     {link.label}
                   </Link>
