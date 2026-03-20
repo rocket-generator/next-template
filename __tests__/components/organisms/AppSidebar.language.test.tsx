@@ -35,7 +35,7 @@ jest.mock("next/navigation", () => ({
     replace: jest.fn(),
     prefetch: jest.fn(),
   }),
-  usePathname: mockUsePathname,
+  usePathname: () => mockUsePathname(),
 }));
 
 // Mock next-intl

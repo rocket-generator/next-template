@@ -82,7 +82,7 @@ jest.mock("next/navigation", () => ({
     replace: jest.fn(),
     prefetch: jest.fn(),
   }),
-  usePathname: mockUsePathname,
+  usePathname: () => mockUsePathname(),
 }));
 
 // lucide-reactアイコンのモック
@@ -104,6 +104,8 @@ jest.mock("lucide-react", () => {
     BarChart2: createIcon("barchart2-icon"),
     CheckCircle: createIcon("checkcircle-icon"),
     LogOut: createIcon("logout-icon"),
+    User: createIcon("user-icon"),
+    PanelLeft: createIcon("panelleft-icon"),
   };
 });
 
@@ -180,11 +182,12 @@ describe("AdminSidebar", () => {
       expect(screen.getByTestId("checkcircle-icon")).toBeInTheDocument();
     });
 
-    it("should render title without icon when icon is not provided", () => {
+    it("should render default icon when icon is not provided", () => {
       renderWithProvider({ icon: undefined });
 
       expect(screen.getByTestId("admin-sidebar-title-text")).toHaveTextContent("Admin Panel");
-      expect(screen.queryByTestId("admin-sidebar-icon")).not.toBeInTheDocument();
+      expect(screen.getByTestId("admin-sidebar-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("checkcircle-icon")).toBeInTheDocument();
     });
 
     it("should render all menu items", () => {

@@ -1,16 +1,5 @@
 import * as z from "zod";
 
-// 国際化対応のスキーマ作成関数
-export const createEmailSchema = (t: (key: string) => string) =>
-  z
-    .string({
-      required_error: t("validation.email_required"),
-      invalid_type_error: t("validation.email_required"),
-    })
-    .email({
-      message: t("validation.email_invalid"),
-    });
-
 export const createPasswordSchema = (t: (key: string) => string) =>
   z
     .string({
@@ -40,13 +29,11 @@ export const createTokenSchema = (t: (key: string) => string) =>
 export const createResetPasswordRequestSchema = (
   t: (key: string) => string
 ) => {
-  const emailSchema = createEmailSchema(t);
   const passwordSchema = createPasswordSchema(t);
   const tokenSchema = createTokenSchema(t);
 
   return z
     .object({
-      email: emailSchema,
       password: passwordSchema,
       confirm_password: passwordSchema,
       token: tokenSchema,
@@ -56,15 +43,6 @@ export const createResetPasswordRequestSchema = (
       path: ["confirm_password"],
     });
 };
-
-// 後方互換性のための非国際化スキーマ（デフォルト英語）
-export const emailSchema = createEmailSchema((key) => {
-  const messages: Record<string, string> = {
-    "validation.email_required": "Email is required",
-    "validation.email_invalid": "Please enter a valid email address",
-  };
-  return messages[key] || key;
-});
 
 export const passwordSchema = createPasswordSchema((key) => {
   const messages: Record<string, string> = {
@@ -88,8 +66,6 @@ export const tokenSchema = createTokenSchema((key) => {
 export const ResetPasswordRequestSchema = createResetPasswordRequestSchema(
   (key) => {
     const messages: Record<string, string> = {
-      "validation.email_required": "Email is required",
-      "validation.email_invalid": "Please enter a valid email address",
       "validation.password_required": "Password is required",
       "validation.password_min_length":
         "Password must be at least 8 characters",

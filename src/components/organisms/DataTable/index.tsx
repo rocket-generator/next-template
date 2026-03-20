@@ -96,14 +96,10 @@ export default function CRUDTable({
   };
 
   const getStickyHeaderClass = (index: number) =>
-    index === 0
-      ? "sticky left-0 z-20 bg-gray-50"
-      : "";
+    index === 0 ? "sticky left-0 z-20 bg-gray-50" : "";
 
   const getStickyCellClass = (index: number) =>
-    index === 0
-      ? "sticky left-0 z-10 bg-white"
-      : "";
+    index === 0 ? "sticky left-0 z-10 bg-white" : "";
 
   return (
     <>
@@ -140,8 +136,8 @@ export default function CRUDTable({
                           getTextAlignClass(align),
                           index === 0 ? "pl-4 sm:pl-6" : "",
                           getStickyHeaderClass(index),
-                        isSortable ? "cursor-pointer hover:bg-gray-100" : ""
-                      );
+                          isSortable ? "cursor-pointer hover:bg-gray-100" : ""
+                        );
                         return (
                           <th
                             scope="col"
@@ -215,12 +211,12 @@ export default function CRUDTable({
                                 <td
                                   className={className}
                                   key={"column-" + column.key}
-                                data-testid={`datatable-cell-${record.id}-${column.key}`}
-                              >
-                                <DataLinkItem
-                                  record={record}
-                                  name={column.name}
-                                  columnKey={column.key}
+                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
+                                >
+                                  <DataLinkItem
+                                    record={record}
+                                    name={column.name}
+                                    columnKey={column.key}
                                     options={column.options}
                                     key={column.key}
                                   />
@@ -231,12 +227,12 @@ export default function CRUDTable({
                                 <td
                                   className={className}
                                   key={"column-" + column.key}
-                                data-testid={`datatable-cell-${record.id}-${column.key}`}
-                              >
-                                <DataDateTimeItem
-                                  record={record}
-                                  name={column.name}
-                                  columnKey={column.key}
+                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
+                                >
+                                  <DataDateTimeItem
+                                    record={record}
+                                    name={column.name}
+                                    columnKey={column.key}
                                     options={column.options}
                                     key={column.key}
                                   />
@@ -263,12 +259,12 @@ export default function CRUDTable({
                                 <td
                                   className={className}
                                   key={"column-" + column.key}
-                                data-testid={`datatable-cell-${record.id}-${column.key}`}
-                              >
-                                <DataTextItem
-                                  record={record}
-                                  name={column.name}
-                                  columnKey={column.key}
+                                  data-testid={`datatable-cell-${record.id}-${column.key}`}
+                                >
+                                  <DataTextItem
+                                    record={record}
+                                    name={column.name}
+                                    columnKey={column.key}
                                     options={column.options}
                                     key={column.key}
                                   />

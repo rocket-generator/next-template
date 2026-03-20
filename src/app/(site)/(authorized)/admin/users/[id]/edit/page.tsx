@@ -4,7 +4,6 @@ import { getTranslations } from "next-intl/server";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataForm from "@/components/organisms/DataForm";
 import { notFound } from "next/navigation";
-import { User } from "@/models/user";
 import { updateUser } from "./actions";
 import { UserUpdateRequest } from "@/requests/admin/user_update_request";
 import { redirect } from "next/navigation";
@@ -27,12 +26,16 @@ export default async function Page({ params }: Props) {
   const tMenu = await getTranslations("Menu.Admin");
   const tUser = await getTranslations("Users");
 
-  let data: User | null = null;
+  let data: Awaited<ReturnType<UserRepository["findById"]>> | null = null;
   try {
     const repository = new UserRepository();
     data = await repository.findById(id);
   } catch (error) {
     console.log(error);
+    return notFound();
+  }
+
+  if (!data) {
     return notFound();
   }
 

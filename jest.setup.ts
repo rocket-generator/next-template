@@ -5,6 +5,59 @@ import * as React from 'react';
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
 
+jest.mock('next-intl', () => {
+  const ReactLocal = require('react');
+  const IntlContext = ReactLocal.createContext({} as Record<string, unknown>);
+
+  const readMessage = (
+    messages: Record<string, unknown>,
+    namespace: string | undefined,
+    key: string
+  ) => {
+    const path = namespace ? `${namespace}.${key}` : key;
+
+    return path.split('.').reduce<unknown>((value, segment) => {
+      if (value && typeof value === 'object' && segment in value) {
+        return (value as Record<string, unknown>)[segment];
+      }
+
+      return undefined;
+    }, messages);
+  };
+
+  return {
+    __esModule: true,
+    NextIntlClientProvider: ({
+      children,
+      messages,
+    }: {
+      children: React.ReactNode;
+      messages?: Record<string, unknown>;
+    }) =>
+      ReactLocal.createElement(
+        IntlContext.Provider,
+        { value: messages ?? {} },
+        children
+      ),
+    useTranslations: (namespace?: string) => {
+      const messages = ReactLocal.useContext(IntlContext);
+
+      return (key: string) => {
+        const value = readMessage(messages, namespace, key);
+        return typeof value === 'string' ? value : key;
+      };
+    },
+    useLocale: () => 'en',
+  };
+});
+
+jest.mock('next-intl/server', () => ({
+  __esModule: true,
+  getTranslations: jest.fn(async (namespace?: string) => (key: string) =>
+    namespace ? `${namespace}.${key}` : key
+  ),
+}));
+
 // Mock better-auth to avoid ESM issues until actual implementation is in place
 jest.mock('better-auth', () => ({
   __esModule: true,
@@ -13,8 +66,15 @@ jest.mock('better-auth', () => ({
     api: {
       getSession: jest.fn(),
       signInEmail: jest.fn(),
-      signInPassword: jest.fn(),
+      signUpEmail: jest.fn(),
       signOut: jest.fn(),
+      verifyEmail: jest.fn(),
+      sendVerificationEmail: jest.fn(),
+      requestPasswordReset: jest.fn(),
+      resetPassword: jest.fn(),
+      updateUser: jest.fn(),
+      changeEmail: jest.fn(),
+      changePassword: jest.fn(),
     },
   })),
 }));

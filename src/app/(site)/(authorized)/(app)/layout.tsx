@@ -3,13 +3,11 @@ import React, { Suspense } from "react";
 import AppSidebar from "@/components/organisms/AppSidebar";
 import Footer from "@/components/organisms/Footer";
 import { UserRepository } from "@/repositories/user_repository";
-import AuthError from "@/exceptions/auth_error";
-import { redirect } from "next/navigation";
 import { User } from "@/models/user";
 import { CheckCircle, Home } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { signOutAction } from "./actions";
-import { auth } from "@/libraries/auth";
+import { requireAuthSession } from "@/libraries/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
 import { SERVICE_NAME } from "@/constants/site";
 
@@ -18,21 +16,9 @@ type Props = {
 };
 
 export default async function SiteLayout({ children }: Props) {
-  const session = await auth({ disableRefresh: true });
-  if (!session) {
-    redirect("/signin");
-  }
-
-  let me: User | null = null;
-  try {
-    const repository = new UserRepository();
-    me = await repository.getMe();
-  } catch (error) {
-    console.log(error);
-    if (error instanceof AuthError) {
-      redirect("/signin");
-    }
-  }
+  const session = await requireAuthSession();
+  const repository = new UserRepository();
+  const me: User | null = await repository.getUserById(session.user.id);
 
   const t = await getTranslations("Menu.App");
   const tCommon = await getTranslations("Common");

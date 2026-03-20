@@ -1,9 +1,6 @@
 "use server";
 
 import { AuthService } from "@/services/auth_service";
-import { UserRepository } from "@/repositories/user_repository";
-import { PasswordResetRepository } from "@/repositories/password_reset_repository";
-import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
 import { Status } from "@/models/status";
 
 /**
@@ -11,14 +8,7 @@ import { Status } from "@/models/status";
  */
 export async function verifyEmailAction(token: string): Promise<Status> {
   try {
-    const userRepository = new UserRepository();
-    const passwordResetRepository = new PasswordResetRepository();
-    const emailVerificationRepository = new EmailVerificationRepository();
-    const authService = new AuthService(
-      userRepository,
-      passwordResetRepository,
-      emailVerificationRepository
-    );
+    const authService = new AuthService();
 
     return await authService.verifyEmail(token);
   } catch (error) {
@@ -38,14 +28,7 @@ export async function resendVerificationEmailAction(
   email: string
 ): Promise<Status> {
   try {
-    const userRepository = new UserRepository();
-    const passwordResetRepository = new PasswordResetRepository();
-    const emailVerificationRepository = new EmailVerificationRepository();
-    const authService = new AuthService(
-      userRepository,
-      passwordResetRepository,
-      emailVerificationRepository
-    );
+    const authService = new AuthService();
 
     return await authService.resendVerificationEmail(email);
   } catch (error) {

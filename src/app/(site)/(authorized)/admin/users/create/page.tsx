@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataForm from "@/components/organisms/DataForm";
-import { User } from "@/models/user";
 import { createUser } from "./actions";
 import { redirect } from "next/navigation";
 import { UserCreateRequest } from "@/requests/admin/user_create_request";
@@ -19,14 +18,12 @@ export async function generateMetadata() {
 export default async function Page() {
   const tMenu = await getTranslations("Menu.Admin");
   const tUser = await getTranslations("Users");
-  const data: User = {
-    id: "",
+  const data: UserCreateRequest = {
     name: "",
     email: "",
     password: "",
     permissions: [],
-    isActive: true,
-    emailVerified: false,
+    avatarKey: undefined,
   };
 
   const structure = [

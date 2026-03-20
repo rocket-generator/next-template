@@ -6,7 +6,6 @@ describe("Auth Model", () => {
       const validAuth = {
         id: "user-123",
         email: "test@example.com",
-        password: "hashedPassword123",
         name: "Test User",
         permissions: ["read", "write"],
         isActive: true,
@@ -21,7 +20,6 @@ describe("Auth Model", () => {
       const validAuth = {
         id: "user-456",
         email: "user@example.com",
-        password: "hashedPassword456",
         name: "Another User",
         permissions: [],
         isActive: true,
@@ -37,7 +35,6 @@ describe("Auth Model", () => {
       const validAuth = {
         id: "admin-789",
         email: "admin@example.com",
-        password: "hashedPassword789",
         name: "Admin User",
         permissions: ["read", "write", "delete", "admin"],
         isActive: true,
@@ -53,7 +50,6 @@ describe("Auth Model", () => {
       const invalidAuth = {
         id: 123, // Should be string
         email: "test@example.com",
-        password: "password",
         name: "Test User",
         permissions: [],
       };
@@ -65,7 +61,6 @@ describe("Auth Model", () => {
       const invalidAuth = {
         id: "user-123",
         email: null, // Should be string
-        password: "password",
         name: "Test User",
         permissions: [],
       };
@@ -73,13 +68,28 @@ describe("Auth Model", () => {
       expect(() => AuthSchema.parse(invalidAuth)).toThrow();
     });
 
+    it("should allow password to be omitted", () => {
+      const validAuth = {
+        id: "user-123",
+        email: "test@example.com",
+        name: "Test User",
+        permissions: [],
+        isActive: true,
+        emailVerified: false,
+      };
+
+      expect(() => AuthSchema.parse(validAuth)).not.toThrow();
+    });
+
     it("should fail validation when password is not string", () => {
       const invalidAuth = {
         id: "user-123",
         email: "test@example.com",
-        password: undefined, // Should be string
+        password: 123,
         name: "Test User",
         permissions: [],
+        isActive: true,
+        emailVerified: false,
       };
 
       expect(() => AuthSchema.parse(invalidAuth)).toThrow();
@@ -89,7 +99,6 @@ describe("Auth Model", () => {
       const invalidAuth = {
         id: "user-123",
         email: "test@example.com",
-        password: "password",
         name: { first: "Test", last: "User" }, // Should be string
         permissions: [],
       };
@@ -101,7 +110,6 @@ describe("Auth Model", () => {
       const invalidAuth = {
         id: "user-123",
         email: "test@example.com",
-        password: "password",
         name: "Test User",
         permissions: "read,write", // Should be array
       };
@@ -113,7 +121,6 @@ describe("Auth Model", () => {
       const invalidAuth = {
         id: "user-123",
         email: "test@example.com",
-        password: "password",
         name: "Test User",
         permissions: ["read", 123, "write"], // Should be all strings
       };
@@ -124,21 +131,12 @@ describe("Auth Model", () => {
     it("should fail validation when required fields are missing", () => {
       const missingId = {
         email: "test@example.com",
-        password: "password",
         name: "Test User",
         permissions: [],
       };
 
       const missingEmail = {
         id: "user-123",
-        password: "password",
-        name: "Test User",
-        permissions: [],
-      };
-
-      const missingPassword = {
-        id: "user-123",
-        email: "test@example.com",
         name: "Test User",
         permissions: [],
       };
@@ -146,20 +144,17 @@ describe("Auth Model", () => {
       const missingName = {
         id: "user-123",
         email: "test@example.com",
-        password: "password",
         permissions: [],
       };
 
       const missingPermissions = {
         id: "user-123",
         email: "test@example.com",
-        password: "password",
         name: "Test User",
       };
 
       expect(() => AuthSchema.parse(missingId)).toThrow();
       expect(() => AuthSchema.parse(missingEmail)).toThrow();
-      expect(() => AuthSchema.parse(missingPassword)).toThrow();
       expect(() => AuthSchema.parse(missingName)).toThrow();
       expect(() => AuthSchema.parse(missingPermissions)).toThrow();
     });
@@ -176,7 +171,6 @@ describe("Auth Model", () => {
         const auth = {
           id: "user-123",
           email,
-          password: "password",
           name: "Test User",
           permissions: [],
           isActive: true,
@@ -192,7 +186,6 @@ describe("Auth Model", () => {
       const validAuth = {
         id: "user-123",
         email: "test@example.com",
-        password: "password",
         name: "山田 太郎 (Yamada Taro)",
         permissions: [],
         isActive: true,
@@ -207,7 +200,6 @@ describe("Auth Model", () => {
       const validAuth = {
         id: "", // Empty but valid string
         email: "", // Empty but valid string
-        password: "", // Empty but valid string
         name: "", // Empty but valid string
         permissions: [],
         isActive: false,
@@ -217,7 +209,6 @@ describe("Auth Model", () => {
       const result = AuthSchema.parse(validAuth);
       expect(result.id).toBe("");
       expect(result.email).toBe("");
-      expect(result.password).toBe("");
       expect(result.name).toBe("");
     });
 
@@ -225,7 +216,6 @@ describe("Auth Model", () => {
       const validAuth = {
         id: "user-123",
         email: "test@example.com",
-        password: "password",
         name: "Test User",
         permissions: ["read", "write", "read", "write"], // Duplicates
         isActive: true,
@@ -242,7 +232,6 @@ describe("Auth Model", () => {
       const auth: Auth = {
         id: "user-123",
         email: "test@example.com",
-        password: "hashedPassword",
         name: "Test User",
         permissions: ["read"],
         isActive: true,
@@ -252,7 +241,6 @@ describe("Auth Model", () => {
       // TypeScript will ensure this compiles
       expect(auth.id).toBe("user-123");
       expect(auth.email).toBe("test@example.com");
-      expect(auth.password).toBe("hashedPassword");
       expect(auth.name).toBe("Test User");
       expect(auth.permissions).toEqual(["read"]);
     });
@@ -261,7 +249,6 @@ describe("Auth Model", () => {
       const auth: Auth = {
         id: "complete-user",
         email: "complete@example.com",
-        password: "completePassword",
         name: "Complete User",
         permissions: ["all"],
         isActive: true,
@@ -269,10 +256,9 @@ describe("Auth Model", () => {
       };
 
       // All fields should be present
-      expect(Object.keys(auth)).toHaveLength(7);
+      expect(Object.keys(auth)).toHaveLength(6);
       expect(auth).toHaveProperty("id");
       expect(auth).toHaveProperty("email");
-      expect(auth).toHaveProperty("password");
       expect(auth).toHaveProperty("name");
       expect(auth).toHaveProperty("permissions");
       expect(auth).toHaveProperty("isActive");

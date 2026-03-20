@@ -1,340 +1,189 @@
-import { z } from "zod";
-import { SignInRequest } from "@/requests/signin_request";
-import { AccessToken, AccessTokenSchema } from "@/models/access_token";
-import { SignUpRequest } from "@/requests/signup_request";
-import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
-import { Status, StatusSchema } from "@/models/status";
-import { ResetPasswordRequest } from "@/requests/reset_password_request";
-import { AuthSchema } from "@/models/auth";
-import { hashPassword, verifyPassword, generateToken } from "@/libraries/hash";
-import { PasswordResetRepository } from "@/repositories/password_reset_repository";
-import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
-import { AuthRepositoryInterface } from "@/repositories/auth_repository";
-import { createEmailServiceInstance } from "@/libraries/email";
-import {
-  generateResetToken,
-  createTokenExpiry,
-  isTokenExpired,
-  getCurrentTimestamp,
-} from "@/libraries/reset_token";
-import { PasswordReset } from "@/models/password_reset";
-import { EmailVerification } from "@/models/email_verification";
 import { getTranslations } from "next-intl/server";
 
-export class EmailNotVerifiedError extends Error {
-  constructor(
-    message: string = "Email not verified. Please check your email and verify your account."
-  ) {
-    super(message);
-    this.name = "EmailNotVerifiedError";
+import { buildAppUrl, buildHeaders, betterAuthHandler } from "@/libraries/auth";
+import { hashPassword } from "@/libraries/hash";
+import { prisma } from "@/libraries/prisma";
+import { Status, StatusSchema } from "@/models/status";
+import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
+import { PasswordChangeRequest } from "@/requests/password_change_request";
+import { ProfileUpdateRequest } from "@/requests/profile_update_request";
+import { ResetPasswordRequest } from "@/requests/reset_password_request";
+import { SignInRequest } from "@/requests/signin_request";
+import { SignUpRequest } from "@/requests/signup_request";
+import { UserCreateRequest } from "@/requests/admin/user_create_request";
+import { UserUpdateRequest } from "@/requests/admin/user_update_request";
+import { User, transformPrismToModel } from "@/models/user";
+
+type AuthFlowResult =
+  | { success: true; requiresEmailVerification?: boolean }
+  | { success: false; reason: "invalid_credentials" | "email_not_verified" };
+
+function isEmailVerificationEnabled(): boolean {
+  return process.env.ENABLE_EMAIL_VERIFICATION === "true";
+}
+
+async function extractAuthErrorMessage(error: unknown): Promise<string> {
+  if (!error) {
+    return "";
   }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (typeof Response !== "undefined" && error instanceof Response) {
+    try {
+      const payload = (await error.clone().json()) as Record<string, unknown>;
+      if (typeof payload.message === "string") {
+        return payload.message;
+      }
+    } catch {
+      return error.statusText ?? "";
+    }
+  }
+
+  if (typeof error === "object") {
+    const payload = error as Record<string, unknown>;
+
+    if (typeof payload.message === "string") {
+      return payload.message;
+    }
+
+    if (typeof payload.error === "string") {
+      return payload.error;
+    }
+  }
+
+  return "";
 }
 
 export class AuthService {
-  constructor(
-    private authRepository: AuthRepositoryInterface,
-    private passwordResetRepository: PasswordResetRepository,
-    private emailVerificationRepository: EmailVerificationRepository
-  ) {}
-
-  private isEmailVerificationEnabled(): boolean {
-    return process.env.ENABLE_EMAIL_VERIFICATION === "true";
-  }
-
-  async signIn(request: SignInRequest): Promise<AccessToken> {
-    // Find user by email
-    const users = await this.authRepository.get(
-      0,
-      1,
-      undefined,
-      undefined,
-      undefined,
-      [{ column: "email", operator: "=", value: request.email }]
-    );
-
-    if (users.data.length === 0) {
-      throw new Error("Invalid credentials");
-    }
-
-    const user = users.data[0];
-
-    // Verify password
-    const isValidPassword = await verifyPassword(
-      request.password,
-      user.password
-    );
-    if (!isValidPassword) {
-      throw new Error("Invalid credentials");
-    }
-
-    // Check email verification if enabled
-    console.log(user);
-    if (this.isEmailVerificationEnabled() && !user.emailVerified) {
-      throw new EmailNotVerifiedError();
-    }
-
-    // Generate access token
-    const accessToken = await generateToken();
-
-    return AccessTokenSchema.parse({
-      id: user.id,
-      access_token: accessToken,
-      token_type: "Bearer",
-      expires_in: 3600,
-      permissions: user.permissions,
-    });
-  }
-
-  async signUp(request: SignUpRequest): Promise<AccessToken | null> {
-    // Check if user already exists
-    const existingUsers = await this.authRepository.get(
-      0,
-      1,
-      undefined,
-      undefined,
-      undefined,
-      [{ column: "email", operator: "=", value: request.email }]
-    );
-
-    if (existingUsers.data.length > 0) {
-      throw new Error("User already exists");
-    }
-
-    // Hash password
-    const hashedPassword = await hashPassword(request.password);
-
-    // Create user
-    const emailVerified = !this.isEmailVerificationEnabled(); // If email verification is disabled, mark as verified
-    const newUser = await this.authRepository.create({
-      email: request.email,
-      password: hashedPassword,
-      name: request.name,
-      permissions: [],
-      isActive: true,
-      emailVerified: emailVerified,
+  async signIn(request: SignInRequest): Promise<AuthFlowResult> {
+    const user = await prisma.user.findUnique({
+      where: { email: request.email.toLowerCase() },
+      select: {
+        isActive: true,
+      },
     });
 
-    // Send verification email if enabled
-    if (this.isEmailVerificationEnabled()) {
-      await this.sendVerificationEmail(newUser.id, newUser.email);
-      // Return null to indicate email verification is required
-      return null;
+    if (user && user.isActive === false) {
+      return { success: false, reason: "invalid_credentials" };
     }
 
-    // Generate access token only if email verification is disabled
-    const accessToken = await generateToken();
-
-    return AccessTokenSchema.parse({
-      id: newUser.id,
-      access_token: accessToken,
-      token_type: "Bearer",
-      expires_in: 3600,
-      permissions: newUser.permissions,
-    });
-  }
-
-  /**
-   * メール認証トークンを作成
-   */
-  async createVerificationToken(userId: string): Promise<EmailVerification> {
-    const token = await generateResetToken(); // 同じトークン生成関数を使用
-    const expiresAt = createTokenExpiry(); // 同じ有効期限設定を使用
-    const now = new Date();
-
-    const verificationData = {
-      userId,
-      token,
-      expiresAt,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    return this.emailVerificationRepository.create(verificationData);
-  }
-
-  /**
-   * 認証メールを送信
-   */
-  async sendVerificationEmail(userId: string, email: string): Promise<void> {
     try {
-      if (!this.isEmailVerificationEnabled()) {
-        return; // メール認証が無効な場合は何もしない
-      }
-
-      // 既存のトークンを削除
-      await this.emailVerificationRepository.deleteUserTokens(userId);
-
-      // 新しい認証トークンを作成
-      const verificationToken = await this.createVerificationToken(userId);
-
-      // 認証URLを生成
-      const appUrl = process.env.APP_URL || "http://localhost:3000";
-      const verificationUrl = `${appUrl}/auth/verify-email?token=${verificationToken.token}`;
-
-      // メール送信
-      const emailService = createEmailServiceInstance();
-      await emailService.sendVerificationEmail(email, verificationUrl);
-
-      console.log(`Verification email sent to ${email}`);
-    } catch (error) {
-      console.error("Error sending verification email:", error);
-      throw new Error("Failed to send verification email");
-    }
-  }
-
-  /**
-   * メールアドレスを認証
-   */
-  async verifyEmail(token: string): Promise<Status> {
-    const t = await getTranslations("Auth");
-    try {
-      if (!this.isEmailVerificationEnabled()) {
-        return StatusSchema.parse({
-          success: false,
-          message: t("email_verification_not_enabled"),
-          code: 400,
-        });
-      }
-
-      // トークンを検索
-      const verificationToken = await this.findValidVerificationToken(token);
-
-      if (!verificationToken) {
-        return StatusSchema.parse({
-          success: false,
-          message: t("invalid_or_expired_token"),
-          code: 400,
-        });
-      }
-
-      // ユーザーを認証済みに更新
-      await this.authRepository.update(verificationToken.userId, {
-        emailVerified: true,
+      await betterAuthHandler.api.signInEmail({
+        headers: await buildHeaders(),
+        body: {
+          email: request.email,
+          password: request.password,
+          rememberMe: true,
+        },
       });
 
-      // 使用済みトークンを削除
-      await this.emailVerificationRepository.deleteUserTokens(
-        verificationToken.userId
-      );
+      return { success: true };
+    } catch (error) {
+      const message = await extractAuthErrorMessage(error);
+
+      if (message === "Email not verified") {
+        return { success: false, reason: "email_not_verified" };
+      }
+
+      return { success: false, reason: "invalid_credentials" };
+    }
+  }
+
+  async signUp(request: SignUpRequest): Promise<AuthFlowResult> {
+    try {
+      const result = await betterAuthHandler.api.signUpEmail({
+        headers: await buildHeaders(),
+        body: {
+          email: request.email,
+          password: request.password,
+          name: request.name,
+          permissions: [],
+          isActive: true,
+          language: "",
+        },
+      });
+
+      if (!isEmailVerificationEnabled()) {
+        await prisma.user.update({
+          where: { id: result.user.id },
+          data: { emailVerified: true },
+        });
+      }
+
+      return {
+        success: true,
+        requiresEmailVerification: result.token == null,
+      };
+    } catch (error) {
+      const message = await extractAuthErrorMessage(error);
+
+      if (message === "Email not verified") {
+        return { success: false, reason: "email_not_verified" };
+      }
+
+      return { success: false, reason: "invalid_credentials" };
+    }
+  }
+
+  async verifyEmail(token: string): Promise<Status> {
+    const t = await getTranslations("Auth");
+
+    if (!isEmailVerificationEnabled()) {
+      return StatusSchema.parse({
+        success: false,
+        message: t("email_verification_not_enabled"),
+        code: 400,
+      });
+    }
+
+    try {
+      const result = await betterAuthHandler.api.verifyEmail({
+        headers: await buildHeaders(),
+        query: { token },
+      });
 
       return StatusSchema.parse({
-        success: true,
+        success: result?.status === true,
         message: t("email_verified_successfully"),
         code: 200,
       });
     } catch (error) {
-      console.error("Error verifying email:", error);
+      const message = await extractAuthErrorMessage(error);
+      const invalidToken =
+        message === "invalid_token" || message === "token_expired";
+
       return StatusSchema.parse({
         success: false,
-        message: t("email_verification_failed"),
-        code: 500,
+        message: invalidToken
+          ? t("invalid_or_expired_token")
+          : t("email_verification_failed"),
+        code: invalidToken ? 400 : 500,
       });
     }
   }
 
-  /**
-   * メールアドレスのトークンを認証（真偽値を返す）
-   */
-  async verifyEmailToken(token: string): Promise<boolean> {
-    try {
-      if (!this.isEmailVerificationEnabled()) {
-        return false;
-      }
-
-      // トークンを検索
-      const verificationToken = await this.findValidVerificationToken(token);
-
-      if (!verificationToken) {
-        return false;
-      }
-
-      // ユーザーを認証済みに更新
-      await this.authRepository.update(verificationToken.userId, {
-        emailVerified: true,
-      });
-
-      // 使用済みトークンを削除
-      await this.emailVerificationRepository.deleteUserTokens(
-        verificationToken.userId
-      );
-
-      return true;
-    } catch (error) {
-      console.error("Error verifying email token:", error);
-      return false;
-    }
-  }
-
-  /**
-   * 有効な認証トークンを検索
-   */
-  async findValidVerificationToken(
-    token: string
-  ): Promise<EmailVerification | null> {
-    try {
-      const verificationToken =
-        await this.emailVerificationRepository.findByToken(token);
-
-      if (!verificationToken) {
-        return null;
-      }
-
-      if (isTokenExpired(verificationToken.expiresAt)) {
-        return null;
-      }
-
-      return verificationToken;
-    } catch (error) {
-      console.error("Error finding valid verification token:", error);
-      return null;
-    }
-  }
-
-  /**
-   * 認証メールを再送信
-   */
   async resendVerificationEmail(email: string): Promise<Status> {
     const t = await getTranslations("Auth");
+
+    if (!isEmailVerificationEnabled()) {
+      return StatusSchema.parse({
+        success: false,
+        message: t("email_verification_not_enabled"),
+        code: 400,
+      });
+    }
+
     try {
-      if (!this.isEmailVerificationEnabled()) {
-        return StatusSchema.parse({
-          success: false,
-          message: t("email_verification_not_enabled"),
-          code: 400,
-        });
-      }
-
-      // ユーザーを検索
-      const users = await this.authRepository.get(
-        0,
-        1,
-        undefined,
-        undefined,
-        undefined,
-        [{ column: "email", operator: "=", value: email }]
-      );
-
-      if (users.data.length === 0) {
-        // セキュリティのため、メールアドレスの存在を明かさない
-        return StatusSchema.parse({
-          success: true,
-          message: t("verification_email_sent"),
-          code: 200,
-        });
-      }
-
-      const user = users.data[0];
-
-      if (user.emailVerified) {
-        return StatusSchema.parse({
-          success: false,
-          message: t("email_already_verified"),
-          code: 400,
-        });
-      }
-
-      // 認証メールを送信
-      await this.sendVerificationEmail(user.id, user.email);
+      await betterAuthHandler.api.sendVerificationEmail({
+        headers: await buildHeaders(),
+        body: {
+          email,
+          callbackURL: buildAppUrl("/signin"),
+        },
+      });
 
       return StatusSchema.parse({
         success: true,
@@ -342,312 +191,180 @@ export class AuthService {
         code: 200,
       });
     } catch (error) {
-      console.error("Error resending verification email:", error);
-      return StatusSchema.parse({
-        success: true,
-        message: t("verification_email_sent"),
-        code: 200,
-      });
-    }
-  }
-
-  /**
-   * 期限切れ認証トークンのクリーンアップ
-   */
-  async cleanupExpiredVerificationTokens(): Promise<void> {
-    try {
-      const now = getCurrentTimestamp();
-      const expiredTokens = await this.emailVerificationRepository.get(
-        0,
-        1000,
-        undefined,
-        undefined,
-        undefined,
-        [{ column: "expiresAt", operator: "<", value: now }]
-      );
-
-      for (const token of expiredTokens.data) {
-        await this.emailVerificationRepository.delete(token.id);
-      }
-
-      console.log(
-        `Cleaned up ${expiredTokens.data.length} expired email verification tokens`
-      );
-    } catch (error) {
-      console.error("Error cleaning up expired verification tokens:", error);
-    }
-  }
-
-  async forgotPassword(request: ForgotPasswordRequest): Promise<Status> {
-    try {
-      // Find user by email
-      const users = await this.authRepository.get(
-        0,
-        1,
-        undefined,
-        undefined,
-        undefined,
-        [{ column: "email", operator: "=", value: request.email }]
-      );
-
-      if (users.data.length === 0) {
-        // Don't reveal whether email exists or not
-        return StatusSchema.parse({
-          success: true,
-          message:
-            "If an account with that email exists, a password reset link has been sent.",
-          code: 200,
-        });
-      }
-
-      const user = users.data[0];
-
-      // Delete any existing tokens for this user
-      await this.passwordResetRepository.deleteUserTokens(user.id);
-
-      // Create new reset token
-      const resetToken = await this.createResetToken(user.id);
-
-      // Send email with reset link
-      const appUrl = process.env.APP_URL || "http://localhost:3000";
-      const resetUrl = `${appUrl}/reset-password?token=${resetToken.token}`;
-
-      const emailService = createEmailServiceInstance();
-      await emailService.sendPasswordResetEmail(user.email, resetUrl);
+      const message = await extractAuthErrorMessage(error);
 
       return StatusSchema.parse({
-        success: true,
+        success: false,
         message:
-          "If an account with that email exists, a password reset link has been sent.",
-        code: 200,
-      });
-    } catch (error) {
-      console.error("Error in forgotPassword:", error);
-
-      // Still return success to avoid revealing system errors
-      return StatusSchema.parse({
-        success: true,
-        message:
-          "If an account with that email exists, a password reset link has been sent.",
-        code: 200,
+          message === "Email is already verified"
+            ? t("email_already_verified")
+            : t("email_verification_failed"),
+        code: message === "Email is already verified" ? 400 : 500,
       });
     }
   }
 
-  /**
-   * パスワードリセット処理
-   */
-  async resetPassword(request: ResetPasswordRequest): Promise<Status> {
-    try {
-      // Find and validate the reset token
-      const resetToken = await this.findValidResetToken(request.token);
-
-      if (!resetToken) {
-        throw new Error("Invalid or expired reset token");
-      }
-
-      // Find the user
-      const user = await this.authRepository.findById(resetToken.userId);
-
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      // Verify that the email matches (extra security check)
-      if (user.email !== request.email) {
-        throw new Error("Invalid or expired reset token");
-      }
-
-      // Hash new password
-      const hashedPassword = await hashPassword(request.password);
-
-      // Update user password
-      await this.authRepository.update(user.id, {
-        password: hashedPassword,
-      });
-
-      // Mark the token as used
-      await this.passwordResetRepository.update(resetToken.id, {
-        usedAt: getCurrentTimestamp(),
-      });
-
-      // Delete all other tokens for this user
-      await this.passwordResetRepository.deleteUserTokens(user.id);
-
-      return StatusSchema.parse({
-        success: true,
-        message: "Password has been reset successfully.",
-        code: 200,
-      });
-    } catch (error) {
-      console.error("Error in resetPassword:", error);
-      throw new Error("Invalid reset token");
-    }
-  }
-
-  /**
-   * ユーザーパスワード更新
-   */
-  async updateUserPassword(userId: string, newPassword: string): Promise<void> {
-    if (!newPassword || newPassword.trim() === "") {
-      // Don't update if password is empty
-      return;
-    }
-
-    const hashedPassword = await hashPassword(newPassword);
-    await this.authRepository.update(userId, {
-      password: hashedPassword,
+  async forgotPassword(request: ForgotPasswordRequest): Promise<void> {
+    await betterAuthHandler.api.requestPasswordReset({
+      headers: await buildHeaders(),
+      body: {
+        email: request.email,
+      },
     });
   }
 
-  /**
-   * ハッシュ化されたパスワードでユーザー作成
-   */
-  async createUserWithHashedPassword(
-    userData: Omit<z.infer<typeof AuthSchema>, "id" | "password"> & {
-      password: string;
-    }
-  ): Promise<z.infer<typeof AuthSchema>> {
-    const hashedPassword = await hashPassword(userData.password);
-
-    return this.authRepository.create({
-      ...userData,
-      password: hashedPassword,
+  async resetPassword(request: ResetPasswordRequest): Promise<void> {
+    await betterAuthHandler.api.resetPassword({
+      headers: await buildHeaders(),
+      body: {
+        token: request.token,
+        newPassword: request.password,
+      },
     });
   }
 
-  /**
-   * ユーザーデータ更新（パスワードハッシュ化を含む）
-   */
-  async updateUserData(
-    userId: string,
-    userData: Partial<z.infer<typeof AuthSchema>>
-  ): Promise<z.infer<typeof AuthSchema>> {
-    const updateData = { ...userData };
-
-    // If password is provided and not empty, hash it
-    if (updateData.password && updateData.password.trim() !== "") {
-      updateData.password = await hashPassword(updateData.password);
-    } else {
-      // Remove password from update data if it's empty
-      delete updateData.password;
-    }
-
-    return this.authRepository.update(userId, updateData);
-  }
-
-  /**
-   * リセットトークン作成
-   */
-  async createResetToken(userId: string): Promise<PasswordReset> {
-    const token = await generateResetToken();
-    const expiresAt = createTokenExpiry();
-    const now = new Date();
-
-    const resetData = {
-      userId,
-      token,
-      expiresAt,
-      usedAt: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    return this.passwordResetRepository.create(resetData);
-  }
-
-  /**
-   * 有効なリセットトークンの検索
-   */
-  async findValidResetToken(token: string): Promise<PasswordReset | null> {
-    try {
-      const resetTokens = await this.passwordResetRepository.get(
-        0,
-        1,
-        undefined,
-        undefined,
-        undefined,
-        [
-          { column: "token", operator: "=", value: token },
-          { column: "usedAt", operator: "=", value: null },
-        ]
-      );
-
-      if (resetTokens.data.length === 0) {
-        return null;
-      }
-
-      const resetToken = resetTokens.data[0];
-
-      if (isTokenExpired(resetToken.expiresAt)) {
-        return null;
-      }
-
-      return resetToken;
-    } catch (error) {
-      console.error("Error finding valid token:", error);
-      return null;
-    }
-  }
-
-  /**
-   * 期限切れトークンのクリーンアップ
-   */
-  async cleanupExpiredTokens(): Promise<void> {
-    try {
-      const now = getCurrentTimestamp();
-      const expiredTokens = await this.passwordResetRepository.get(
-        0,
-        1000,
-        undefined,
-        undefined,
-        undefined,
-        [{ column: "expiresAt", operator: "<", value: now }]
-      );
-
-      for (const token of expiredTokens.data) {
-        await this.passwordResetRepository.delete(token.id);
-      }
-
-      console.log(
-        `Cleaned up ${expiredTokens.data.length} expired password reset tokens`
-      );
-    } catch (error) {
-      console.error("Error cleaning up expired tokens:", error);
-    }
-  }
-
-  /**
-   * プロフィール情報を更新する（設定画面用）
-   */
   async updateProfile(
     userId: string,
-    name: string,
-    email: string
-  ): Promise<z.infer<typeof AuthSchema>> {
-    return this.authRepository.update(userId, { name, email });
-  }
+    request: ProfileUpdateRequest
+  ): Promise<void> {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        name: true,
+      },
+    });
 
-  /**
-   * パスワードを変更する（設定画面用）
-   */
-  async changePassword(
-    userId: string,
-    currentPassword: string,
-    newPassword: string
-  ): Promise<z.infer<typeof AuthSchema>> {
-    const user = await this.authRepository.findById(userId);
-
-    // 現在のパスワードを検証
-    const isValid = await verifyPassword(currentPassword, user.password);
-
-    if (!isValid) {
-      throw new Error("invalid_current_password");
+    if (!currentUser) {
+      throw new Error("user_not_found");
     }
 
-    // 新しいパスワードをハッシュ化して更新
-    const hashedNewPassword = await hashPassword(newPassword);
+    if (request.name !== currentUser.name) {
+      await betterAuthHandler.api.updateUser({
+        headers: await buildHeaders(),
+        body: {
+          name: request.name,
+        },
+      });
+    }
 
-    return this.authRepository.update(userId, { password: hashedNewPassword });
+    if (request.email !== currentUser.email) {
+      if (isEmailVerificationEnabled()) {
+        await betterAuthHandler.api.changeEmail({
+          headers: await buildHeaders(),
+          body: {
+            newEmail: request.email,
+            callbackURL: buildAppUrl("/settings"),
+          },
+        });
+      } else {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            email: request.email.toLowerCase(),
+            emailVerified: true,
+          },
+        });
+      }
+    }
+  }
+
+  async changePassword(
+    _userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    try {
+      await betterAuthHandler.api.changePassword({
+        headers: await buildHeaders(),
+        body: {
+          currentPassword,
+          newPassword,
+          revokeOtherSessions: true,
+        },
+      });
+    } catch (error) {
+      const message = await extractAuthErrorMessage(error);
+
+      if (message === "Invalid password") {
+        throw new Error("invalid_current_password");
+      }
+
+      throw error;
+    }
+  }
+
+  async createUser(request: UserCreateRequest): Promise<User> {
+    const hashedPassword = await hashPassword(request.password);
+
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          email: request.email.toLowerCase(),
+          name: request.name,
+          permissions: request.permissions,
+          avatarKey: request.avatarKey,
+          language: "",
+          isActive: true,
+          emailVerified: true,
+        },
+      });
+
+      await tx.account.create({
+        data: {
+          userId: createdUser.id,
+          providerId: "credential",
+          accountId: createdUser.id,
+          password: hashedPassword,
+        },
+      });
+
+      return createdUser;
+    });
+
+    return transformPrismToModel(user);
+  }
+
+  async updateUser(id: string, request: UserUpdateRequest): Promise<User> {
+    const user = await prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id },
+        data: {
+          email: request.email.toLowerCase(),
+          name: request.name,
+          permissions: request.permissions,
+          avatarKey: request.avatarKey,
+        },
+      });
+
+      if (request.password && request.password.trim() !== "") {
+        const hashedPassword = await hashPassword(request.password);
+
+        await tx.account.upsert({
+          where: {
+            providerId_accountId: {
+              providerId: "credential",
+              accountId: id,
+            },
+          },
+          update: {
+            userId: id,
+            password: hashedPassword,
+          },
+          create: {
+            userId: id,
+            providerId: "credential",
+            accountId: id,
+            password: hashedPassword,
+          },
+        });
+      }
+
+      return updatedUser;
+    });
+
+    return transformPrismToModel(user);
   }
 }
+
+export type { AuthFlowResult };

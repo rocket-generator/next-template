@@ -15,7 +15,7 @@ export async function generateMetadata() {
 }
 
 interface ResetPasswordPageProps {
-  searchParams: Promise<{ token?: string; email?: string }>;
+  searchParams: Promise<{ token?: string }>;
 }
 
 export default async function ResetPasswordPage({
@@ -23,7 +23,6 @@ export default async function ResetPasswordPage({
 }: ResetPasswordPageProps) {
   const params = await searchParams;
   const token = params.token || "";
-  const email = params.email || "";
 
   const handleSubmit = async (formData: ResetPasswordRequest) => {
     "use server";
@@ -34,11 +33,5 @@ export default async function ResetPasswordPage({
     return result;
   };
 
-  return (
-    <AuthResetPasswordForm
-      token={token}
-      email={email}
-      onSubmit={handleSubmit}
-    />
-  );
+  return <AuthResetPasswordForm token={token} onSubmit={handleSubmit} />;
 }

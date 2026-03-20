@@ -15,7 +15,6 @@ model User {
   id                 String          @id @default(uuid()) @db.Uuid // ユーザーの一意識別子（UUID形式）
   name               String // ユーザーの表示名
   email              String          @unique // ログインに使用するメールアドレス（一意制約）
-  password           String // ハッシュ化されたパスワード（PBKDF2形式: pbkdf2:100000:salt:hash）
   permissions        Json // ユーザーの権限配列（JSON形式で保存）
   language           String          @default("") // ユーザーの言語設定（国際化対応）
   avatarKey          String?         @map("avatar_key") // アバター画像のストレージキー
@@ -24,63 +23,22 @@ model User {
   createdAt          DateTime        @default(now()) @map("created_at") // レコード作成日時
   updatedAt          DateTime        @updatedAt @map("updated_at") // レコード更新日時
   
-  passwordResets     PasswordReset[] // パスワードリセット関連のレコード（1対多）
-  emailVerifications EmailVerification[] // メール認証関連のレコード（1対多）
   sessions           Session[]
   accounts           Account[]
   
   @@map("users")
 }
 
-/// メール認証トークンを管理するテーブル
-/// ユーザー登録時のメール認証機能で使用
-model EmailVerification {
-  id        String   @id @default(uuid()) @db.Uuid // メール認証レコードの一意識別子
-  userId    String   @map("user_id") @db.Uuid // 認証対象のユーザーID（外部キー）
-  token     String   @unique // 認証用の一意トークン
-  expiresAt BigInt   @map("expires_at") // トークンの有効期限（Unix timestamp）
-  createdAt DateTime @default(now()) @map("created_at") // レコード作成日時
-  updatedAt DateTime @updatedAt @map("updated_at") // レコード更新日時
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) // 関連するユーザー（多対1）
-
-  @@index([token])
-  @@index([userId])
-  @@index([expiresAt])
-  @@map("email_verifications")
-}
-
-/// パスワードリセットトークンを管理するテーブル
-/// パスワードを忘れた場合のリセット機能で使用
-model PasswordReset {
-  id        String   @id @default(uuid()) @db.Uuid // パスワードリセットレコードの一意識別子
-  userId    String   @map("user_id") @db.Uuid // リセット対象のユーザーID（外部キー）
-  token     String   @unique // リセット用の一意トークン
-  expiresAt BigInt   @map("expires_at") // トークンの有効期限（Unix timestamp）
-  usedAt    BigInt?  @map("used_at") // トークン使用日時（使用済みの場合のみ設定）
-  createdAt DateTime @default(now()) @map("created_at") // レコード作成日時
-  updatedAt DateTime @updatedAt @map("updated_at") // レコード更新日時
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) // 関連するユーザー（多対1）
-
-  @@index([token])
-  @@index([userId])
-  @@index([expiresAt])
-  @@map("password_resets")
-}
-
 /// Better Auth のセッション情報を保持するテーブル
 model Session {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id") @db.Uuid
-  token       String   @unique
-  expiresAt   DateTime @map("expires_at")
-  accessToken String?  @map("access_token")
-  permissions Json?    @map("permissions")
-  ipAddress   String?  @map("ip_address")
-  userAgent   String?  @map("user_agent")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -17,13 +17,11 @@ import Link from "next/link";
 
 interface AuthResetPasswordFormProps {
   token: string;
-  email: string;
   onSubmit: (formData: ResetPasswordRequest) => Promise<string>;
 }
 
 export default function AuthResetPasswordForm({
   token,
-  email,
   onSubmit,
 }: AuthResetPasswordFormProps) {
   const [, startTransition] = React.useTransition();
@@ -44,7 +42,6 @@ export default function AuthResetPasswordForm({
   } = useForm<ResetPasswordRequest>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      email,
       token,
       password: "",
       confirm_password: "",
@@ -107,31 +104,6 @@ export default function AuthResetPasswordForm({
         >
           <div className="space-y-4">
             <Input type="hidden" {...register("token")} />
-
-            <div>
-              <Label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                {tAuth("email")}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                className={cn(
-                  "mt-1",
-                  errors.email && "border-red-500 focus:ring-red-500"
-                )}
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
 
             <div>
               <Label

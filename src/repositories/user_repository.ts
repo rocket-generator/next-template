@@ -12,7 +12,6 @@ function transformPrismaToAuth(data: unknown): z.infer<typeof AuthSchema> {
   return {
     id: userData.id,
     email: userData.email,
-    password: userData.password,
     name: userData.name,
     permissions: userData.permissions,
     isActive: userData.isActive,

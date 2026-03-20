@@ -43,9 +43,9 @@ async function main() {
     const user = await prisma.user.create({
       data: {
         email: userData.email,
-        password: hashedPassword,
         name: userData.name,
         permissions: userData.permissions,
+        language: "",
         isActive: userData.isActive,
         emailVerified: userData.emailVerified,
       },
@@ -54,7 +54,7 @@ async function main() {
       data: {
         userId: user.id,
         providerId: "credential",
-        accountId: userData.email.toLowerCase(),
+        accountId: user.id,
         password: hashedPassword,
       },
     });

@@ -17,7 +17,6 @@ export function transformPrismToModel(data: unknown): User {
   const transformedData = {
     id: prismaData.id,
     email: prismaData.email,
-    password: prismaData.password,
     name: prismaData.name,
     permissions: Array.isArray(prismaData.permissions)
       ? (prismaData.permissions as string[])

@@ -1,10 +1,7 @@
 import { Suspense } from "react";
 import { User } from "@/models/user";
 import { UserRepository } from "@/repositories/user_repository";
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import AuthError from "@/exceptions/auth_error";
-import { headers } from "next/headers";
 import AdminPageHeader from "@/components/molecules/AdminPageHeader";
 import DataTable from "@/components/organisms/DataTable";
 import { Plus } from "lucide-react";
@@ -46,21 +43,14 @@ export default async function Page(props: Props) {
   const tUser = await getTranslations("Users");
   const tCrud = await getTranslations("Crud");
 
-  let data: { data: User[]; count: number } | null = null;
-  try {
-    const repository = new UserRepository();
-    data = await repository.get(offset, limit, order, direction, query);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      const heads = await headers();
-      const host = await heads.get("host");
-      const protocol = (await heads.get("x-forwarded-proto")) || "http";
-      const pathname = `/admin/users?offset=${offset}&limit=${limit}&order=${order}&direction=${direction}&query=${query}`;
-      const fullUrl = `${protocol}://${host}${pathname}`;
-      redirect("/signin?callback_url=" + encodeURIComponent(fullUrl));
-    }
-    console.log(error);
-  }
+  const repository = new UserRepository();
+  const data: { data: User[]; count: number } = await repository.get(
+    offset,
+    limit,
+    order,
+    direction,
+    query
+  );
   const structure = [
     {
       name: tUser("name"),
@@ -105,13 +95,13 @@ export default async function Page(props: Props) {
             />
             <DataTable
               basePath={"/admin/users"}
-              count={data?.count || 0}
+              count={data.count}
               offset={offset}
               limit={limit}
               order={order}
               direction={direction}
               query={query}
-              data={data?.data || []}
+              data={data.data}
               structure={structure}
             />
           </div>

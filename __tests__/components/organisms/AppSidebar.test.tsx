@@ -11,7 +11,7 @@ const mockUsePathname = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
-  usePathname: mockUsePathname,
+  usePathname: () => mockUsePathname(),
 }));
 
 jest.mock("next-intl", () => ({

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const AuthSchema = z.object({
   id: z.string(),
   email: z.string(),
-  password: z.string(),
+  password: z.string().optional(),
   name: z.string(),
   permissions: z.array(z.string()),
   isActive: z.boolean(),

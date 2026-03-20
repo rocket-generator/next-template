@@ -68,7 +68,6 @@ describe("UserRepository", () => {
       const prismaData = {
         id: "user-1",
         email: "test@example.com",
-        password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"],
         createdAt: new Date(),
@@ -80,7 +79,6 @@ describe("UserRepository", () => {
       expect(result).toEqual({
         id: "user-1",
         email: "test@example.com",
-        password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"],
         avatarKey: undefined,
@@ -94,7 +92,6 @@ describe("UserRepository", () => {
       const prismaData = {
         id: "user-2",
         email: "user2@example.com",
-        password: "hashedPassword2",
         name: "User Two",
         permissions: ["admin"],
       };
@@ -114,7 +111,6 @@ describe("UserRepository", () => {
       const prismaData = {
         id: "user-3",
         email: "user3@example.com",
-        password: "hashedPassword3",
         name: "User Three",
         permissions: [],
       };
@@ -129,7 +125,6 @@ describe("UserRepository", () => {
       const prismaData = {
         id: "user-4",
         email: "山田太郎@example.co.jp",
-        password: "hashedPassword4",
         name: "山田 太郎",
         permissions: ["読み取り", "書き込み"],
       };
@@ -148,7 +143,6 @@ describe("UserRepository", () => {
       const validUser: User = {
         id: "user-1",
         email: "test@example.com",
-        password: "hashedPassword",
         name: "Test User",
         permissions: ["read", "write"],
         avatarKey: undefined,
@@ -164,7 +158,6 @@ describe("UserRepository", () => {
       const invalidUser = {
         // Missing required id field
         email: "test@example.com",
-        password: "hashedPassword",
         name: "Test User",
         permissions: ["read"],
       };
@@ -176,7 +169,6 @@ describe("UserRepository", () => {
       const invalidUser = {
         id: "user-1",
         email: "invalid-email", // Invalid email format
-        password: "hashedPassword",
         name: "Test User",
         permissions: [],
       };

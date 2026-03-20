@@ -30,24 +30,10 @@ export function useAuthSession() {
     (getNestedProperty(raw, "user") as MaybeRecord) ??
     (session ? (getNestedProperty(session, "user") as MaybeRecord) : null);
 
-  const sessionPermissions = extractArray(
-    getNestedProperty(session, "permissions")
-  );
-  const userPermissions = extractArray(getNestedProperty(user, "permissions"));
-
-  const permissions =
-    sessionPermissions.length > 0 ? sessionPermissions : userPermissions;
-
-  const accessToken = getNestedProperty<string | undefined>(
-    session,
-    "accessToken"
-  );
-
   return {
     session,
     user,
-    permissions,
-    accessToken,
+    permissions: extractArray(getNestedProperty(user, "permissions")),
     isPending,
     error,
     refetch,

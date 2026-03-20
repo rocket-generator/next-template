@@ -5,9 +5,6 @@ import {
   ForgotPasswordRequest,
 } from "@/requests/forgot_password_request";
 import { InvalidInput, Success } from "@/constants/auth";
-import { UserRepository } from "@/repositories/user_repository";
-import { PasswordResetRepository } from "@/repositories/password_reset_repository";
-import { EmailVerificationRepository } from "@/repositories/email_verification_repository";
 import { AuthService } from "@/services/auth_service";
 
 export async function forgotPasswordAction(
@@ -19,14 +16,7 @@ export async function forgotPasswordAction(
       return InvalidInput;
     }
 
-    const userRepository = new UserRepository();
-    const passwordResetRepository = new PasswordResetRepository();
-    const emailVerificationRepository = new EmailVerificationRepository();
-    const authService = new AuthService(
-      userRepository,
-      passwordResetRepository,
-      emailVerificationRepository
-    );
+    const authService = new AuthService();
     await authService.forgotPassword(validatedInput.data);
 
     return Success;
