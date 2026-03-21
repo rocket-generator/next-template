@@ -1,5 +1,5 @@
 import { UserSchema, User, transformPrismToModel } from "@/models/user";
-import { User as PrismaUser } from "@/generated/prisma";
+import type { User as PrismaUser } from "@/generated/prisma/client";
 
 describe("User Model", () => {
   describe("UserSchema", () => {

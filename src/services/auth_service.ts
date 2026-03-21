@@ -1,11 +1,14 @@
 import { getTranslations } from "next-intl/server";
 
-import { buildAppUrl, buildHeaders, betterAuthHandler } from "@/libraries/auth";
+import {
+  buildAppUrl,
+  buildHeaders,
+  getBetterAuthHandler,
+} from "@/libraries/auth";
 import { hashPassword } from "@/libraries/hash";
 import { prisma } from "@/libraries/prisma";
 import { Status, StatusSchema } from "@/models/status";
 import { ForgotPasswordRequest } from "@/requests/forgot_password_request";
-import { PasswordChangeRequest } from "@/requests/password_change_request";
 import { ProfileUpdateRequest } from "@/requests/profile_update_request";
 import { ResetPasswordRequest } from "@/requests/reset_password_request";
 import { SignInRequest } from "@/requests/signin_request";
@@ -71,7 +74,8 @@ export class AuthService {
     }
 
     try {
-      await betterAuthHandler.api.signInEmail({
+      const authHandler = getBetterAuthHandler();
+      await authHandler.api.signInEmail({
         headers: await buildHeaders(),
         body: {
           email: request.email,
@@ -94,7 +98,8 @@ export class AuthService {
 
   async signUp(request: SignUpRequest): Promise<AuthFlowResult> {
     try {
-      const result = await betterAuthHandler.api.signUpEmail({
+      const authHandler = getBetterAuthHandler();
+      const result = await authHandler.api.signUpEmail({
         headers: await buildHeaders(),
         body: {
           email: request.email,
@@ -140,7 +145,8 @@ export class AuthService {
     }
 
     try {
-      const result = await betterAuthHandler.api.verifyEmail({
+      const authHandler = getBetterAuthHandler();
+      const result = await authHandler.api.verifyEmail({
         headers: await buildHeaders(),
         query: { token },
       });
@@ -177,7 +183,8 @@ export class AuthService {
     }
 
     try {
-      await betterAuthHandler.api.sendVerificationEmail({
+      const authHandler = getBetterAuthHandler();
+      await authHandler.api.sendVerificationEmail({
         headers: await buildHeaders(),
         body: {
           email,
@@ -205,7 +212,8 @@ export class AuthService {
   }
 
   async forgotPassword(request: ForgotPasswordRequest): Promise<void> {
-    await betterAuthHandler.api.requestPasswordReset({
+    const authHandler = getBetterAuthHandler();
+    await authHandler.api.requestPasswordReset({
       headers: await buildHeaders(),
       body: {
         email: request.email,
@@ -214,7 +222,8 @@ export class AuthService {
   }
 
   async resetPassword(request: ResetPasswordRequest): Promise<void> {
-    await betterAuthHandler.api.resetPassword({
+    const authHandler = getBetterAuthHandler();
+    await authHandler.api.resetPassword({
       headers: await buildHeaders(),
       body: {
         token: request.token,
@@ -240,7 +249,8 @@ export class AuthService {
     }
 
     if (request.name !== currentUser.name) {
-      await betterAuthHandler.api.updateUser({
+      const authHandler = getBetterAuthHandler();
+      await authHandler.api.updateUser({
         headers: await buildHeaders(),
         body: {
           name: request.name,
@@ -250,7 +260,8 @@ export class AuthService {
 
     if (request.email !== currentUser.email) {
       if (isEmailVerificationEnabled()) {
-        await betterAuthHandler.api.changeEmail({
+        const authHandler = getBetterAuthHandler();
+        await authHandler.api.changeEmail({
           headers: await buildHeaders(),
           body: {
             newEmail: request.email,
@@ -275,7 +286,8 @@ export class AuthService {
     newPassword: string
   ): Promise<void> {
     try {
-      await betterAuthHandler.api.changePassword({
+      const authHandler = getBetterAuthHandler();
+      await authHandler.api.changePassword({
         headers: await buildHeaders(),
         body: {
           currentPassword,

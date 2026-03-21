@@ -12,8 +12,7 @@ dist
 
 # Environment files
 .env*
-!.env.sample
-!.env.docker
+!.env.example
 
 # Development and testing
 coverage

@@ -24,6 +24,7 @@ export default function EmailVerificationForm({
   onResendEmail,
 }: EmailVerificationFormProps) {
   const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const router = useRouter();
   const [status, setStatus] = useState<
     "loading" | "success" | "error" | "resending" | "resend_success"
@@ -33,11 +34,7 @@ export default function EmailVerificationForm({
   const t = useTranslations("Auth");
 
   useEffect(() => {
-    const token = searchParams.get("token");
-
     if (!token) {
-      setStatus("error");
-      setMessage(t("token_missing"));
       return;
     }
 
@@ -57,7 +54,7 @@ export default function EmailVerificationForm({
         setStatus("error");
         setMessage(t("verification_error"));
       });
-  }, [searchParams, router, onVerifyEmail, t]);
+  }, [token, onVerifyEmail, t]);
 
   // 成功時に自動リダイレクト
   useEffect(() => {
@@ -96,7 +93,11 @@ export default function EmailVerificationForm({
     }
   };
 
-  if (status === "loading") {
+  const isMissingToken = !token && status === "loading";
+  const resolvedStatus = isMissingToken ? "error" : status;
+  const resolvedMessage = isMissingToken ? t("token_missing") : message;
+
+  if (resolvedStatus === "loading") {
     return (
       <div
         data-testid="email-verification-loading"
@@ -113,7 +114,7 @@ export default function EmailVerificationForm({
     );
   }
 
-  if (status === "success") {
+  if (resolvedStatus === "success") {
     return (
       <div
         data-testid="email-verification-success"
@@ -139,7 +140,7 @@ export default function EmailVerificationForm({
               />
             </svg>
           </div>
-          <p className="mt-4 text-sm text-gray-600">{message}</p>
+          <p className="mt-4 text-sm text-gray-600">{resolvedMessage}</p>
           <p className="mt-4 text-sm text-gray-600">
             {t("verification_success_message")}
           </p>
@@ -158,7 +159,7 @@ export default function EmailVerificationForm({
   }
 
   // リセンド成功状態
-  if (status === "resend_success") {
+  if (resolvedStatus === "resend_success") {
     return (
       <div
         data-testid="email-verification-resend-success"
@@ -184,7 +185,7 @@ export default function EmailVerificationForm({
               />
             </svg>
           </div>
-          <p className="mt-4 text-sm text-gray-600">{message}</p>
+          <p className="mt-4 text-sm text-gray-600">{resolvedMessage}</p>
           <div className="mt-6">
             <Link
               data-testid="signin-link"
@@ -209,12 +210,12 @@ export default function EmailVerificationForm({
         <h1 className="text-2xl font-bold">{t("email_verification")}</h1>
         <p className="mt-2 text-gray-600">{t("verification_error")}</p>
       </div>
-      {message && (
+      {resolvedMessage && (
         <div
           data-testid="error-message"
           className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded"
         >
-          {message}
+          {resolvedMessage}
         </div>
       )}
       <form className="mt-8 space-y-6" onSubmit={(e) => e.preventDefault()}>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { User as PrismaModel } from "@/generated/prisma";
+import type { User as PrismaModel } from "@/generated/prisma/client";
 import { AuthSchema } from "./auth";
 
 export const UserSchema = AuthSchema.extend({

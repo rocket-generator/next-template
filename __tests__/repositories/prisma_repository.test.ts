@@ -51,7 +51,11 @@ describe("PrismaRepository", () => {
 
   beforeEach(() => {
     repository = new TestPrismaRepository();
-    mockPrismaModel = require("@/libraries/prisma").prisma.testModel;
+    mockPrismaModel = (
+      jest.requireMock("@/libraries/prisma") as {
+        prisma: Record<string, unknown>;
+      }
+    ).prisma.testModel;
     jest.clearAllMocks();
   });
 

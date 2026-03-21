@@ -116,7 +116,7 @@ export function createEmailServiceInstance(): EmailService {
 
 ### 5. 環境変数の追加
 
-`.env.sample` に新しいプロバイダー用の環境変数を追加：
+`.env.example` に新しいプロバイダー用の環境変数を追加：
 
 ```bash
 # Email Provider Selection
@@ -1138,18 +1138,21 @@ alwaysApply: false
   "dependencies": {
     "better-auth": "^1.3.29",
     "@better-fetch/fetch": "^1.1.18",
-    "@prisma/client": "^6.8.2",
+    "@prisma/client": "^7.5.0",
+    "@prisma/adapter-pg": "^7.5.0",
+    "pg": "^8.20.0",
     "next-intl": "^3.26.3"
   },
   "devDependencies": {
-    "prisma": "^6.8.2",
+    "prisma": "^7.5.0",
+    "dotenv": "^17.3.1",
     "@types/node": "^20",
     "typescript": "^5"
   }
 }
 ```
 
-`better-auth/adapters/prisma` を利用するため、Prisma の生成物は `src/generated/prisma` に配置しています。
+Prisma CLI の設定は `prisma.config.ts` に集約しています。`better-auth/adapters/prisma` を利用するため、Prisma の生成物は `src/generated/prisma` に配置し、アプリ側では `src/generated/prisma/client` を import します。`src/generated/prisma` は Git 管理対象ではなく、`npm run db:generate` で再生成する前提です。
 
 ## ディレクトリ構造
 
@@ -1178,7 +1181,7 @@ prisma/
 
 ## 環境変数
 
-必須となるキーを整理します。全シーンで `.env.sample` / `.env.docker` を参照してください。
+必須となるキーを整理します。ホスト実行時は `.env.example` を参照してください。Docker 開発では `docker-compose.yml` 側の既定値も利用できます。
 
 | 変数 | 用途 | 備考 |
 | ---- | ---- | ---- |
@@ -3446,7 +3449,7 @@ export function createStorageServiceInstance(): StorageService {
 
 ### 5. 環境変数の追加
 
-`.env.sample` に新しいプロバイダー用の環境変数を追加：
+`.env.example` に新しいプロバイダー用の環境変数を追加：
 
 ```bash
 # Storage Provider Selection
@@ -4431,7 +4434,7 @@ describe.each([
 
 1. **Module not found エラー**
    - `tsconfig.json` のパスエイリアスが Jest で認識されているか確認
-   - `jest.config.js` の `moduleNameMapper` を確認
+   - `jest.config.cjs` の `moduleNameMapper` を確認
 
 2. **Next.js コンポーネントのエラー**
    - 必要なモックが設定されているか確認
@@ -4882,7 +4885,7 @@ describe.each([
 
 1. **Module not found エラー**
    - `tsconfig.json` のパスエイリアスが Jest で認識されているか確認
-   - `jest.config.js` の `moduleNameMapper` を確認
+   - `jest.config.cjs` の `moduleNameMapper` を確認
 
 2. **Next.js コンポーネントのエラー**
    - 必要なモックが設定されているか確認
@@ -4915,4 +4918,3 @@ describe.each([
 
 
 ---
-

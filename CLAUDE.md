@@ -43,16 +43,17 @@ npm start
 npm run lint
 
 # Prisma commands
-npx prisma generate    # Generate Prisma Client
-npx prisma db push     # Push schema changes to database
-npx prisma migrate dev # Create and apply migrations
-npx prisma studio      # Open Prisma Studio GUI
-npx prisma format      # Format schema.prisma file
+npm run db:generate    # Generate Prisma Client
+npm run db:push        # Push schema changes to database
+npm run db:migrate     # Create and apply migrations
+npm run db:seed        # Seed the database explicitly
+npm run db:studio      # Open Prisma Studio GUI
+npm run db:format      # Format schema.prisma file
 ```
 
 ## Architecture Overview
 
-This is a Next.js 15.3.3 web system template with TypeScript, using App Router and a multi-layered architecture:
+This is a Next.js 16.2.0 web system template with TypeScript, using App Router and a multi-layered architecture:
 
 ### Directory Structure
 
@@ -74,14 +75,14 @@ This is a Next.js 15.3.3 web system template with TypeScript, using App Router a
 ### Key Technologies
 
 - **Authentication**: Better Auth with credential-based sign-in
-- **Database**: PostgreSQL with Prisma ORM (client output to `/src/generated/prisma`)
+- **Database**: PostgreSQL with Prisma ORM 7 (client output to `/src/generated/prisma`, imported from `/src/generated/prisma/client`; generated files are not committed and should be recreated with `npm run db:generate`)
 - **Forms**: React Hook Form + Zod validation
 - **Styling**: Tailwind CSS + CSS Modules + Radix UI
 - **Internationalization**: next-intl with Japanese and English support
 
 ### Environment Setup
 
-Copy `.env.sample` to `.env` and configure:
+Copy `.env.example` to `.env` and configure:
 
 - `DATABASE_URL` - PostgreSQL connection string
 - `BETTER_AUTH_BASE_URL` - Better Auth base URL (http://localhost:3000 in development)

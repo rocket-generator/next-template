@@ -45,7 +45,9 @@ describe("Storage Library", () => {
     let mockSend: jest.Mock;
 
     beforeEach(() => {
-      const { S3Client } = require("@aws-sdk/client-s3");
+      const { S3Client } = jest.requireMock("@aws-sdk/client-s3") as {
+        S3Client: jest.Mock;
+      };
       mockSend = jest.fn();
       mockS3Client = {
         send: mockSend,
@@ -161,7 +163,11 @@ describe("Storage Library", () => {
 
     describe("getSignedUrl", () => {
       it("should generate signed URL successfully", async () => {
-        const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+        const { getSignedUrl } = jest.requireMock(
+          "@aws-sdk/s3-request-presigner"
+        ) as {
+          getSignedUrl: jest.Mock;
+        };
         getSignedUrl.mockResolvedValue("https://signed-url.com");
 
         const result = await provider.getSignedUrl(testKey, 3600);
@@ -171,7 +177,11 @@ describe("Storage Library", () => {
       });
 
       it("should handle signed URL generation failure", async () => {
-        const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+        const { getSignedUrl } = jest.requireMock(
+          "@aws-sdk/s3-request-presigner"
+        ) as {
+          getSignedUrl: jest.Mock;
+        };
         getSignedUrl.mockRejectedValue(new Error("URL generation failed"));
 
         await expect(provider.getSignedUrl(testKey, 3600)).rejects.toThrow(
@@ -448,7 +458,9 @@ describe("Storage Library", () => {
       const service = new StorageServiceImpl(provider);
 
       // Mock successful operations
-      const { S3Client } = require("@aws-sdk/client-s3");
+      const { S3Client } = jest.requireMock("@aws-sdk/client-s3") as {
+        S3Client: jest.Mock;
+      };
       const mockSend = jest.fn();
       S3Client.mockImplementation(() => ({ send: mockSend }));
 

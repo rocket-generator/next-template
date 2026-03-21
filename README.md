@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org) project with TypeScript, using App Route
 
 ## 🚀 Technologies
 
-- **Framework**: Next.js 15.3.3 with App Router
+- **Framework**: Next.js 16.2.0 with App Router
 - **Language**: TypeScript
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Better Auth (with cookie-backed sessions)
@@ -37,7 +37,7 @@ src/
 
 ### Prerequisites
 
-- Node.js 20 or later
+- Node.js 20.19.0 or later
 - Docker and Docker Compose
 - PostgreSQL (if running locally without Docker)
 
@@ -50,14 +50,13 @@ src/
 
 2. **Setup environment variables**
    ```bash
-   cp .env.sample .env
+   cp .env.example .env
    # Edit .env with your database and auth settings
    ```
 
 3. **Setup database**
    ```bash
-   npx prisma generate
-   npx prisma db push
+   npm run db:setup
    ```
 
 4. **Run development server**
@@ -124,10 +123,11 @@ docker compose up web
 ##### Using npm scripts (Recommended)
 ```bash
 npm run docker:db:migrate    # Run migrations
+npm run docker:db:generate   # Generate Prisma Client
 npm run docker:db:push       # Push schema to database
 npm run docker:db:seed       # Run seed data
-npm run docker:db:reset      # Reset database (⚠️ deletes all data)
-npm run docker:db:setup      # Initial setup (push + seed)
+npm run docker:db:reset      # Reset DB, regenerate client, and reseed (⚠️ deletes all data)
+npm run docker:db:setup      # Initial setup (generate + push + seed)
 npm run docker:db:studio     # Open Prisma Studio
 ```
 
@@ -148,9 +148,10 @@ npm run docker:db:studio  # Opens at http://localhost:5555
 ##### Direct Docker commands
 ```bash
 # Run Prisma commands in container
-docker compose exec web npx prisma generate
-docker compose exec web npx prisma db push
-docker compose exec web npx prisma migrate dev
+docker compose exec web npm run db:generate
+docker compose exec web npm run db:push
+docker compose exec web npm run db:migrate
+docker compose exec web npm run db:seed
 
 # Connect to database
 docker compose exec postgres psql -U postgres -d myapp
@@ -185,12 +186,8 @@ docker system prune -f
 ### Environment Configuration
 
 #### For Docker Development
-Use the provided `.env.docker` file as reference for Docker-specific environment variables:
-
-```bash
-# Copy Docker environment template
-cp .env.docker .env
-```
+`docker-compose.yml` already provides the default environment variables required for the local containers.
+If you also run Prisma CLI or Next.js directly on your host machine, copy `.env.example` to `.env` first.
 
 Key environment variables for Docker:
 - `DATABASE_URL`: PostgreSQL connection (automatically configured)
@@ -223,10 +220,13 @@ npm run start        # Start production server
 npm run lint         # Run ESLint
 
 # Database
-npx prisma generate  # Generate Prisma Client
-npx prisma db push   # Push schema changes to database
-npx prisma migrate dev # Create and apply migrations
-npx prisma studio    # Open Prisma Studio GUI
+npm run db:generate  # Generate Prisma Client
+npm run db:push      # Push schema changes to database
+npm run db:migrate   # Create and apply migrations
+npm run db:seed      # Seed the database explicitly
+npm run db:reset     # Reset DB, regenerate client, and reseed
+npm run db:studio    # Open Prisma Studio GUI
+npm run db:format    # Format schema.prisma
 
 # Testing
 npm run test         # Run Jest tests
@@ -258,6 +258,7 @@ npm run build-storybook # Build Storybook for production
 - **Form Validation**: Consistent Zod schemas for client/server validation
 - **Internationalization**: Built-in Japanese/English support
 - **Authentication**: Secure Better Auth implementation
+- **Prisma 7 Setup**: Prisma CLI is configured in `prisma.config.ts`, and the generated client is emitted to `src/generated/prisma` and imported from `src/generated/prisma/client`. This directory is not committed and must be regenerated with `npm run db:generate`.
 
 ## Learn More
 

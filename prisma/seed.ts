@@ -1,7 +1,7 @@
-import { PrismaClient } from "../src/generated/prisma";
+import { createPrismaClient } from "../src/libraries/prisma";
 import { hashPassword } from "../src/libraries/hash";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   console.log("Start seeding...");

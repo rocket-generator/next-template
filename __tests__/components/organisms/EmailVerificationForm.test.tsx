@@ -66,8 +66,12 @@ describe('EmailVerificationForm', () => {
       const mockSearchParams = {
         get: jest.fn((key) => key === 'token' ? 'valid-token' : null),
       };
-      
-      require('next/navigation').useSearchParams.mockReturnValue(mockSearchParams);
+
+      (
+        jest.requireMock('next/navigation') as {
+          useSearchParams: jest.Mock;
+        }
+      ).useSearchParams.mockReturnValue(mockSearchParams);
     });
 
     it('should call onVerifyEmail when token is present', async () => {
@@ -137,8 +141,12 @@ describe('EmailVerificationForm', () => {
       const mockSearchParams = {
         get: jest.fn(() => null),
       };
-      
-      require('next/navigation').useSearchParams.mockReturnValue(mockSearchParams);
+
+      (
+        jest.requireMock('next/navigation') as {
+          useSearchParams: jest.Mock;
+        }
+      ).useSearchParams.mockReturnValue(mockSearchParams);
     });
 
     it('should show error message when token is not present', async () => {
@@ -165,8 +173,12 @@ describe('EmailVerificationForm', () => {
       const mockSearchParams = {
         get: jest.fn(() => null),
       };
-      
-      require('next/navigation').useSearchParams.mockReturnValue(mockSearchParams);
+
+      (
+        jest.requireMock('next/navigation') as {
+          useSearchParams: jest.Mock;
+        }
+      ).useSearchParams.mockReturnValue(mockSearchParams);
     });
 
     it('should allow resending verification email', async () => {

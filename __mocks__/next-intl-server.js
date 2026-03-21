@@ -1,22 +1,15 @@
-async function getTranslations() {
+export async function getTranslations() {
   return (key) => key;
 }
 
-async function getLocale() {
+export async function getLocale() {
   return "ja";
 }
 
-async function getMessages() {
+export async function getMessages() {
   return {};
 }
 
-function getRequestConfig(config) {
+export function getRequestConfig(config) {
   return config;
 }
-
-module.exports = {
-  getTranslations,
-  getLocale,
-  getMessages,
-  getRequestConfig,
-};

@@ -21,6 +21,7 @@ ENV NODE_ENV=production
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
 RUN npx prisma generate
 
 COPY . .
@@ -33,6 +34,7 @@ ENV NODE_ENV=development
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
 RUN npx prisma generate
 COPY . .
 
@@ -49,12 +51,12 @@ ENV HOSTNAME=0.0.0.0
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/src/generated ./src/generated
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/src/generated/prisma ./src/generated/prisma
 
 # Ensure prerender cache directory exists and owned by app user
 RUN mkdir -p .next && chown -R nextjs:nodejs /app
@@ -63,5 +65,4 @@ USER nextjs
 
 EXPOSE 3000
 
-ENTRYPOINT ["node", "server.js"]
-CMD []
+CMD ["npm", "run", "start"]

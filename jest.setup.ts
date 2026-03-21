@@ -6,7 +6,7 @@ import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
 
 jest.mock('next-intl', () => {
-  const ReactLocal = require('react');
+  const ReactLocal = jest.requireActual<typeof import('react')>('react');
   const IntlContext = ReactLocal.createContext({} as Record<string, unknown>);
 
   const readMessage = (
