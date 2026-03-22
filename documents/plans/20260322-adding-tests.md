@@ -149,9 +149,9 @@
 - [x] `createSESProviderConfig()` の production / development 分岐を確認する。
 - [x] `EmailServiceImpl` が verification / reset の件名・本文・送信先を正しく組み立てることを確認する。
 - [x] `EmailServiceImpl` が provider failure を例外化することを確認する。
-- [ ] `UserRepository.getUserById()` / `updateUserData()` の基本挙動を確認する。
-- [ ] `UserRepository` の avatar upload / delete / signed URL / download の分岐を確認する。
-- [ ] sign in / sign up / forgot password / reset password / password change / profile update の各 request schema を直接テストし、実バリデーションが UI テストから独立して保証されるようにする。
+- [x] `UserRepository.getUserById()` / `updateUserData()` の基本挙動を確認する。
+- [x] `UserRepository` の avatar upload / delete / signed URL / download の分岐を確認する。
+- [x] sign in / sign up / forgot password / reset password / password change / profile update の各 request schema を直接テストし、実バリデーションが UI テストから独立して保証されるようにする。
 
 ---
 
@@ -165,10 +165,10 @@
 
 追加項目:
 
-- [ ] `AuthSignupForm` の描画、validation、loading、submit、エラー表示を追加する。
-- [ ] `AuthSignupForm` で `EmailVerificationRequired` が返るケースを UI から確認できるようにする。
-- [ ] `AuthForgotPasswordForm` の submit、success 画面、`try again` 導線、エラー表示を追加する。
-- [ ] `AuthResetPasswordForm` の token なし、validation、submit、loading、エラー表示を追加する。
+- [x] `AuthSignupForm` の描画、validation、loading、submit、エラー表示を追加する。
+- [x] `AuthSignupForm` で `EmailVerificationRequired` が返るケースを UI から確認できるようにする。
+- [x] `AuthForgotPasswordForm` の submit、success 画面、`try again` 導線、エラー表示を追加する。
+- [x] `AuthResetPasswordForm` の token なし、validation、submit、loading、エラー表示を追加する。
 
 ---
 
@@ -216,7 +216,7 @@
 - [x] 2. `AuthService` の分岐テストを追加する。
 - [x] 3. server actions の戻り値変換テストを追加する。
 - [x] 4. Prisma 7 初期化コードと email service の unit テストを追加する。
-- [ ] 5. request schema / signup・forgot・reset form のテストを追加する。
+- [x] 5. request schema / signup・forgot・reset form のテストを追加する。
 - [ ] 6. 実 DB を使う integration テストを追加する。
 - [ ] 7. Playwright E2E を決定的なフローに置き換える。
 
