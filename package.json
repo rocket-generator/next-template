@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "test": "jest",

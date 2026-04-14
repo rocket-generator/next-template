@@ -16,11 +16,18 @@ function getDatabaseUrl(): string {
 export function createPrismaClient(
   connectionString: string = getDatabaseUrl()
 ): PrismaClient {
-  const adapter = new PrismaPg({
-    connectionString,
-    // Add pg driver tuning here if environment-specific SSL or timeout
-    // behavior needs to differ from the adapter defaults.
-  });
+  const url = new URL(connectionString);
+  const sslMode = url.searchParams.get("sslmode");
+  // pg driver の sslmode 解釈が verify-full 扱いになり RDS 等で失敗するため、
+  // URL からは除去し ssl オプションで直接制御
+  url.searchParams.delete("sslmode");
+  const cleanedUrl = url.toString();
+
+  const adapter = new PrismaPg(
+    sslMode
+      ? { connectionString: cleanedUrl, ssl: { rejectUnauthorized: false } }
+      : { connectionString: cleanedUrl }
+  );
 
   return new PrismaClient({ adapter });
 }
