@@ -49,8 +49,40 @@ prisma/
 | `NEXT_PUBLIC_BETTER_AUTH_BASE_PATH` | クライアントからの API パス | デフォルト `/api/auth` |
 | `ENABLE_EMAIL_VERIFICATION` | メール検証の有効/無効 | サインアップ動作切替 |
 | `LOCALSTACK_ENDPOINT` 等 | SES/S3 エミュレーション | LocalStack 利用時 |
+| `DATABASE_URL` | Postgres 接続文字列 | `sslmode` を付けると TLS 有効化（下記 DB TLS 参照） |
+| `DATABASE_SSL_REJECT_UNAUTHORIZED` | CA 検証の opt-out | `false` にすると証明書検証無効（非推奨） |
+| `DATABASE_SSL_CA_PATH` | CA 証明書ファイルパス | RDS 等で CA バンドルを読み込む場合に指定 |
 
 `src/libraries/auth.ts` では `BETTER_AUTH_SECRET` → `AUTH_SECRET` の順で解決。
+
+### DB TLS（`DATABASE_URL` の `sslmode`）
+
+`src/libraries/prisma.ts` は DATABASE_URL の `sslmode` を以下のように解釈する。
+
+| `sslmode` | 挙動 |
+|-----------|------|
+| 未指定 | TLS を有効化しない（ローカル開発向け、pg ドライバのデフォルト） |
+| `disable` | 明示的に TLS オフ |
+| その他（`require` 等） | TLS 有効化。既定で `rejectUnauthorized: true`（CA 検証 ON） |
+
+`sslmode` が有効なとき、追加で以下の env を参照する。
+
+- `DATABASE_SSL_REJECT_UNAUTHORIZED=false` → `rejectUnauthorized` を false に（中間者攻撃に弱くなるため通常は避ける）
+- `DATABASE_SSL_CA_PATH=/path/to/ca.pem` → `ssl.ca` にファイル内容を読み込む（AWS RDS の CA バンドル等）
+
+接続例:
+
+```bash
+# ローカル開発（Docker Compose Postgres）
+DATABASE_URL="postgres://user:pass@localhost:5432/app"
+
+# Neon / Supabase（TLS 必須、CA は公開 CA）
+DATABASE_URL="postgres://user:pass@host.neon.tech/app?sslmode=require"
+
+# AWS RDS（CA バンドル検証）
+DATABASE_URL="postgres://user:pass@rds-host/app?sslmode=require"
+DATABASE_SSL_CA_PATH=./rds-ca.pem
+```
 
 ## サーバ実装のポイント
 

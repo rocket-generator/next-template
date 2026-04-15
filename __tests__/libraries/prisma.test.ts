@@ -8,6 +8,11 @@ jest.mock("../../src/generated/prisma/client", () => ({
   PrismaClient: jest.fn(),
 }));
 
+jest.mock("node:fs", () => ({
+  __esModule: true,
+  readFileSync: jest.fn(),
+}));
+
 type PrismaPgModule = {
   PrismaPg: jest.Mock;
 };
@@ -16,12 +21,19 @@ type GeneratedPrismaModule = {
   PrismaClient: jest.Mock;
 };
 
+type FsModule = {
+  readFileSync: jest.Mock;
+};
+
 const getPrismaPgMock = () =>
   (jest.requireMock("@prisma/adapter-pg") as PrismaPgModule).PrismaPg;
 
 const getPrismaClientMock = () =>
   (jest.requireMock("../../src/generated/prisma/client") as GeneratedPrismaModule)
     .PrismaClient;
+
+const getReadFileSyncMock = () =>
+  (jest.requireMock("node:fs") as FsModule).readFileSync;
 
 const loadPrismaModule = () =>
   require("@/libraries/prisma") as typeof import("@/libraries/prisma");
@@ -34,6 +46,8 @@ describe("prisma library", () => {
     process.env.DATABASE_URL = "postgres://localhost:5432/template";
     (process.env as Record<string, string | undefined>).NODE_ENV =
       "development";
+    delete process.env.DATABASE_SSL_REJECT_UNAUTHORIZED;
+    delete process.env.DATABASE_SSL_CA_PATH;
 
     delete (
       globalThis as typeof globalThis & {
@@ -41,10 +55,12 @@ describe("prisma library", () => {
       }
     ).prisma;
 
-    getPrismaPgMock().mockImplementation((options: { connectionString: string }) => ({
-      type: "adapter",
-      options,
-    }));
+    getPrismaPgMock().mockImplementation(
+      (options: { connectionString: string; ssl?: unknown }) => ({
+        type: "adapter",
+        options,
+      })
+    );
 
     getPrismaClientMock().mockImplementation(
       ({ adapter }: { adapter: unknown }) => ({
@@ -111,5 +127,83 @@ describe("prisma library", () => {
     const getMarker = proxiedPrisma.getMarker;
 
     expect(getMarker()).toBe("prisma-client");
+  });
+
+  describe("SSL 設定", () => {
+    it("sslmode=require のとき rejectUnauthorized:true で TLS を有効化する", () => {
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://example.com:5432/app?sslmode=require");
+
+      expect(getPrismaPgMock()).toHaveBeenCalledWith({
+        connectionString: "postgres://example.com:5432/app",
+        ssl: { rejectUnauthorized: true },
+      });
+    });
+
+    it("DATABASE_SSL_REJECT_UNAUTHORIZED=false で rejectUnauthorized を false に上書きする", () => {
+      process.env.DATABASE_SSL_REJECT_UNAUTHORIZED = "false";
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://example.com:5432/app?sslmode=require");
+
+      expect(getPrismaPgMock()).toHaveBeenCalledWith({
+        connectionString: "postgres://example.com:5432/app",
+        ssl: { rejectUnauthorized: false },
+      });
+    });
+
+    it("sslmode=disable のとき ssl:false を設定する", () => {
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://example.com:5432/app?sslmode=disable");
+
+      expect(getPrismaPgMock()).toHaveBeenCalledWith({
+        connectionString: "postgres://example.com:5432/app",
+        ssl: false,
+      });
+    });
+
+    it("DATABASE_SSL_CA_PATH が指定されると ca にファイル内容が渡る", () => {
+      process.env.DATABASE_SSL_CA_PATH = "/etc/ssl/rds-ca.pem";
+      getReadFileSyncMock().mockReturnValue("CA_CONTENT");
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://example.com:5432/app?sslmode=require");
+
+      expect(getReadFileSyncMock()).toHaveBeenCalledWith(
+        "/etc/ssl/rds-ca.pem",
+        "utf8"
+      );
+      expect(getPrismaPgMock()).toHaveBeenCalledWith({
+        connectionString: "postgres://example.com:5432/app",
+        ssl: { rejectUnauthorized: true, ca: "CA_CONTENT" },
+      });
+    });
+
+    it("sslmode が URL から剥がれてから PrismaPg へ渡る", () => {
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient(
+        "postgres://example.com:5432/app?sslmode=require&application_name=test"
+      );
+
+      expect(getPrismaPgMock()).toHaveBeenCalledWith(
+        expect.objectContaining({
+          connectionString:
+            "postgres://example.com:5432/app?application_name=test",
+        })
+      );
+    });
+
+    it("sslmode が無ければ ssl オプションを渡さない（ローカル開発互換）", () => {
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://localhost:5432/app");
+
+      expect(getPrismaPgMock()).toHaveBeenCalledWith({
+        connectionString: "postgres://localhost:5432/app",
+      });
+    });
   });
 });

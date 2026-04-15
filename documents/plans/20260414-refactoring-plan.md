@@ -1,7 +1,17 @@
 # Next.js テンプレート リファクタリング計画
 
 作成日: 2026-04-14
-最終更新: 2026-04-16（Codex 第 3 回レビューを反映）
+最終更新: 2026-04-16（Codex 第 3 回レビューを反映 + 子計画へのリンク追加）
+
+## 子計画（実行計画書）
+
+重大項目は個別の実行計画書に分解済。
+
+| # | 計画書 | 対象 |
+|---|--------|------|
+| 001 | [20260414-refactoring-plan-001.md](./20260414-refactoring-plan-001.md) | Prisma SSL 実装の安全化 |
+| 002 | [20260414-refactoring-plan-002.md](./20260414-refactoring-plan-002.md) | セキュリティヘッダの付与 |
+| 003 | [20260414-refactoring-plan-003.md](./20260414-refactoring-plan-003.md) | Storage / Email プロバイダ切替機構の完成 |
 対象: `/Users/takaaki/Development/rocket/typescript-next-template`
 目的: 複数サイト/サービスのベーステンプレートとして耐えるよう、セキュリティ・移植性・運用性を底上げする。特に Amplify 以外（Vercel / Docker / ECS / Fly / Railway / Cloudflare Workers）へのデプロイに対応させる。
 

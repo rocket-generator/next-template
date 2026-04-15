@@ -1,5 +1,9 @@
+import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+
+type SslObject = { rejectUnauthorized: boolean; ca?: string };
+type SslOption = false | SslObject | undefined;
 
 function getDatabaseUrl(): string {
   const databaseUrl = process.env.DATABASE_URL;
@@ -13,21 +17,45 @@ function getDatabaseUrl(): string {
   return databaseUrl;
 }
 
+function resolveSslOption(sslMode: string | null): SslOption {
+  if (sslMode === null) {
+    return undefined;
+  }
+  if (sslMode === "disable") {
+    return false;
+  }
+
+  const ssl: SslObject = {
+    rejectUnauthorized:
+      process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false",
+  };
+
+  const caPath = process.env.DATABASE_SSL_CA_PATH;
+  if (caPath) {
+    ssl.ca = readFileSync(caPath, "utf8");
+  }
+
+  return ssl;
+}
+
 export function createPrismaClient(
   connectionString: string = getDatabaseUrl()
 ): PrismaClient {
+  // pg driver interprets sslmode=verify-full on the URL strictly and
+  // fails on managed services like RDS, so strip sslmode and drive TLS
+  // via the ssl option instead.
   const url = new URL(connectionString);
   const sslMode = url.searchParams.get("sslmode");
-  // pg driver の sslmode 解釈が verify-full 扱いになり RDS 等で失敗するため、
-  // URL からは除去し ssl オプションで直接制御
   url.searchParams.delete("sslmode");
   const cleanedUrl = url.toString();
 
-  const adapter = new PrismaPg(
-    sslMode
-      ? { connectionString: cleanedUrl, ssl: { rejectUnauthorized: false } }
-      : { connectionString: cleanedUrl }
-  );
+  const ssl = resolveSslOption(sslMode);
+  const adapterOptions =
+    ssl === undefined
+      ? { connectionString: cleanedUrl }
+      : { connectionString: cleanedUrl, ssl };
+
+  const adapter = new PrismaPg(adapterOptions);
 
   return new PrismaClient({ adapter });
 }
