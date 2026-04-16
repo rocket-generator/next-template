@@ -210,6 +210,34 @@ This Docker Compose setup is for local development only. For production deployme
 - Configure real AWS S3 and SES endpoints
 - Set proper environment variables for production
 
+### Security Headers and External Images
+
+This template adds baseline security headers through `next.config.ts`.
+
+- `Content-Security-Policy`
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy`
+- `Strict-Transport-Security` in production only
+
+The CSP is environment-aware by design.
+
+- Development keeps `unsafe-eval`, `http:`, `ws:`, and `wss:` available so Next.js HMR, local APIs, and LocalStack do not break.
+- Production removes those generic development allowances and only adds HSTS there.
+
+If your production deployment needs external APIs, scripts, images, or WebSocket endpoints, update [`src/libraries/security-headers.ts`](./src/libraries/security-headers.ts) to allow them explicitly. `EXTRA_REMOTE_IMAGE_URLS` only extends `next/image` host matching. It does not update CSP automatically.
+
+Use `EXTRA_REMOTE_IMAGE_URLS` when you need additional remote image sources without editing `next.config.ts`:
+
+```bash
+EXTRA_REMOTE_IMAGE_URLS=https://cdn.example.com,https://images.example.com/account123/,http://localhost:9000/my-bucket/
+```
+
+Each CSV entry must be an absolute `http` or `https` URL prefix. The template converts each entry into a `remotePatterns` rule using its protocol, hostname, optional port, and path prefix.
+
+Future hardening such as nonce-based CSP is intentionally left as separate follow-up work.
+
 ## 🎯 Available Scripts
 
 ```bash

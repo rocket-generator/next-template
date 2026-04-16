@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { buildRemoteImagePatterns } from "./src/libraries/remote-image-patterns";
+import { buildSecurityHeaders } from "./src/libraries/security-headers";
 
 const withNextIntl = createNextIntlPlugin();
+const isDevelopment = process.env.NODE_ENV === "development";
+const isProduction = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: [],
@@ -14,38 +18,21 @@ const nextConfig: NextConfig = {
     '@aws-sdk/client-ses',
     '@aws-sdk/s3-request-presigner',
   ],
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: buildSecurityHeaders({
+          isDevelopment,
+          isProduction,
+        }),
+      },
+    ];
+  },
   images: {
-    remotePatterns: [
-      // LocalStack (Development)
-      {
-        protocol: 'http',
-        hostname: 'localstack',
-        port: '4566',
-        pathname: '/**',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '4566',
-        pathname: '/**',
-      },
-      // AWS S3 (Production)
-      {
-        protocol: 'https',
-        hostname: '*.s3.amazonaws.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.s3.*.amazonaws.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 's3.amazonaws.com',
-        pathname: '/**',
-      },
-    ],
+    remotePatterns: buildRemoteImagePatterns(
+      process.env.EXTRA_REMOTE_IMAGE_URLS
+    ),
   },
 };
 
