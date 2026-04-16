@@ -58,3 +58,4 @@ node_modules/
 /playwright/.cache/
 
 .serena
+!certs/rds-ca-bundle.pem
