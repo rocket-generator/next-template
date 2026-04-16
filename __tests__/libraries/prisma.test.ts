@@ -165,6 +165,28 @@ describe("prisma library", () => {
       });
     });
 
+    it("sslmode=prefer はサポート外として明示的エラーを投げる", () => {
+      const { createPrismaClient } = loadPrismaModule();
+
+      expect(() =>
+        createPrismaClient("postgres://example.com:5432/app?sslmode=prefer")
+      ).toThrow(
+        'Unsupported sslmode "prefer". Supported values are "disable" and "require".'
+      );
+    });
+
+    it("未知の sslmode はサポート外として明示的エラーを投げる", () => {
+      const { createPrismaClient } = loadPrismaModule();
+
+      expect(() =>
+        createPrismaClient(
+          "postgres://example.com:5432/app?sslmode=accept_invalid_certs"
+        )
+      ).toThrow(
+        'Unsupported sslmode "accept_invalid_certs". Supported values are "disable" and "require".'
+      );
+    });
+
     it("DATABASE_SSL_CA_PATH が指定されると ca にファイル内容が渡る", () => {
       process.env.DATABASE_SSL_CA_PATH = "/etc/ssl/rds-ca.pem";
       getReadFileSyncMock().mockReturnValue("CA_CONTENT");

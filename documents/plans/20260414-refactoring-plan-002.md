@@ -1,42 +1,121 @@
-# リファクタリング計画 002: セキュリティヘッダの付与
+# リファクタリング計画 002: セキュリティヘッダとリモート画像設定の整備
 
-親計画: [20260414-refactoring-plan.md](./20260414-refactoring-plan.md) の重大 §2
-作成日: 2026-04-16
+親計画: [20260414-refactoring-plan.md](./20260414-refactoring-plan.md) の重大 §2  
+初版: 2026-04-16  
+改訂: 2026-04-17
 
 ---
 
 ## 背景
 
-`next.config.ts:1-48` には `headers()` 定義が無く、`src/proxy.ts` でもレスポンスヘッダを付与していない。
+現状の `next.config.ts` には `headers()` がなく、テンプレートから生成される Next.js アプリは CSP / HSTS / X-Frame-Options / Referrer-Policy / Permissions-Policy を一切返していない。
 
-- Amplify Hosting の SSR Compute は既定でセキュリティヘッダを自動付与しない
-- Vercel も Next.js が返すヘッダ以外を自動追加しない
-- その結果、派生する全サイトが CSP / HSTS / X-Frame-Options / Referrer-Policy 等ゼロの状態で出発することになる
+一方で、このテンプレートの既定開発環境は「外部接続ゼロ」ではない。
 
-テンプレートとして、最低限の共通ヘッダはコミットしておくべき。
+- `.env.example` では `NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:8000/api`
+- `.env.example` では `LOCALSTACK_PUBLIC_ENDPOINT=http://localhost:4566`
+- `src/libraries/storage.ts` は LocalStack 利用時に `http://localhost:4566` ベースの公開 URL を返す
+- `next.config.ts` の `images.remotePatterns` は LocalStack と S3 のみを固定列挙している
 
-CSP の厳格さは「緩め」とする（ユーザー判断済）:
+したがって今回の計画は、単にヘッダを追加するだけでは不十分である。テンプレート利用直後のローカル開発を壊さずに、最低限のセキュリティヘッダを標準搭載し、画像ホストの拡張も現実的な形に改める必要がある。
 
-- `'unsafe-inline'` / `'unsafe-eval'` は許可（Next.js のインラインスクリプトや Tailwind JIT に配慮）
-- 将来 nonce ベースに差し替える場合でも、ヘッダ生成を関数化しておけば差し替えしやすい
+また、前版計画にあった以下の前提は不適切だったため撤回する。
+
+- `unsafe-eval` を本番でも常時許可する
+- `EXTRA_REMOTE_IMAGE_HOSTS` のような hostname-only 設計で十分とみなす
+- Storybook を CSP の確認対象に含める
+- Playwright で新規 E2E を追加すればそのまま `npm run test:e2e` が成立するとみなす
 
 ---
 
-## 方針とその理由
+## 到達目標
 
-1. **ヘッダ生成ロジックを `src/libraries/security-headers.ts` に切り出す**
-   - 理由: テスト容易性 / 再利用性 / 将来の差し替え容易性（nonce 化など）。
+- [ ] Next.js レスポンスにテンプレート標準のセキュリティヘッダを付与する
+- [ ] ローカル開発環境（`localhost:3000`, `localhost:8000`, `localhost:4566`）を CSP で壊さない
+- [ ] 本番のみ HSTS を付与し、localhost 開発には影響させない
+- [ ] 追加のリモート画像ソースを `next.config.ts` 直編集なしで設定できるようにする
+- [ ] 将来 nonce ベース CSP へ移行しやすいよう、ヘッダ生成ロジックを純粋関数として切り出す
 
-2. **緩め CSP を採用**
-   - 理由: テンプレートとして追加直後に Next / Storybook / shadcn ui などが壊れないことを優先。
+---
 
-3. **HSTS は本番のみ付与**
-   - `NODE_ENV === "production"` のときだけ `Strict-Transport-Security` を付ける
-   - 理由: localhost の HTTP 開発で HSTS が刺さるとブラウザ側キャッシュで不便。
+## 今回やらないこと
 
-4. **`remotePatterns` を env で拡張可能に**
-   - `EXTRA_REMOTE_IMAGE_HOSTS`（カンマ区切り）を読み、hostname を追加
-   - 理由: GCS / R2 / CDN に向けて派生サイト側で `next.config.ts` を触らず切替可能にする。
+- [ ] `src/proxy.ts` で nonce を生成する strict CSP への移行
+- [ ] nonce 導入に伴う dynamic rendering 強制
+- [ ] Storybook dev server に対するヘッダ注入
+- [ ] Playwright 実行基盤の全面見直し
+- [ ] 外部スクリプト利用時の個別 CSP 緩和（必要な派生サイト側で調整する）
+
+---
+
+## 実装方針
+
+1. **ヘッダ生成ロジックは `src/libraries/security-headers.ts` に分離する**
+   - `next.config.ts` から直接文字列を組み立てず、純粋関数として切り出して Jest で検証可能にする。
+
+2. **CSP は dev/prod で明示的に挙動を分ける**
+   - development:
+     - `script-src` で `'unsafe-eval'` を許可
+     - `img-src` で `http:` を許可
+     - `connect-src` で `http:` / `ws:` / `wss:` を許可
+   - production:
+     - `'unsafe-eval'` は許可しない
+     - 汎用 `http:` / `ws:` は許可しない
+   - 理由: Next.js 開発時の HMR とローカル API / LocalStack を壊さず、本番だけを不必要に緩めないため。
+
+3. **CSP は「緩め」だが、無制限にはしない**
+   - 維持するディレクティブ:
+     - `default-src 'self'`
+     - `base-uri 'self'`
+     - `form-action 'self'`
+     - `frame-ancestors 'none'`
+     - `object-src 'none'`
+     - `script-src 'self' 'unsafe-inline'`
+     - `style-src 'self' 'unsafe-inline'`
+     - `img-src 'self' data: blob: https:`（dev のみ `http:` 追加）
+     - `font-src 'self' data:`
+     - `connect-src 'self' https:`（dev のみ `http:` / `ws:` / `wss:` 追加）
+   - `X-Frame-Options: DENY` は `frame-ancestors 'none'` の補完として残す。
+
+4. **HSTS は本番限定、かつ preload は付けない**
+   - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+   - 理由: preload はテンプレート既定値としては強すぎる。サブドメイン HTTPS 化が完了していない利用者を巻き込まないため。
+
+5. **追加画像ソースは hostname ではなく「URL プレフィックス」で受ける**
+   - 新規 env: `EXTRA_REMOTE_IMAGE_URLS`
+   - 値は CSV の絶対 URL とする
+   - 例:
+     - `https://cdn.example.com`
+     - `https://images.example.com/account123/`
+     - `http://localhost:9000/my-bucket/`
+   - これを `protocol` / `hostname` / `port` / `pathname` に分解して `remotePatterns` 化する。
+   - 理由: hostname-only では protocol / port / path を表現できず、MinIO・R2・GCS・path-prefix CDN に弱い。
+
+6. **env の不正値は黙殺せず、設定読み込み時に fail fast する**
+   - 空文字のエントリだけ無視
+   - URL として解釈できない値、`http` / `https` 以外の scheme は例外にする
+   - 理由: typo を見逃すと画像だけ本番で壊れるため。
+
+7. **今回の自動テストは Jest までに留める**
+   - `playwright.config.ts` では `webServer` が未設定であり、新規 E2E を追加しても実行前提が曖昧なため。
+   - エンドツーエンド確認は `curl -I` による dev / prod 手動検証で担保する。
+
+---
+
+## 対象ファイル
+
+### 新規作成
+
+- `src/libraries/security-headers.ts`
+- `src/libraries/remote-image-patterns.ts`
+- `__tests__/libraries/security-headers.test.ts`
+- `__tests__/libraries/remote-image-patterns.test.ts`
+
+### 更新
+
+- `next.config.ts`
+- `.env.example`
+- `README.md`
 
 ---
 
@@ -46,76 +125,124 @@ CSP の厳格さは「緩め」とする（ユーザー判断済）:
 
 - [ ] `src/libraries/security-headers.ts` を新規作成
   - [ ] `export type SecurityHeader = { key: string; value: string }`
-  - [ ] `export function buildCsp(): string` — 緩め CSP を返す
-    - `default-src 'self'`
-    - `script-src 'self' 'unsafe-inline' 'unsafe-eval'`
-    - `style-src 'self' 'unsafe-inline'`
-    - `img-src 'self' data: blob: https:`
-    - `font-src 'self' data:`
-    - `connect-src 'self' https:`
-    - `frame-ancestors 'none'`
-    - `base-uri 'self'`
-    - `form-action 'self'`
-  - [ ] `export function buildSecurityHeaders(env: { isProduction: boolean }): SecurityHeader[]`
-    - [ ] `Content-Security-Policy` ← `buildCsp()`
+  - [ ] `export type SecurityHeadersEnv = { isDevelopment: boolean; isProduction: boolean }`
+  - [ ] `buildCsp(env: SecurityHeadersEnv): string` を実装
+    - [ ] 余分な改行・スペースを畳み込んだ 1 行文字列を返す
+    - [ ] production では `'unsafe-eval'` を含めない
+    - [ ] development では `img-src` に `http:` を含める
+    - [ ] development では `connect-src` に `http:` / `ws:` / `wss:` を含める
+    - [ ] `object-src 'none'` を含める
+  - [ ] `buildSecurityHeaders(env: SecurityHeadersEnv): SecurityHeader[]` を実装
+    - [ ] `Content-Security-Policy`
     - [ ] `X-Content-Type-Options: nosniff`
     - [ ] `X-Frame-Options: DENY`
     - [ ] `Referrer-Policy: strict-origin-when-cross-origin`
-    - [ ] `Permissions-Policy: camera=(), microphone=(), geolocation=()`
-    - [ ] 本番のみ `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+    - [ ] `Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()`
+    - [ ] production のみ `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+  - [ ] Next.js / DOM 依存を持たない純粋関数にする
+
+- [ ] `src/libraries/remote-image-patterns.ts` を新規作成
+  - [ ] 既存の LocalStack / AWS S3 用 `remotePatterns` をこのファイルへ移す
+  - [ ] `buildRemoteImagePatterns(extraRemoteImageUrls?: string): RemotePattern[]` を実装
+  - [ ] CSV を split して空要素を除外する
+  - [ ] 各要素を `new URL(...)` で解釈し、`protocol` / `hostname` / `port` / `pathname` に落とす
+  - [ ] `pathname` は以下の規則で正規化する
+    - [ ] `/` または空なら `/**`
+    - [ ] `/account123/` なら `/account123/**`
+    - [ ] 末尾スラッシュの有無で結果が変わらないようにする
+  - [ ] `http:` / `https:` 以外は例外にする
+  - [ ] 不正 URL も例外にする
+
 - [ ] `next.config.ts` を更新
   - [ ] `buildSecurityHeaders` を import
-  - [ ] `async headers()` を実装
-    ```ts
-    async headers() {
-      return [{
-        source: "/(.*)",
-        headers: buildSecurityHeaders({ isProduction: process.env.NODE_ENV === "production" }),
-      }];
-    }
-    ```
-  - [ ] `images.remotePatterns` の構築を関数化し、末尾で `process.env.EXTRA_REMOTE_IMAGE_HOSTS?.split(",")` から `{ protocol: "https", hostname, pathname: "/**" }` を追加（空や未設定なら無視）
+  - [ ] `buildRemoteImagePatterns` を import
+  - [ ] `async headers()` を追加し、`/(.*)` へ全ヘッダを適用する
+  - [ ] `buildSecurityHeaders({ isDevelopment: process.env.NODE_ENV === "development", isProduction: process.env.NODE_ENV === "production" })` を使う
+  - [ ] `images.remotePatterns` を `buildRemoteImagePatterns(process.env.EXTRA_REMOTE_IMAGE_URLS)` に置き換える
+  - [ ] 今回は `src/proxy.ts` にヘッダ注入処理を移さない
 
 ### ドキュメント・設定
 
 - [ ] `.env.example` に追記
-  - [ ] `# Additional remote image hosts (CSV of hostnames)`
-  - [ ] `EXTRA_REMOTE_IMAGE_HOSTS=`（例コメント: `cdn.example.com,images.example.com`）
-- [ ] `README.md` に「セキュリティヘッダのカスタマイズ」セクションを追記
-  - `src/libraries/security-headers.ts` を編集することで調整可能
-  - CSP を nonce ベースへ強化する手順（概要）は future work として記載
+  - [ ] `# Additional remote image URL prefixes (CSV of absolute URLs)`
+  - [ ] `EXTRA_REMOTE_IMAGE_URLS=`
+  - [ ] コメント例を追記
+    - [ ] `https://cdn.example.com`
+    - [ ] `https://images.example.com/account123/`
+    - [ ] `http://localhost:9000/my-bucket/`
+
+- [ ] `README.md` に「Security Headers / External Images」節を追加
+  - [ ] テンプレート標準で付与するヘッダを列挙
+  - [ ] development と production で CSP / HSTS が異なることを明記
+  - [ ] `EXTRA_REMOTE_IMAGE_URLS` の使い方を記載
+  - [ ] 外部 script / image / API を production で使う場合は `src/libraries/security-headers.ts` の更新が必要と明記
+  - [ ] nonce ベース CSP は別計画で扱う future work と明記
 
 ### テスト
 
 - [ ] `__tests__/libraries/security-headers.test.ts` を新規作成
-  - [ ] `buildSecurityHeaders({ isProduction: true })` に HSTS が含まれる
-  - [ ] `buildSecurityHeaders({ isProduction: false })` に HSTS が含まれない
-  - [ ] 必須ヘッダ（CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / Permissions-Policy）が揃う
-  - [ ] `buildCsp()` に `frame-ancestors 'none'` / `default-src 'self'` が含まれる
-- [ ] `e2e/security-headers.spec.ts` を新規作成
-  - [ ] `/` GET でレスポンスヘッダに `x-frame-options: DENY` が付く
-  - [ ] `content-security-policy` が付き `frame-ancestors 'none'` を含む
-  - [ ] 開発モードでは HSTS が付かない（`strict-transport-security` が undefined）
+  - [ ] development の CSP に `'unsafe-eval'` が含まれる
+  - [ ] production の CSP に `'unsafe-eval'` が含まれない
+  - [ ] development の CSP に `img-src ... http:` が含まれる
+  - [ ] development の CSP に `connect-src ... http: ws: wss:` が含まれる
+  - [ ] production の CSP に汎用 `http:` / `ws:` が含まれない
+  - [ ] `buildSecurityHeaders({ isProduction: true, isDevelopment: false })` に HSTS が含まれる
+  - [ ] `buildSecurityHeaders({ isProduction: false, isDevelopment: true })` に HSTS が含まれない
+  - [ ] `frame-ancestors 'none'`, `object-src 'none'`, `default-src 'self'` が含まれる
+
+- [ ] `__tests__/libraries/remote-image-patterns.test.ts` を新規作成
+  - [ ] 既定パターンに LocalStack と AWS S3 の既存定義が含まれる
+  - [ ] `https://cdn.example.com` が `protocol=https`, `hostname=cdn.example.com`, `pathname=/**` に変換される
+  - [ ] `https://images.example.com/account123/` が `pathname=/account123/**` に変換される
+  - [ ] `http://localhost:9000/my-bucket/` が `port=9000`, `pathname=/my-bucket/**` に変換される
+  - [ ] 空の CSV 要素は無視される
+  - [ ] `ftp://example.com` で例外になる
+  - [ ] `not-a-url` で例外になる
+
+- [ ] 今回は `e2e/security-headers.spec.ts` を追加しない
+  - [ ] 理由を計画に明記する
+    - [ ] 現行 `playwright.config.ts` に `webServer` がなく、ヘッダ検証の前提サーバが未定義
+    - [ ] 今回の変更は config / helper レベルであり、Jest + `curl` 検証で十分にリスクを抑えられる
 
 ### 検証
 
-- [ ] `npm run test` 全 pass
-- [ ] `npm run build && npm run start` 後に `curl -I http://localhost:3000/` でヘッダ確認
-- [ ] `npm run test:e2e` pass（新規 spec 含む）
-- [ ] Storybook 起動（`npm run storybook`）でコンソールに CSP 違反が出ない
-- [ ] 管理画面のアバター画像表示などで `img-src` 起因の違反が出ない
+- [ ] `npm run type-check`
+- [ ] `npm run test -- __tests__/libraries/security-headers.test.ts __tests__/libraries/remote-image-patterns.test.ts`
+- [ ] `npm run build`
+
+- [ ] development 検証
+  - [ ] `npm run dev` を起動
+  - [ ] `curl -I http://localhost:3000/` を実行
+  - [ ] `Content-Security-Policy` が返る
+  - [ ] `X-Frame-Options: DENY` が返る
+  - [ ] `Strict-Transport-Security` が返らない
+
+- [ ] production 検証
+  - [ ] `npm run start` を起動
+  - [ ] `curl -I http://localhost:3000/` を実行
+  - [ ] `Content-Security-Policy` が返る
+  - [ ] `X-Frame-Options: DENY` が返る
+  - [ ] `Strict-Transport-Security` が返る
+
+- [ ] ローカルで LocalStack を使っている場合のみ追加確認
+  - [ ] アバター画像や LocalStack 公開 URL が CSP / `next/image` 設定でブロックされないことを確認
 
 ---
 
 ## ロールアウト注意事項
 
-- [ ] 派生サイトで外部 CDN からのスクリプト/画像を使う場合、`buildCsp()` の該当ディレクティブ更新が必要な旨を README に明記
-- [ ] Storybook 用の Storybook 設定（`.storybook/`）には本ヘッダは影響しない（Next.js のレスポンスヘッダ機能は Storybook dev server では無関係）
+- [ ] production で外部 CDN / 解析タグ / 外部 API / WebSocket を使う派生サイトは、`src/libraries/security-headers.ts` を個別調整する必要がある
+- [ ] `EXTRA_REMOTE_IMAGE_URLS` は画像読み込み許可だけであり、CSP の `img-src` まで自動更新するわけではない点を README に明記する
+- [ ] nonce ベース CSP へ移行する場合は `src/proxy.ts` を使う別計画として切り出す
+- [ ] HSTS preload は今回入れない。必要ならサブドメイン HTTPS 化完了後に別途 opt-in で検討する
+- [ ] Storybook は Next.js の `headers()` 対象外なので、この計画の検証対象から外す
 
 ---
 
 ## 完了条件
 
-- [ ] 上記全タスクにチェックが入っている
-- [ ] `npm run type-check`、`npm run test`、`npm run test:e2e`、`npm run build` がすべて pass
-- [ ] `curl -I` で期待ヘッダが返ることを目視確認
+- [ ] 上記タスクがすべて完了している
+- [ ] `npm run type-check`、対象 Jest テスト、`npm run build` が pass している
+- [ ] development の `curl -I` で CSP が返り、HSTS が返らないことを確認している
+- [ ] production の `curl -I` で CSP と HSTS が返ることを確認している
+- [ ] `README.md` と `.env.example` が実装と一致している

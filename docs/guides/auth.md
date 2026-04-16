@@ -51,7 +51,8 @@ prisma/
 | `LOCALSTACK_ENDPOINT` 等 | SES/S3 エミュレーション | LocalStack 利用時 |
 | `DATABASE_URL` | Postgres 接続文字列 | `sslmode` を付けると TLS 有効化（下記 DB TLS 参照） |
 | `DATABASE_SSL_REJECT_UNAUTHORIZED` | CA 検証の opt-out | `false` にすると証明書検証無効（非推奨） |
-| `DATABASE_SSL_CA_PATH` | CA 証明書ファイルパス | RDS 等で CA バンドルを読み込む場合に指定 |
+| `DATABASE_SSL_CA_PATH` | CA 証明書ファイルパス | 標準経路。RDS 等で CA バンドルを読み込む場合に指定 |
+| `DATABASE_SSL_CA` | CA 証明書本文 | override。ファイル配置が難しい環境向け |
 
 `src/libraries/auth.ts` では `BETTER_AUTH_SECRET` → `AUTH_SECRET` の順で解決。
 
@@ -63,13 +64,24 @@ prisma/
 |-----------|------|
 | 未指定 | TLS を有効化しない（ローカル開発向け、pg ドライバのデフォルト） |
 | `disable` | 明示的に TLS オフ |
-| その他（`require` 等） | TLS 有効化。既定で `rejectUnauthorized: true`（CA 検証 ON） |
+| `require` | TLS 有効化。既定で `rejectUnauthorized: true`（CA 検証 ON） |
+
+`prefer` と未知の値は本テンプレートではサポートしない。起動時に明示的エラーで停止させ、曖昧な設定を早期に検出する。
 
 `sslmode` が有効なとき、追加で以下の env を参照する。
 
 - `DATABASE_SSL_REJECT_UNAUTHORIZED=false` → `rejectUnauthorized` を false に（中間者攻撃に弱くなるため通常は避ける）
-- `DATABASE_SSL_CA` → PEM 本文を直接渡す（**Amplify / Vercel / Cloudflare 等サーバレスで推奨**。`\n` エスケープでも実改行でも可）
-- `DATABASE_SSL_CA_PATH=/path/to/ca.pem` → CA ファイルパスから読み込む（Docker / VM 向け。`DATABASE_SSL_CA` が設定されていれば無視）
+- `DATABASE_SSL_CA_PATH=/path/to/ca.pem` → 標準経路。CA ファイルパスから読み込む（Docker / VM / ECS / Kubernetes / Amplify 向け）
+- `DATABASE_SSL_CA` → override。PEM 本文を直接渡す（Vercel / Cloudflare / env-only 環境向け。`\n` エスケープでも実改行でも可）
+
+`DATABASE_SSL_CA` が設定されている場合は `DATABASE_SSL_CA_PATH` より優先される。
+
+#### 環境別の推奨設定
+
+- ローカル開発（Docker Compose Postgres）: `sslmode` 未指定
+- Amplify: `DATABASE_SSL_CA_PATH=./certs/rds-ca-bundle.pem`
+- Docker / VM / ECS / Kubernetes: `DATABASE_SSL_CA_PATH=/path/to/ca.pem`
+- Vercel / Cloudflare / env-only 環境: `DATABASE_SSL_CA` に PEM 本文を設定
 
 接続例:
 
@@ -80,11 +92,11 @@ DATABASE_URL="postgres://user:pass@localhost:5432/app"
 # Neon / Supabase（TLS 必須、CA は公開 CA）
 DATABASE_URL="postgres://user:pass@host.neon.tech/app?sslmode=require"
 
-# AWS RDS（CA バンドル検証 / ファイル）
+# Amplify / AWS RDS（標準の CA ファイル経路）
 DATABASE_URL="postgres://user:pass@rds-host/app?sslmode=require"
 DATABASE_SSL_CA_PATH=./certs/rds-ca-bundle.pem
 
-# AWS RDS（CA バンドル検証 / env インライン）
+# Vercel / Cloudflare / env-only 環境
 DATABASE_URL="postgres://user:pass@rds-host/app?sslmode=require"
 DATABASE_SSL_CA="-----BEGIN CERTIFICATE-----\nMIID...\n-----END CERTIFICATE-----"
 ```

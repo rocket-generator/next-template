@@ -4,6 +4,7 @@ import { PrismaClient } from "../generated/prisma/client";
 
 type SslObject = { rejectUnauthorized: boolean; ca?: string };
 type SslOption = false | SslObject | undefined;
+type SupportedSslMode = "disable" | "require";
 
 function getDatabaseUrl(): string {
   const databaseUrl = process.env.DATABASE_URL;
@@ -18,8 +19,8 @@ function getDatabaseUrl(): string {
 }
 
 function resolveSslCa(): string | undefined {
-  // Inline PEM (preferred on serverless: Amplify / Vercel / Cloudflare).
-  // Accepts either real newlines or escaped \n (env UIs often mangle them).
+  // Standard path-based CA config works well when files can be bundled or mounted.
+  // Inline PEM stays available as an override for env-only deployments.
   const inline = process.env.DATABASE_SSL_CA;
   if (inline) {
     return inline.includes("\\n") ? inline.replace(/\\n/g, "\n") : inline;
@@ -33,7 +34,20 @@ function resolveSslCa(): string | undefined {
   return undefined;
 }
 
-function resolveSslOption(sslMode: string | null): SslOption {
+function parseSslMode(sslMode: string | null): SupportedSslMode | null {
+  if (sslMode === null) {
+    return null;
+  }
+  if (sslMode === "disable" || sslMode === "require") {
+    return sslMode;
+  }
+
+  throw new Error(
+    `Unsupported sslmode "${sslMode}". Supported values are "disable" and "require".`
+  );
+}
+
+function resolveSslOption(sslMode: SupportedSslMode | null): SslOption {
   if (sslMode === null) {
     return undefined;
   }
@@ -61,7 +75,7 @@ export function createPrismaClient(
   // fails on managed services like RDS, so strip sslmode and drive TLS
   // via the ssl option instead.
   const url = new URL(connectionString);
-  const sslMode = url.searchParams.get("sslmode");
+  const sslMode = parseSslMode(url.searchParams.get("sslmode"));
   url.searchParams.delete("sslmode");
   const cleanedUrl = url.toString();
 

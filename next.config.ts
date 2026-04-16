@@ -6,6 +6,7 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   serverExternalPackages: [],
   outputFileTracingIncludes: {
+    // Keep bundled DB CA files in the server output for path-based TLS config.
     "*": ["./certs/**/*"],
   },
   transpilePackages: [

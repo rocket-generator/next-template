@@ -72,7 +72,7 @@ const adapter = new PrismaPg(
 
 > 方針からの差分メモ: 計画原案では「sslmode 未指定でも ssl オブジェクトを組み立てる」と読める表現だったが、ローカル開発（docker-compose の Postgres は TLS 無し）との後方互換を優先し、未指定時は pg デフォルトに委ねる実装とした。結果としてテスト `sslmode が無ければ ssl オプションを渡さない（ローカル開発互換）` を追加済。
 
-> 追加変更（2026-04-16）: Amplify SSR (Lambda) 実行時に `DATABASE_SSL_CA_PATH` で指定した PEM ファイルが bundle されず `ENOENT` になる問題への対応として、環境変数 `DATABASE_SSL_CA` に PEM 本文を直接渡せるよう拡張した。CA パスより優先される。`\n` エスケープと実改行の両方に対応。テストを 3 ケース追加済（合計 13/13 green）。Amplify / Vercel / Cloudflare 等サーバレスでは本方式が推奨。
+> 追加変更（2026-04-16）: `DATABASE_SSL_CA_PATH` に加えて、環境変数 `DATABASE_SSL_CA` に PEM 本文を直接渡せるよう拡張した。CA パスより優先される。`\n` エスケープと実改行の両方に対応。テストを 3 ケース追加済（合計 13/13 green）。本変数は Vercel / Cloudflare / env-only 環境向けの代替手段として残し、Amplify の正式経路は `DATABASE_SSL_CA_PATH` とする。
 
 ### ドキュメント・設定
 
@@ -117,3 +117,76 @@ const adapter = new PrismaPg(
 - [x] 上記主要タスクにチェックが入っている（手動接続確認 2 項目を除き完了）
 - [x] `npm run type-check`、`npm run test`、`npm run build` がすべて pass
 - [x] ドキュメント（`.env.example` / `docs/guides/auth.md`）が現実装と一致している
+
+---
+
+## レビュー反映による追補（2026-04-17）
+
+コードレビューと Amplify 実運用確認を踏まえ、以下を追補方針とする。
+
+### 決定事項
+
+1. **Amplify の正式サポート経路は `DATABASE_SSL_CA_PATH`**
+   - Amplify では `certs/rds-ca-bundle.pem` を bundle に含め、`DATABASE_SSL_CA_PATH` で参照する方式を正式サポートとする。
+   - 理由: 現在の `amplify.yml` + `next.config.ts` の実配線と一致し、multi-line env を `.env` に流し込む必要がないため運用が安定する。
+
+2. **`DATABASE_SSL_CA` は削除しない**
+   - `DATABASE_SSL_CA` はファイル配置が難しい環境向けの override / escape hatch として残す。
+   - 優先順位は現状どおり `DATABASE_SSL_CA` > `DATABASE_SSL_CA_PATH`。
+   - 想定環境: Vercel / Cloudflare / env-only 運用など。
+
+3. **`sslmode` の正式サポート値を明確化する**
+   - 本テンプレートで正式にサポートする値は `未指定` / `disable` / `require` のみとする。
+   - `prefer` や typo を黙って `require` 相当に丸める実装は避け、明示的なエラーで落とす。
+   - 理由: pg の `prefer` を忠実再現しない以上、曖昧な値を受け入れるほうが危険。
+
+### 追加修正タスク
+
+#### コード
+
+- [x] `src/libraries/prisma.ts`
+  - [x] `sslmode` の値を明示的に検証するヘルパーを追加する
+  - [x] 許可値 `null` / `disable` / `require` のみ受け入れる
+  - [x] `prefer` および未知の値は `Unsupported sslmode` 系の明示的エラーを投げる
+  - [x] `resolveSslCa` 周辺コメントを「`DATABASE_SSL_CA_PATH` が標準、`DATABASE_SSL_CA` は override」に修正する
+- [x] `amplify.yml`
+  - [x] Amplify では `DATABASE_SSL_CA_PATH` が標準経路であることが分かるコメントを追加する
+  - [x] `DATABASE_SSL_CA` を Amplify の標準配線にしない理由（multi-line PEM を `.env` に安全に書き出しにくい）をドキュメントへ委譲する
+- [x] `next.config.ts`
+  - [x] `outputFileTracingIncludes` で `certs/**/*` を含めている理由をコメントで明示する
+
+#### ドキュメント・設定
+
+- [x] `.env.example`
+  - [x] `DATABASE_SSL_CA_PATH` のコメントを「標準経路（Docker / VM / ECS / Kubernetes / Amplify 向け）」に修正
+  - [x] `DATABASE_SSL_CA` のコメントを「override（ファイル配置が難しい環境向け）」に修正
+- [x] `docs/guides/auth.md`
+  - [x] DB TLS セクションに「環境別の推奨設定」を追記する
+  - [x] Amplify の正式経路を `DATABASE_SSL_CA_PATH=./certs/rds-ca-bundle.pem` として明記する
+  - [x] Vercel / Cloudflare / env-only 環境では `DATABASE_SSL_CA` を使う方針を追記する
+  - [x] `DATABASE_SSL_CA` が `DATABASE_SSL_CA_PATH` より優先されることを明記する
+  - [x] `sslmode` の正式サポート値が `未指定` / `disable` / `require` のみであることを明記する
+  - [x] `prefer` と未知の値はサポート外であることを明記する
+- [x] 本計画内の 2026-04-16 追記メモの文言を、`DATABASE_SSL_CA` を Amplify 向け「推奨」ではなく「代替手段」と読める表現に読み替える
+
+#### テスト
+
+- [x] `__tests__/libraries/prisma.test.ts`
+  - [x] `sslmode=require` が従来どおり通ることを維持確認する
+  - [x] `sslmode=prefer` で明示的エラーになるテストを追加する
+  - [x] `sslmode=unknown` で明示的エラーになるテストを追加する
+  - [x] `DATABASE_SSL_CA` が `DATABASE_SSL_CA_PATH` より優先される既存テストを維持する
+
+#### 検証
+
+- [x] `npm run test -- prisma`
+- [x] `npm run type-check`
+- [x] `npm run build`
+- [x] `.next` の build trace に `certs/rds-ca-bundle.pem` が含まれることを確認する
+- [ ] Amplify の運用手順として、`DATABASE_SSL_CA_PATH=./certs/rds-ca-bundle.pem` で SSR 実接続できることを再確認する
+
+### 期待する着地点
+
+- Amplify の正式運用経路とドキュメントが一致している
+- `DATABASE_SSL_CA` は残るが、どの環境で使うべきかが明確になっている
+- `sslmode` の解釈が曖昧でなくなり、設定ミスを早期に検出できる
