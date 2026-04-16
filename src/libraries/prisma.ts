@@ -17,6 +17,22 @@ function getDatabaseUrl(): string {
   return databaseUrl;
 }
 
+function resolveSslCa(): string | undefined {
+  // Inline PEM (preferred on serverless: Amplify / Vercel / Cloudflare).
+  // Accepts either real newlines or escaped \n (env UIs often mangle them).
+  const inline = process.env.DATABASE_SSL_CA;
+  if (inline) {
+    return inline.includes("\\n") ? inline.replace(/\\n/g, "\n") : inline;
+  }
+
+  const caPath = process.env.DATABASE_SSL_CA_PATH;
+  if (caPath) {
+    return readFileSync(caPath, "utf8");
+  }
+
+  return undefined;
+}
+
 function resolveSslOption(sslMode: string | null): SslOption {
   if (sslMode === null) {
     return undefined;
@@ -30,9 +46,9 @@ function resolveSslOption(sslMode: string | null): SslOption {
       process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false",
   };
 
-  const caPath = process.env.DATABASE_SSL_CA_PATH;
-  if (caPath) {
-    ssl.ca = readFileSync(caPath, "utf8");
+  const ca = resolveSslCa();
+  if (ca) {
+    ssl.ca = ca;
   }
 
   return ssl;

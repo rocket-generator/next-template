@@ -68,7 +68,8 @@ prisma/
 `sslmode` が有効なとき、追加で以下の env を参照する。
 
 - `DATABASE_SSL_REJECT_UNAUTHORIZED=false` → `rejectUnauthorized` を false に（中間者攻撃に弱くなるため通常は避ける）
-- `DATABASE_SSL_CA_PATH=/path/to/ca.pem` → `ssl.ca` にファイル内容を読み込む（AWS RDS の CA バンドル等）
+- `DATABASE_SSL_CA` → PEM 本文を直接渡す（**Amplify / Vercel / Cloudflare 等サーバレスで推奨**。`\n` エスケープでも実改行でも可）
+- `DATABASE_SSL_CA_PATH=/path/to/ca.pem` → CA ファイルパスから読み込む（Docker / VM 向け。`DATABASE_SSL_CA` が設定されていれば無視）
 
 接続例:
 
@@ -79,9 +80,13 @@ DATABASE_URL="postgres://user:pass@localhost:5432/app"
 # Neon / Supabase（TLS 必須、CA は公開 CA）
 DATABASE_URL="postgres://user:pass@host.neon.tech/app?sslmode=require"
 
-# AWS RDS（CA バンドル検証）
+# AWS RDS（CA バンドル検証 / ファイル）
 DATABASE_URL="postgres://user:pass@rds-host/app?sslmode=require"
-DATABASE_SSL_CA_PATH=./rds-ca.pem
+DATABASE_SSL_CA_PATH=./certs/rds-ca-bundle.pem
+
+# AWS RDS（CA バンドル検証 / env インライン）
+DATABASE_URL="postgres://user:pass@rds-host/app?sslmode=require"
+DATABASE_SSL_CA="-----BEGIN CERTIFICATE-----\nMIID...\n-----END CERTIFICATE-----"
 ```
 
 ## サーバ実装のポイント

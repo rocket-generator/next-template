@@ -48,6 +48,7 @@ describe("prisma library", () => {
       "development";
     delete process.env.DATABASE_SSL_REJECT_UNAUTHORIZED;
     delete process.env.DATABASE_SSL_CA_PATH;
+    delete process.env.DATABASE_SSL_CA;
 
     delete (
       globalThis as typeof globalThis & {
@@ -204,6 +205,54 @@ describe("prisma library", () => {
       expect(getPrismaPgMock()).toHaveBeenCalledWith({
         connectionString: "postgres://localhost:5432/app",
       });
+    });
+
+    it("DATABASE_SSL_CA（本文インライン）が渡ると ca に設定される", () => {
+      process.env.DATABASE_SSL_CA =
+        "-----BEGIN CERTIFICATE-----\nINLINE_PEM\n-----END CERTIFICATE-----";
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://example.com:5432/app?sslmode=require");
+
+      expect(getPrismaPgMock()).toHaveBeenCalledWith({
+        connectionString: "postgres://example.com:5432/app",
+        ssl: {
+          rejectUnauthorized: true,
+          ca: "-----BEGIN CERTIFICATE-----\nINLINE_PEM\n-----END CERTIFICATE-----",
+        },
+      });
+      expect(getReadFileSyncMock()).not.toHaveBeenCalled();
+    });
+
+    it("DATABASE_SSL_CA の \\n エスケープは実改行に戻される", () => {
+      process.env.DATABASE_SSL_CA =
+        "-----BEGIN CERTIFICATE-----\\nESCAPED_PEM\\n-----END CERTIFICATE-----";
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://example.com:5432/app?sslmode=require");
+
+      expect(getPrismaPgMock()).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ssl: expect.objectContaining({
+            ca: "-----BEGIN CERTIFICATE-----\nESCAPED_PEM\n-----END CERTIFICATE-----",
+          }),
+        })
+      );
+    });
+
+    it("DATABASE_SSL_CA が DATABASE_SSL_CA_PATH より優先される", () => {
+      process.env.DATABASE_SSL_CA = "INLINE_WINS";
+      process.env.DATABASE_SSL_CA_PATH = "/etc/ssl/unused.pem";
+      const { createPrismaClient } = loadPrismaModule();
+
+      createPrismaClient("postgres://example.com:5432/app?sslmode=require");
+
+      expect(getReadFileSyncMock()).not.toHaveBeenCalled();
+      expect(getPrismaPgMock()).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ssl: expect.objectContaining({ ca: "INLINE_WINS" }),
+        })
+      );
     });
   });
 });

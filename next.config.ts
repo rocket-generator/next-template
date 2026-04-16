@@ -5,6 +5,9 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   serverExternalPackages: [],
+  outputFileTracingIncludes: {
+    "*": ["./certs/**/*"],
+  },
   transpilePackages: [
     '@aws-sdk/client-s3',
     '@aws-sdk/client-ses',

@@ -72,6 +72,8 @@ const adapter = new PrismaPg(
 
 > 方針からの差分メモ: 計画原案では「sslmode 未指定でも ssl オブジェクトを組み立てる」と読める表現だったが、ローカル開発（docker-compose の Postgres は TLS 無し）との後方互換を優先し、未指定時は pg デフォルトに委ねる実装とした。結果としてテスト `sslmode が無ければ ssl オプションを渡さない（ローカル開発互換）` を追加済。
 
+> 追加変更（2026-04-16）: Amplify SSR (Lambda) 実行時に `DATABASE_SSL_CA_PATH` で指定した PEM ファイルが bundle されず `ENOENT` になる問題への対応として、環境変数 `DATABASE_SSL_CA` に PEM 本文を直接渡せるよう拡張した。CA パスより優先される。`\n` エスケープと実改行の両方に対応。テストを 3 ケース追加済（合計 13/13 green）。Amplify / Vercel / Cloudflare 等サーバレスでは本方式が推奨。
+
 ### ドキュメント・設定
 
 - [x] `.env.example` に追記
