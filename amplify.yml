@@ -27,6 +27,7 @@ applications:
             - echo "SYSTEM_AWS_S3_BUCKET=$SYSTEM_AWS_S3_BUCKET" >> .env
             - echo "SYSTEM_AWS_SQS_QUEUE_URL=$SYSTEM_AWS_SQS_QUEUE_URL" >> .env
             - echo "SYSTEM_AWS_SQS_REGION=$SYSTEM_AWS_SQS_REGION" >> .env
+            - echo "DATABASE_SSL_CA_PATH=$DATABASE_SSL_CA_PATH" >> .env
             - rm -rf .next
             - npm run db:generate
             - npm run build
