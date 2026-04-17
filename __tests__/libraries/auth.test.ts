@@ -25,12 +25,39 @@ jest.mock("next/navigation", () => ({
   notFound: jest.fn(),
 }));
 
+const mockSendPasswordResetEmail = jest.fn();
+const mockSendVerificationEmail = jest.fn();
+const mockSendMail = jest.fn();
+const mockCreateTransport = jest.fn(() => ({
+  sendMail: mockSendMail,
+}));
+
+jest.mock(
+  "nodemailer",
+  () => ({
+    __esModule: true,
+    createTransport: mockCreateTransport,
+    default: {
+      createTransport: mockCreateTransport,
+    },
+  }),
+  { virtual: true }
+);
+
 jest.mock("@/libraries/email", () => ({
   __esModule: true,
-  createEmailServiceInstance: jest.fn(() => ({
-    sendPasswordResetEmail: jest.fn(),
-    sendVerificationEmail: jest.fn(),
-  })),
+  ...jest.requireActual("@/libraries/email"),
+  createEmailServiceInstance: jest.fn(() => {
+    if (process.env.AUTH_TEST_USE_REAL_EMAIL_SERVICE === "true") {
+      const actual = jest.requireActual("@/libraries/email") as typeof import("@/libraries/email");
+      return actual.createEmailServiceInstance();
+    }
+
+    return {
+      sendPasswordResetEmail: mockSendPasswordResetEmail,
+      sendVerificationEmail: mockSendVerificationEmail,
+    };
+  }),
 }));
 
 jest.mock("@/libraries/hash", () => ({
@@ -66,6 +93,21 @@ type NextNavigationModule = {
   notFound: jest.Mock;
 };
 
+type BetterAuthConfig = {
+  emailAndPassword: {
+    sendResetPassword: (options: {
+      user: { email: string };
+      token: string;
+    }) => Promise<void>;
+  };
+  emailVerification?: {
+    sendVerificationEmail: (options: {
+      user: { email: string };
+      token: string;
+    }) => Promise<void>;
+  };
+};
+
 const getBetterAuthMock = () =>
   (jest.requireMock("better-auth") as BetterAuthModule).betterAuth;
 
@@ -97,6 +139,22 @@ describe("auth helpers", () => {
     process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
     delete process.env.AUTH_SECRET;
     delete process.env.BETTER_AUTH_BASE_URL;
+    delete process.env.EMAIL_PROVIDER;
+    delete process.env.EMAIL_FROM;
+    delete process.env.SES_FROM_EMAIL;
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_PORT;
+    delete process.env.SMTP_SECURE;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    delete process.env.AUTH_TEST_USE_REAL_EMAIL_SERVICE;
+    delete process.env.ENABLE_EMAIL_VERIFICATION;
+
+    mockSendPasswordResetEmail.mockReset();
+    mockSendVerificationEmail.mockReset();
+    mockSendMail.mockReset();
+    mockSendMail.mockResolvedValue({ messageId: "smtp-message-id" });
+    mockCreateTransport.mockClear();
 
     mockGetSession = jest.fn();
     mockSignOut = jest.fn();
@@ -224,5 +282,53 @@ describe("auth helpers", () => {
     await expect(requireAdminSession()).rejects.toThrow("NEXT_NOT_FOUND");
 
     expect(getNavigationMocks().notFound).toHaveBeenCalledTimes(1);
+  });
+
+  it("SMTP provider でも reset / verification コールバックがメール送信できる", async () => {
+    process.env.AUTH_TEST_USE_REAL_EMAIL_SERVICE = "true";
+    process.env.EMAIL_PROVIDER = "smtp";
+    process.env.EMAIL_FROM = "noreply@example.test";
+    process.env.SMTP_HOST = "smtp.example.test";
+    process.env.SMTP_PORT = "2525";
+    process.env.SMTP_SECURE = "false";
+    process.env.ENABLE_EMAIL_VERIFICATION = "true";
+
+    const { getBetterAuthHandler } = loadAuthModule();
+    getBetterAuthHandler();
+
+    const config = getBetterAuthMock().mock.calls[0]?.[0] as BetterAuthConfig;
+
+    await config.emailAndPassword.sendResetPassword({
+      user: { email: "user@example.test" },
+      token: "reset-token",
+    });
+    await config.emailVerification?.sendVerificationEmail({
+      user: { email: "user@example.test" },
+      token: "verify-token",
+    });
+
+    expect(mockCreateTransport).toHaveBeenCalledWith({
+      host: "smtp.example.test",
+      port: 2525,
+      secure: false,
+      auth: undefined,
+    });
+    expect(mockSendMail).toHaveBeenCalledTimes(2);
+    expect(mockSendMail).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        from: "noreply@example.test",
+        to: "user@example.test",
+        subject: "パスワードリセットのご案内",
+      })
+    );
+    expect(mockSendMail).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        from: "noreply@example.test",
+        to: "user@example.test",
+        subject: "メールアドレス認証のご案内",
+      })
+    );
   });
 });

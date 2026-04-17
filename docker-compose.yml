@@ -61,15 +61,15 @@ services:
       - NEXT_PUBLIC_BETTER_AUTH_BASE_PATH=/api/auth
       - NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL=http://web:3000/api
       - NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL=http://localhost:3000/api
-      # LocalStack S3 Configuration
-      - AWS_S3_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
+      # LocalStack S3 / SES Configuration (SYSTEM_ prefix required for Amplify compatibility)
+      - SYSTEM_AWS_S3_REGION=us-east-1
+      - SYSTEM_AWS_ACCESS_KEY_ID=test
+      - SYSTEM_AWS_SECRET_ACCESS_KEY=test
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - LOCALSTACK_PUBLIC_ENDPOINT=http://localhost:4566
-      - AWS_S3_BUCKET=my-app-bucket
-      - AWS_SES_REGION=us-east-1
-      - SES_FROM_EMAIL=noreply@example.com
+      - SYSTEM_AWS_S3_BUCKET=my-app-bucket
+      - SYSTEM_AWS_SES_REGION=us-east-1
+      - EMAIL_FROM=noreply@example.com
     depends_on:
       postgres:
         condition: service_healthy

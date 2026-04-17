@@ -193,22 +193,35 @@ Key environment variables for Docker:
 - `DATABASE_URL`: PostgreSQL connection (automatically configured)
 - `BETTER_AUTH_BASE_URL`: Base URL used by Better Auth
 - `BETTER_AUTH_SECRET`: Secret key for Better Auth session encryption
-- `AWS_S3_REGION`: AWS S3 region (us-east-1 for LocalStack)
-- `AWS_ACCESS_KEY_ID`: AWS access key (test for LocalStack)
-- `AWS_SECRET_ACCESS_KEY`: AWS secret key (test for LocalStack)
-- `AWS_S3_BUCKET`: S3 bucket name (my-app-bucket for LocalStack)
+- `SYSTEM_AWS_S3_REGION`: AWS S3 region (us-east-1 for LocalStack)
+- `SYSTEM_AWS_ACCESS_KEY_ID`: AWS access key (test for LocalStack)
+- `SYSTEM_AWS_SECRET_ACCESS_KEY`: AWS secret key (test for LocalStack)
+- `SYSTEM_AWS_S3_BUCKET`: S3 bucket name (my-app-bucket for LocalStack)
 - `LOCALSTACK_ENDPOINT`: LocalStack endpoint for server-side S3 and SES operations
 - `LOCALSTACK_PUBLIC_ENDPOINT`: LocalStack endpoint for browser access to uploaded files (defaults to localhost:4566)
-- `AWS_SES_REGION`: AWS SES region (us-east-1 for LocalStack)
-- `SES_FROM_EMAIL`: Default sender email address
+- `SYSTEM_AWS_SES_REGION`: AWS SES region (us-east-1 for LocalStack)
+- `EMAIL_FROM`: Default sender email address (`SES_FROM_EMAIL` is still accepted as a deprecated fallback)
+- `STORAGE_PROVIDER`: Storage backend selector (`s3`, `s3-compatible`, `gcs`)
+- `S3_COMPATIBLE_ENDPOINT` / `S3_COMPATIBLE_PUBLIC_ENDPOINT` / `S3_COMPATIBLE_FORCE_PATH_STYLE`: S3-compatible storage options for R2, MinIO, Spaces, and similar providers
+- `GCS_PROJECT_ID` / `GCS_BUCKET` / `GCS_CLIENT_EMAIL` / `GCS_PRIVATE_KEY` / `GCS_REGION`: Google Cloud Storage options
+- `EMAIL_PROVIDER`: Email backend selector (`ses`, `smtp`)
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASS`: SMTP delivery options
 - `ENABLE_AUTH_PAGE_REDIRECT`: Redirect authenticated users away from auth pages (true/false, default true)
 
 #### For Production Deployment
 This Docker Compose setup is for local development only. For production deployment:
 - Deploy to cloud platforms (Vercel, AWS, etc.)
 - Use managed database services
-- Configure real AWS S3 and SES endpoints
+- Configure real storage and email providers
 - Set proper environment variables for production
+
+#### Migration Notes
+If you are upgrading an existing derived project to the provider-switching implementation:
+
+- Rename `AWS_S3_REGION`, `AWS_SES_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_S3_BUCKET` to the `SYSTEM_AWS_*` equivalents
+- Prefer `EMAIL_FROM` instead of `SES_FROM_EMAIL` (`SES_FROM_EMAIL` still works as a deprecated fallback)
+- Review any existing `.env` file and align it with the current `.env.example`
+- If you use Docker development, update the app container environment block in `docker-compose.yml` to the same `SYSTEM_AWS_*` / `EMAIL_FROM` naming
 
 ### Security Headers and External Images
 

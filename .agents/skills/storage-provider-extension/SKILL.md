@@ -1,60 +1,98 @@
 ---
 name: storage-provider-extension
-description: Use when adding, switching, or reviewing file/object storage backends in this template, especially for S3-compatible stores, Google Cloud Storage, Azure Blob Storage, Cloudflare R2, or MinIO.
+description: Use when changing this template's object storage backend, reviewing storage env setup, switching between `s3`, `s3-compatible`, and `gcs`, or adding a new provider such as R2, MinIO, Spaces, Azure Blob, or GCS.
 ---
 
 # Storage Provider Extension
 
-## Overview
-
-This skill is for extending the template's storage layer without mixing up three separate concerns:
-
-1. Storage provider implementation
-2. Browser rendering through `next/image`
-3. CSP / security header allowances
-
 Read [`docs/guides/storage-provider.md`](../../../docs/guides/storage-provider.md) first.
 
-## Use This Skill For
+## Current State
 
-- Adding a new storage backend
-- Switching from S3 to another provider
-- Reviewing whether a provider needs a new class or can reuse S3-compatible config
-- Checking what docs, env vars, and tests must change
+- Implemented providers: `s3`, `s3-compatible`, `gcs`
+- Provider selection: `STORAGE_PROVIDER`
+- Shared AWS-style env names use `SYSTEM_AWS_*`
+- S3-compatible services reuse `S3Provider`; do not add a dedicated provider unless the API is actually non-S3
+
+## Current Env Map
+
+### `s3`
+
+Use:
+
+- `STORAGE_PROVIDER=s3`
+- `SYSTEM_AWS_S3_REGION`
+- `SYSTEM_AWS_ACCESS_KEY_ID`
+- `SYSTEM_AWS_SECRET_ACCESS_KEY`
+- `SYSTEM_AWS_S3_BUCKET`
+- `USE_LOCALSTACK`
+- `LOCALSTACK_ENDPOINT`
+- `LOCALSTACK_PUBLIC_ENDPOINT`
+
+### `s3-compatible`
+
+Use:
+
+- `STORAGE_PROVIDER=s3-compatible`
+- `SYSTEM_AWS_S3_REGION`
+- `SYSTEM_AWS_ACCESS_KEY_ID`
+- `SYSTEM_AWS_SECRET_ACCESS_KEY`
+- `SYSTEM_AWS_S3_BUCKET`
+- `S3_COMPATIBLE_ENDPOINT`
+- `S3_COMPATIBLE_PUBLIC_ENDPOINT`
+- `S3_COMPATIBLE_FORCE_PATH_STYLE`
+
+### `gcs`
+
+Use:
+
+- `STORAGE_PROVIDER=gcs`
+- `GCS_PROJECT_ID`
+- `GCS_BUCKET`
+- `GCS_CLIENT_EMAIL`
+- `GCS_PRIVATE_KEY`
+- `GCS_REGION`
 
 ## Workflow
 
-1. Identify whether the request is:
-   - display-only (`next/image` / remote URLs)
-   - full provider integration (upload / download / delete / signed URL / list)
-2. Inspect `src/libraries/storage.ts` and keep `StorageProvider` / `StorageService` contracts intact unless there is a clear reason to change them.
-3. Prefer reusing `S3Provider` for S3-compatible services before adding a dedicated provider.
+1. Decide whether the request is:
+   - display-only (`next/image`, remote host allowlists, CSP)
+   - full provider integration (upload / download / signed URL / delete / list)
+2. Inspect `src/libraries/storage.ts` and keep `StorageProvider` / `StorageService` contracts intact unless there is a concrete reason to change them.
+3. If the target is S3-compatible, prefer extending env/config loading around `S3Provider` before adding a new class.
 4. If a dedicated provider is required:
-   - add provider config and validation
+   - add provider config validation
    - add provider class
    - update `createStorageServiceInstance()`
-5. Update display/security layers separately when needed:
-   - `EXTRA_REMOTE_IMAGE_URLS`
-   - `src/libraries/security-headers.ts`
-6. Update:
+   - keep provider-name typos fail-fast
+5. Update config/docs:
    - `.env.example`
    - `README.md`
    - `docs/guides/storage-provider.md`
-7. Add targeted tests for:
-   - provider selection
-   - env validation
-   - upload/download/delete/list
-   - signed URL generation
+   - `.cursor/rules/storage-provider.mdc` when guidance changed
+6. Update tests:
+   - `__tests__/libraries/storage.test.ts`
+   - consumer smoke around `UserRepository`
 
 ## Rules
 
-- Fail fast on invalid or missing provider env.
-- Do not assume that adding a storage provider also solves browser image rendering.
-- Do not assume that `next/image` allowlists also update CSP.
-- Keep public URL, CDN URL, and signed URL semantics explicit.
+- Keep `UploadResult.url` semantics explicit; do not blur public URL, CDN URL, and signed URL.
+- `S3_COMPATIBLE_FORCE_PATH_STYLE` must preserve both `true` and `false`; there is a regression test for this.
+- Adding a storage provider does not automatically solve browser rendering. Review `EXTRA_REMOTE_IMAGE_URLS` and `src/libraries/security-headers.ts` separately when URLs must load in the browser.
+- Use `SYSTEM_AWS_*` names consistently in code, docs, and examples.
 
-## Examples
+## Files To Touch
 
-- GCS usually needs a dedicated provider.
-- Azure Blob usually needs a dedicated provider.
-- R2 / MinIO / Spaces should be evaluated as S3-compatible first.
+- `src/libraries/storage.ts`
+- `__tests__/libraries/storage.test.ts`
+- `__tests__/repositories/user_repository.storage-provider.test.ts`
+- `.env.example`
+- `README.md`
+- `docs/guides/storage-provider.md`
+- `.cursor/rules/storage-provider.mdc`
+
+## Quick Decisions
+
+- R2 / MinIO / Spaces / Wasabi: evaluate as `s3-compatible` first
+- GCS / Azure Blob: usually dedicated provider
+- Display-only request: likely `EXTRA_REMOTE_IMAGE_URLS` and CSP, not `storage.ts`

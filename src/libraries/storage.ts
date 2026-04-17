@@ -78,6 +78,16 @@ export interface S3ProviderConfig {
   forcePathStyle?: boolean; // For LocalStack compatibility
 }
 
+export interface GCSProviderConfig {
+  projectId: string;
+  bucket: string;
+  credentials: {
+    clientEmail: string;
+    privateKey: string;
+  };
+  region?: string;
+}
+
 // S3 Provider Implementation
 export class S3Provider implements StorageProvider {
   private config: S3ProviderConfig;
@@ -123,39 +133,19 @@ export class S3Provider implements StorageProvider {
 
   async download(key: string): Promise<DownloadResult> {
     try {
-      console.log("S3Provider: Starting download for key:", key);
-      console.log("S3Provider: Config:", {
-        bucket: this.config.bucket,
-        region: this.config.region,
-        endpoint: this.config.endpoint,
-        forcePathStyle: this.config.forcePathStyle,
-      });
-
       const { GetObjectCommand } = await import("@aws-sdk/client-s3");
 
       const s3Client = await this.createS3Client();
-      console.log("S3Provider: S3 client created successfully");
 
       const params = {
         Bucket: this.config.bucket,
         Key: key,
       };
 
-      console.log("S3Provider: GetObjectCommand params:", params);
       const command = new GetObjectCommand(params);
       const result = await s3Client.send(command);
 
-      console.log("S3Provider: GetObjectCommand result:", {
-        hasBody: !!result.Body,
-        contentType: result.ContentType,
-        contentLength: result.ContentLength,
-        lastModified: result.LastModified,
-        bodyType: typeof result.Body,
-        bodyConstructor: result.Body?.constructor?.name,
-      });
-
       if (!result.Body) {
-        console.error("S3Provider: No data received from S3");
         return {
           success: false,
           error: "No data received",
@@ -166,26 +156,14 @@ export class S3Provider implements StorageProvider {
 
       // Bodyの形式に応じてデータを取得
       if (result.Body instanceof Uint8Array) {
-        // Uint8Arrayの場合
-        console.log(
-          "S3Provider: Body is Uint8Array, length:",
-          result.Body.length
-        );
         data = Buffer.from(result.Body);
       } else if (typeof result.Body === "string") {
-        // 文字列の場合
-        console.log(
-          "S3Provider: Body is string, length:",
-          (result.Body as string).length
-        );
         data = Buffer.from(result.Body, "utf-8");
       } else if (
         result.Body &&
         typeof result.Body === "object" &&
         "getReader" in result.Body
       ) {
-        // ReadableStreamの場合
-        console.log("S3Provider: Body is ReadableStream, using getReader");
         const chunks: Uint8Array[] = [];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const reader = (result.Body as any).getReader();
@@ -202,10 +180,6 @@ export class S3Provider implements StorageProvider {
         typeof result.Body === "object" &&
         "transformToByteArray" in result.Body
       ) {
-        // TransformStreamの場合
-        console.log(
-          "S3Provider: Body is TransformStream, using transformToByteArray"
-        );
         const chunks: Uint8Array[] = [];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stream = result.Body as any;
@@ -216,8 +190,6 @@ export class S3Provider implements StorageProvider {
 
         data = Buffer.concat(chunks);
       } else {
-        // その他の場合、toString()を試す
-        console.log("S3Provider: Body is unknown type, trying toString()");
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const bodyString = (result.Body as any).toString();
@@ -230,11 +202,6 @@ export class S3Provider implements StorageProvider {
           };
         }
       }
-
-      console.log(
-        "S3Provider: Stream data converted to buffer, length:",
-        data.length
-      );
 
       return {
         success: true,
@@ -379,7 +346,9 @@ export class S3Provider implements StorageProvider {
     // Add endpoint and path style for LocalStack if provided
     if (this.config.endpoint) {
       clientConfig.endpoint = this.config.endpoint;
-      clientConfig.forcePathStyle = this.config.forcePathStyle || true;
+      if (this.config.forcePathStyle !== undefined) {
+        clientConfig.forcePathStyle = this.config.forcePathStyle;
+      }
     }
 
     return new S3Client(clientConfig);
@@ -407,6 +376,151 @@ export class S3Provider implements StorageProvider {
   }
 }
 
+export class GCSProvider implements StorageProvider {
+  private config: GCSProviderConfig;
+
+  constructor(config: GCSProviderConfig) {
+    if (!config.projectId) {
+      throw new Error("GCS project ID is required");
+    }
+    if (!config.bucket) {
+      throw new Error("GCS bucket is required");
+    }
+    if (!config.credentials.clientEmail || !config.credentials.privateKey) {
+      throw new Error("GCS credentials are required");
+    }
+
+    this.config = config;
+  }
+
+  async upload(options: UploadOptions): Promise<UploadResult> {
+    try {
+      const file = await this.getFileHandle(options.key);
+
+      await file.save(options.data, {
+        contentType: options.contentType || "application/octet-stream",
+        metadata: options.metadata ? { metadata: options.metadata } : undefined,
+      });
+
+      return {
+        success: true,
+        key: options.key,
+        url: this.generateFileUrl(options.key),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        key: options.key,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  async download(key: string): Promise<DownloadResult> {
+    try {
+      const file = await this.getFileHandle(key);
+      const [data] = await file.download();
+      const [metadata] = await file.getMetadata();
+
+      return {
+        success: true,
+        data,
+        contentType: metadata.contentType,
+        contentLength: metadata.size ? Number(metadata.size) : undefined,
+        lastModified: metadata.updated ? new Date(metadata.updated) : undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+    try {
+      const file = await this.getFileHandle(key);
+      const [signedUrl] = await file.getSignedUrl({
+        action: "read",
+        expires: Date.now() + expiresIn * 1000,
+      });
+
+      return signedUrl;
+    } catch (error) {
+      throw new Error(
+        `Failed to generate signed URL: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      const file = await this.getFileHandle(key);
+      await file.delete();
+    } catch (error) {
+      throw new Error(
+        `Failed to delete file: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async list(prefix?: string, maxKeys: number = 1000): Promise<ListResult> {
+    try {
+      const bucket = await this.getBucketHandle();
+      const [files] = await bucket.getFiles({
+        prefix,
+        maxResults: maxKeys,
+        autoPaginate: false,
+      });
+
+      return {
+        success: true,
+        files: files.map((file) => ({
+          key: file.name,
+          size: file.metadata.size ? Number(file.metadata.size) : 0,
+          lastModified: file.metadata.updated
+            ? new Date(file.metadata.updated)
+            : new Date(),
+          etag: file.metadata.etag,
+        })),
+        hasMore: files.length === maxKeys,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        files: [],
+        hasMore: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  private async getBucketHandle() {
+    const { Storage } = await import("@google-cloud/storage");
+
+    return new Storage({
+      projectId: this.config.projectId,
+      credentials: {
+        client_email: this.config.credentials.clientEmail,
+        private_key: this.config.credentials.privateKey,
+      },
+    }).bucket(this.config.bucket);
+  }
+
+  private async getFileHandle(key: string) {
+    const bucket = await this.getBucketHandle();
+    return bucket.file(key);
+  }
+
+  private generateFileUrl(key: string): string {
+    return `https://storage.googleapis.com/${this.config.bucket}/${key}`;
+  }
+}
+
 // Main Storage Service Implementation
 export class StorageServiceImpl implements StorageService {
   private provider: StorageProvider;
@@ -427,10 +541,7 @@ export class StorageServiceImpl implements StorageService {
     };
 
     const result = await this.provider.upload(options);
-
-    if (result.success) {
-      console.log(`File uploaded successfully: ${key}`);
-    } else {
+    if (!result.success) {
       console.error(`Failed to upload file ${key}:`, result.error);
     }
 
@@ -438,26 +549,8 @@ export class StorageServiceImpl implements StorageService {
   }
 
   async downloadFile(key: string): Promise<DownloadResult> {
-    console.log("StorageServiceImpl: Starting download for key:", key);
-    console.log(
-      "StorageServiceImpl: Provider type:",
-      this.provider.constructor.name
-    );
-
     const result = await this.provider.download(key);
-
-    console.log("StorageServiceImpl: Download result:", {
-      success: result.success,
-      hasData: !!result.data,
-      dataLength: result.data?.length,
-      contentType: result.contentType,
-      contentLength: result.contentLength,
-      error: result.error,
-    });
-
-    if (result.success) {
-      console.log(`File downloaded successfully: ${key}`);
-    } else {
+    if (!result.success) {
       console.error(`Failed to download file ${key}:`, result.error);
     }
 
@@ -468,14 +561,11 @@ export class StorageServiceImpl implements StorageService {
     key: string,
     expiresIn: number = 3600
   ): Promise<string> {
-    const url = await this.provider.getSignedUrl(key, expiresIn);
-    console.log(`Signed URL generated for ${key}, expires in ${expiresIn}s`);
-    return url;
+    return this.provider.getSignedUrl(key, expiresIn);
   }
 
   async deleteFile(key: string): Promise<void> {
     await this.provider.delete(key);
-    console.log(`File deleted successfully: ${key}`);
   }
 
   async updateFile(
@@ -489,12 +579,7 @@ export class StorageServiceImpl implements StorageService {
 
   async listFiles(prefix?: string, maxKeys?: number): Promise<ListResult> {
     const result = await this.provider.list(prefix, maxKeys);
-
-    if (result.success) {
-      console.log(
-        `Listed ${result.files.length} files with prefix: ${prefix || "none"}`
-      );
-    } else {
+    if (!result.success) {
       console.error(`Failed to list files:`, result.error);
     }
 
@@ -529,28 +614,73 @@ export function createS3ProviderConfig(): S3ProviderConfig {
   }
 }
 
+function parseBooleanEnv(
+  name: string,
+  defaultValue?: boolean
+): boolean | undefined {
+  const value = process.env[name];
+
+  if (value === undefined) {
+    return defaultValue;
+  }
+  if (value === "true") {
+    return true;
+  }
+  if (value === "false") {
+    return false;
+  }
+
+  throw new Error(
+    `Invalid boolean environment variable ${name}: expected "true" or "false"`
+  );
+}
+
+export function createS3CompatibleProviderConfig(): S3ProviderConfig {
+  const endpoint = process.env.S3_COMPATIBLE_ENDPOINT;
+
+  if (!endpoint) {
+    throw new Error(
+      "Missing required environment variable: S3_COMPATIBLE_ENDPOINT"
+    );
+  }
+
+  return {
+    region: process.env.SYSTEM_AWS_S3_REGION || "us-east-1",
+    accessKeyId: process.env.SYSTEM_AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.SYSTEM_AWS_SECRET_ACCESS_KEY || "",
+    bucket: process.env.SYSTEM_AWS_S3_BUCKET || "",
+    endpoint,
+    publicEndpoint: process.env.S3_COMPATIBLE_PUBLIC_ENDPOINT || endpoint,
+    forcePathStyle: parseBooleanEnv("S3_COMPATIBLE_FORCE_PATH_STYLE", true),
+  };
+}
+
+export function createGCSProviderConfig(): GCSProviderConfig {
+  return {
+    projectId: process.env.GCS_PROJECT_ID || "",
+    bucket: process.env.GCS_BUCKET || "",
+    credentials: {
+      clientEmail: process.env.GCS_CLIENT_EMAIL || "",
+      privateKey: process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
+    },
+    region: process.env.GCS_REGION,
+  };
+}
+
 // Storage Service Factory
 export function createStorageServiceInstance(): StorageService {
-  console.log(
-    "createStorageServiceInstance: Creating storage service instance"
-  );
+  const providerName = process.env.STORAGE_PROVIDER ?? "s3";
 
-  // 常にS3プロバイダーを使用
-  const s3Config = createS3ProviderConfig();
-  console.log("createStorageServiceInstance: S3 config created:", {
-    region: s3Config.region,
-    bucket: s3Config.bucket,
-    endpoint: s3Config.endpoint,
-    forcePathStyle: s3Config.forcePathStyle,
-    hasAccessKey: !!s3Config.accessKeyId,
-    hasSecretKey: !!s3Config.secretAccessKey,
-  });
-
-  const provider = new S3Provider(s3Config);
-  console.log("createStorageServiceInstance: S3Provider created");
-
-  const service = new StorageServiceImpl(provider);
-  console.log("createStorageServiceInstance: StorageServiceImpl created");
-
-  return service;
+  switch (providerName) {
+    case "s3":
+      return new StorageServiceImpl(new S3Provider(createS3ProviderConfig()));
+    case "s3-compatible":
+      return new StorageServiceImpl(
+        new S3Provider(createS3CompatibleProviderConfig())
+      );
+    case "gcs":
+      return new StorageServiceImpl(new GCSProvider(createGCSProviderConfig()));
+    default:
+      throw new Error(`Unknown STORAGE_PROVIDER: ${providerName}`);
+  }
 }

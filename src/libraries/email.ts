@@ -33,6 +33,14 @@ export interface SESProviderConfig {
   endpoint?: string; // For LocalStack
 }
 
+export interface SMTPProviderConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user?: string;
+  pass?: string;
+}
+
 // SES Provider Implementation
 export class SESProvider implements EmailProvider {
   private config: SESProviderConfig;
@@ -109,6 +117,51 @@ export class SESProvider implements EmailProvider {
       };
     } catch (error) {
       console.error("SES email sending failed:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+}
+
+export class SMTPProvider implements EmailProvider {
+  private config: SMTPProviderConfig;
+
+  constructor(config: SMTPProviderConfig) {
+    this.config = config;
+  }
+
+  async sendEmail(options: EmailOptions): Promise<EmailResult> {
+    try {
+      const nodemailer = await import("nodemailer");
+      const transportConfig = {
+        host: this.config.host,
+        port: this.config.port,
+        secure: this.config.secure,
+        auth:
+          this.config.user || this.config.pass
+            ? {
+                user: this.config.user,
+                pass: this.config.pass,
+              }
+            : undefined,
+      };
+
+      const transporter = nodemailer.createTransport(transportConfig);
+      const result = await transporter.sendMail({
+        from: options.from,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+      });
+
+      return {
+        success: true,
+        messageId: result.messageId,
+      };
+    } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -241,30 +294,93 @@ export function createSESProviderConfig(): SESProviderConfig {
   if (isProduction) {
     // Production: Use AWS SES
     return {
-      region: process.env.AWS_SES_REGION || "us-east-1",
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+      region: process.env.SYSTEM_AWS_SES_REGION || "us-east-1",
+      accessKeyId: process.env.SYSTEM_AWS_ACCESS_KEY_ID || "",
+      secretAccessKey: process.env.SYSTEM_AWS_SECRET_ACCESS_KEY || "",
     };
   } else {
     // Development: Use LocalStack SES
     return {
-      region: process.env.AWS_SES_REGION || "us-east-1",
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "test",
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "test",
+      region: process.env.SYSTEM_AWS_SES_REGION || "us-east-1",
+      accessKeyId: process.env.SYSTEM_AWS_ACCESS_KEY_ID || "test",
+      secretAccessKey: process.env.SYSTEM_AWS_SECRET_ACCESS_KEY || "test",
       endpoint: process.env.LOCALSTACK_ENDPOINT || "http://localhost:4566",
     };
   }
 }
 
+function parseSmtpPort(value: string | undefined): number {
+  if (!value) {
+    return 587;
+  }
+
+  const port = Number.parseInt(value, 10);
+  if (Number.isNaN(port)) {
+    throw new Error(`Invalid SMTP_PORT: ${value}`);
+  }
+
+  return port;
+}
+
+function parseBooleanEnv(name: string, defaultValue: boolean): boolean {
+  const value = process.env[name];
+  if (value === undefined) {
+    return defaultValue;
+  }
+  if (value === "true") {
+    return true;
+  }
+  if (value === "false") {
+    return false;
+  }
+
+  throw new Error(
+    `Invalid boolean environment variable ${name}: expected "true" or "false"`
+  );
+}
+
+export function createSMTPProviderConfig(): SMTPProviderConfig {
+  return {
+    host: process.env.SMTP_HOST || "",
+    port: parseSmtpPort(process.env.SMTP_PORT),
+    secure: parseBooleanEnv("SMTP_SECURE", false),
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  };
+}
+
+function resolveFromEmail(): string {
+  if (process.env.EMAIL_FROM) {
+    return process.env.EMAIL_FROM;
+  }
+
+  if (process.env.SES_FROM_EMAIL) {
+    console.warn("SES_FROM_EMAIL is deprecated. Use EMAIL_FROM instead.");
+    return process.env.SES_FROM_EMAIL;
+  }
+
+  return process.env.NODE_ENV === "production"
+    ? "noreply@example.com"
+    : "noreply@localhost";
+}
+
 // Email Service Factory
 export function createEmailServiceInstance(): EmailService {
-  const sesConfig = createSESProviderConfig();
-  const sesProvider = new SESProvider(sesConfig);
-  const fromEmail =
-    process.env.SES_FROM_EMAIL ||
-    (process.env.NODE_ENV === "production"
-      ? "noreply@example.com"
-      : "noreply@localhost");
+  const providerName = process.env.EMAIL_PROVIDER ?? "ses";
+  const fromEmail = resolveFromEmail();
 
-  return new EmailServiceImpl(sesProvider, fromEmail);
+  switch (providerName) {
+    case "ses":
+      return new EmailServiceImpl(
+        new SESProvider(createSESProviderConfig()),
+        fromEmail
+      );
+    case "smtp":
+      return new EmailServiceImpl(
+        new SMTPProvider(createSMTPProviderConfig()),
+        fromEmail
+      );
+    default:
+      throw new Error(`Unknown EMAIL_PROVIDER: ${providerName}`);
+  }
 }

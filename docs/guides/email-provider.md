@@ -1,17 +1,46 @@
 # メールプロバイダー追加ガイド
 
-既存のメールサービスに新プロバイダーを追加する方法。
+既存のメールサービスに新しいプロバイダーを追加する方法。
 
-## 現在のアーキテクチャ
+## 現在の実装状況
 
-メールサービスは Provider パターン：
+現時点で `src/libraries/email.ts` に実装済みなのは以下です。
 
+- `EmailService`
+- `EmailProvider`
+- `SESProvider`
+- `SMTPProvider`
+- `EmailServiceImpl`
+- `createSESProviderConfig()`
+- `createSMTPProviderConfig()`
+- `createEmailServiceInstance()` は `EMAIL_PROVIDER=ses|smtp` で切り替え
+
+送信元アドレスは provider 非依存の `EMAIL_FROM` を優先し、`SES_FROM_EMAIL` は後方互換のため deprecated fallback として残しています。
+
+## 現在の環境変数
+
+### SES
+
+```bash
+EMAIL_PROVIDER=ses
+SYSTEM_AWS_SES_REGION=us-east-1
+SYSTEM_AWS_ACCESS_KEY_ID=your-access-key
+SYSTEM_AWS_SECRET_ACCESS_KEY=your-secret-key
+LOCALSTACK_ENDPOINT=http://localhost:4566
+EMAIL_FROM=noreply@yourdomain.com
+SES_FROM_EMAIL=noreply@yourdomain.com # deprecated
 ```
-src/libraries/email.ts
-├── EmailService (interface)   # メール送信の抽象化
-├── EmailProvider (interface)  # プロバイダーの抽象化
-├── SESProvider (class)        # AWS SES 実装
-└── EmailServiceImpl (class)   # サービス実装
+
+### SMTP
+
+```bash
+EMAIL_PROVIDER=smtp
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=smtp-user
+SMTP_PASS=smtp-pass
+EMAIL_FROM=noreply@yourdomain.com
 ```
 
 ## 追加手順
@@ -21,7 +50,6 @@ src/libraries/email.ts
 ```typescript
 export interface ResendProviderConfig {
   apiKey: string;
-  fromEmail?: string;
 }
 ```
 
@@ -29,15 +57,14 @@ export interface ResendProviderConfig {
 
 ```typescript
 export class ResendProvider implements EmailProvider {
-  private config: ResendProviderConfig;
-
-  constructor(config: ResendProviderConfig) {
-    this.config = config;
+  constructor(private config: ResendProviderConfig) {
+    if (!config.apiKey) {
+      throw new Error("Resend API key is required");
+    }
   }
 
   async sendEmail(options: EmailOptions): Promise<EmailResult> {
     try {
-      // Edge Runtime 互換のため dynamic import
       const { Resend } = await import("resend");
       const resend = new Resend(this.config.apiKey);
       const result = await resend.emails.send({
@@ -47,9 +74,12 @@ export class ResendProvider implements EmailProvider {
         html: options.html,
         text: options.text,
       });
-      return { success: true, messageId: result.data?.id };
+
+      return {
+        success: true,
+        messageId: result.data?.id,
+      };
     } catch (error) {
-      console.error("Resend email sending failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -65,7 +95,6 @@ export class ResendProvider implements EmailProvider {
 export function createResendProviderConfig(): ResendProviderConfig {
   return {
     apiKey: process.env.RESEND_API_KEY || "",
-    fromEmail: process.env.RESEND_FROM_EMAIL,
   };
 }
 ```
@@ -74,114 +103,61 @@ export function createResendProviderConfig(): ResendProviderConfig {
 
 ```typescript
 export function createEmailServiceInstance(): EmailService {
-  const providerType = process.env.EMAIL_PROVIDER || "ses";
-  let provider: EmailProvider;
-  let fromEmail: string;
+  const providerName = process.env.EMAIL_PROVIDER ?? "ses";
+  const fromEmail = resolveFromEmail();
 
-  switch (providerType) {
-    case "resend": {
-      const cfg = createResendProviderConfig();
-      provider = new ResendProvider(cfg);
-      fromEmail = cfg.fromEmail || process.env.SES_FROM_EMAIL || "noreply@localhost";
-      break;
-    }
+  switch (providerName) {
+    case "resend":
+      return new EmailServiceImpl(
+        new ResendProvider(createResendProviderConfig()),
+        fromEmail
+      );
+    case "smtp":
+      return new EmailServiceImpl(
+        new SMTPProvider(createSMTPProviderConfig()),
+        fromEmail
+      );
     case "ses":
-    default: {
-      const cfg = createSESProviderConfig();
-      provider = new SESProvider(cfg);
-      fromEmail = process.env.SES_FROM_EMAIL ||
-        (process.env.NODE_ENV === "production" ? "noreply@example.com" : "noreply@localhost");
-      break;
-    }
+      return new EmailServiceImpl(
+        new SESProvider(createSESProviderConfig()),
+        fromEmail
+      );
+    default:
+      throw new Error(`Unknown EMAIL_PROVIDER: ${providerName}`);
   }
-  return new EmailServiceImpl(provider, fromEmail);
 }
-```
-
-### 5. 環境変数
-
-`.env.example`:
-
-```bash
-EMAIL_PROVIDER=ses # ses, resend, sendgrid, etc.
-RESEND_API_KEY=your-resend-api-key
-RESEND_FROM_EMAIL=noreply@yourdomain.com
-```
-
-### 6. 依存追加
-
-```bash
-npm install resend
 ```
 
 ## 実装の注意点
 
-### Edge Runtime 対応
-
-- Node.js 固有モジュールは dynamic import
-- HTTP ベースの API を優先（Node.js ネイティブモジュール不使用のライブラリ）
-- 可能なら `fetch()` で直接 API 呼び出し
-
-### エラーハンドリング
-
-- 常に `EmailResult` 形式で返す
-- エラーは適切にログ出力し `success: false`
-- ネットワーク・認証など様々なケースを考慮
-
-### 設定の検証
-
-```typescript
-constructor(config: ResendProviderConfig) {
-  if (!config.apiKey) throw new Error("Resend API key is required");
-  this.config = config;
-}
-```
+- `EMAIL_FROM` を基準にする。新 provider を追加しても provider 名入り env を増やさない。
+- `SES_FROM_EMAIL` は後方互換専用。新規ドキュメントやサンプルでは使わない。
+- Node.js 専用 SDK やクライアントは `await import()` で読む。
+- エラーは必ず `EmailResult` に詰めて返す。
+- typo や不正 provider 名は silent fallback させずに throw する。
 
 ## テスト
 
-### 単体
+最低でも以下を追加・更新する。
 
-```typescript
-describe("ResendProvider", () => {
-  it("should send email successfully", async () => {
-    const provider = new ResendProvider({ apiKey: "test-api-key" });
-    const result = await provider.sendEmail({
-      from: "test@example.com",
-      to: "user@example.com",
-      subject: "Test",
-      html: "<p>Test</p>",
-    });
-    expect(result.success).toBe(true);
-  });
-});
-```
-
-### 統合
-
-1. `.env` で `EMAIL_PROVIDER=resend`
-2. パスワードリセットで実際にメール送信テスト
-3. ログでメッセージ ID 確認
+- `__tests__/libraries/email.test.ts`
+  - `EMAIL_PROVIDER=smtp` で SMTPProvider が使われる
+  - `SYSTEM_AWS_*` で SES 設定が生成される
+  - `EMAIL_FROM` 優先 / `SES_FROM_EMAIL` fallback / デフォルト送信元
+  - 不正 provider 名で throw
+- `__tests__/libraries/auth.test.ts`
+  - Better Auth の reset / verification コールバックが切替後 provider を通って動く
 
 ## 利用可能なプロバイダー例
 
-### Edge Runtime 対応
+- Node.js runtime:
+  - AWS SES
+  - SMTP / Mailhog / Mailtrap
+  - Resend
+  - SendGrid
+- HTTP API ベース:
+  - Resend
+  - Postmark
+  - SendGrid Web API
 
-- **Resend**: HTTP API
-- **SendGrid Web API**: HTTP API
-- **Postmark**: HTTP API
-
-### Node.js Runtime のみ
-
-- **Nodemailer**: SMTP
-- **AWS SES (SDK)**: 現行実装
-
-## 既存コードへの影響
-
-新規プロバイダー追加で変更不要なもの：
-
-- `EmailService` インターフェース
-- `EmailServiceImpl` クラス
-- 既存の `SESProvider`
-- パスワードリセット機能（`auth_repository.ts`）
-
-プロバイダー切替は `EMAIL_PROVIDER` 環境変数のみで可能。
+プロバイダー切り替えは `EMAIL_PROVIDER` の設定のみで可能です。

@@ -22,6 +22,14 @@ jest.mock("@aws-sdk/s3-request-presigner", () => ({
   getSignedUrl: jest.fn(),
 }));
 
+type StorageModule = typeof import("@/libraries/storage") & {
+  createS3CompatibleProviderConfig?: () => unknown;
+  createGCSProviderConfig?: () => unknown;
+  GCSProvider?: new (...args: unknown[]) => StorageProvider;
+};
+
+const loadStorageModule = () => require("@/libraries/storage") as StorageModule;
+
 describe("Storage Library", () => {
   const testKey = "test/file.txt";
   const testData = Buffer.from("test content");
@@ -111,6 +119,41 @@ describe("Storage Library", () => {
 
         expect(result.success).toBe(true);
         expect(mockSend).toHaveBeenCalledTimes(1);
+      });
+
+      it("should preserve forcePathStyle false when custom endpoint is used", async () => {
+        provider = new S3Provider({
+          region: "us-east-1",
+          accessKeyId: "test-key",
+          secretAccessKey: "test-secret",
+          bucket: "test-bucket",
+          endpoint: "https://storage.example.test",
+          publicEndpoint: "https://cdn.example.test",
+          forcePathStyle: false,
+        });
+
+        mockSend.mockResolvedValue({
+          ETag: '"test-etag"',
+        });
+
+        const result = await provider.upload({
+          key: testKey,
+          data: testData,
+          contentType: testContentType,
+        });
+
+        const { S3Client } = jest.requireMock("@aws-sdk/client-s3") as {
+          S3Client: jest.Mock;
+        };
+
+        expect(result.success).toBe(true);
+        expect(S3Client).toHaveBeenCalledWith(
+          expect.objectContaining({
+            endpoint: "https://storage.example.test",
+            forcePathStyle: false,
+          })
+        );
+        expect(result.url).toBe("https://test-bucket.cdn.example.test/test/file.txt");
       });
     });
 
@@ -443,6 +486,97 @@ describe("Storage Library", () => {
         const service = createStorageServiceInstance();
 
         expect(service).toBeInstanceOf(StorageServiceImpl);
+      });
+
+      it("should throw for unknown storage providers", () => {
+        process.env.STORAGE_PROVIDER = "s4";
+
+        expect(() => createStorageServiceInstance()).toThrow(
+          "Unknown STORAGE_PROVIDER: s4"
+        );
+      });
+    });
+
+    describe("createS3CompatibleProviderConfig", () => {
+      const originalEnv = process.env;
+
+      beforeEach(() => {
+        jest.resetModules();
+        process.env = { ...originalEnv };
+      });
+
+      afterAll(() => {
+        process.env = originalEnv;
+      });
+
+      it("should create config for s3-compatible endpoints", () => {
+        process.env.S3_COMPATIBLE_ENDPOINT = "https://storage.example.test";
+        process.env.SYSTEM_AWS_S3_REGION = "auto";
+        process.env.SYSTEM_AWS_ACCESS_KEY_ID = "compat-key";
+        process.env.SYSTEM_AWS_SECRET_ACCESS_KEY = "compat-secret";
+        process.env.SYSTEM_AWS_S3_BUCKET = "compat-bucket";
+        process.env.S3_COMPATIBLE_FORCE_PATH_STYLE = "false";
+
+        const storage = loadStorageModule();
+        const config = storage.createS3CompatibleProviderConfig!();
+
+        expect(config).toEqual({
+          region: "auto",
+          accessKeyId: "compat-key",
+          secretAccessKey: "compat-secret",
+          bucket: "compat-bucket",
+          endpoint: "https://storage.example.test",
+          publicEndpoint: "https://storage.example.test",
+          forcePathStyle: false,
+        });
+      });
+
+      it("should require an s3-compatible endpoint", () => {
+        const storage = loadStorageModule();
+
+        expect(() => storage.createS3CompatibleProviderConfig!()).toThrow(
+          "Missing required environment variable: S3_COMPATIBLE_ENDPOINT"
+        );
+      });
+    });
+
+    describe("createGCSProviderConfig", () => {
+      const originalEnv = process.env;
+
+      beforeEach(() => {
+        jest.resetModules();
+        process.env = { ...originalEnv };
+      });
+
+      afterAll(() => {
+        process.env = originalEnv;
+      });
+
+      it("should create GCS config and normalize private keys", () => {
+        process.env.GCS_PROJECT_ID = "gcs-project";
+        process.env.GCS_BUCKET = "gcs-bucket";
+        process.env.GCS_CLIENT_EMAIL = "svc@example.test";
+        process.env.GCS_PRIVATE_KEY = "line1\\nline2";
+        process.env.GCS_REGION = "asia-southeast1";
+
+        const storage = loadStorageModule();
+        const config = storage.createGCSProviderConfig!();
+
+        expect(config).toEqual({
+          projectId: "gcs-project",
+          bucket: "gcs-bucket",
+          credentials: {
+            clientEmail: "svc@example.test",
+            privateKey: "line1\nline2",
+          },
+          region: "asia-southeast1",
+        });
+      });
+
+      it("should export a GCS provider constructor", () => {
+        const storage = loadStorageModule();
+
+        expect(typeof storage.GCSProvider).toBe("function");
       });
     });
   });
