@@ -224,6 +224,22 @@ If you are upgrading an existing derived project to the provider-switching imple
 - Review any existing `.env` file and align it with the current `.env.example`
 - If you use Docker development, update the app container environment block in `docker-compose.yml` to the same `SYSTEM_AWS_*` / `EMAIL_FROM` naming
 
+### Logging / Monitoring
+
+This template includes a lightweight structured logger in `src/libraries/logger.ts`.
+
+- The default sink is the console adapter.
+- `LOG_LEVEL` accepts `debug`, `info`, `warn`, `error` and defaults to `info`.
+- `LOG_FORMAT` accepts `auto`, `json`, `pretty` and defaults to `auto`.
+- `LOG_FORMAT=auto` resolves to `json` in production and `pretty` in non-production environments.
+- Server-side logs under `src/libraries`, `src/repositories`, and `src/app` use this logger. Browser-side `console.*` usage in `src/components/**` is intentionally left for a separate cleanup task.
+
+Derived projects can replace the default adapters without rewriting call sites:
+
+1. Implement a custom `LogSink` and/or `MonitoringAdapter`.
+2. Register them with `setLogSinks()` and `setMonitoringAdapter()` from a server-only initialization module.
+3. Keep application code on `createLogger("scope")` so future Sentry / OpenTelemetry / Cloudflare Logs integration stays an adapter swap instead of another refactor.
+
 ### Security Headers and External Images
 
 This template adds baseline security headers through `next.config.ts`.

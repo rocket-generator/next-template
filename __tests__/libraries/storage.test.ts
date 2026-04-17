@@ -6,6 +6,11 @@ import {
   createS3ProviderConfig,
   createStorageServiceInstance,
 } from "@/libraries/storage";
+import {
+  getLoggedEntries,
+  installTestLoggerAdapters,
+  resetTestLoggerState,
+} from "../helpers/logger";
 
 // Mock AWS SDK
 jest.mock("@aws-sdk/client-s3", () => ({
@@ -35,16 +40,12 @@ describe("Storage Library", () => {
   const testData = Buffer.from("test content");
   const testContentType = "text/plain";
 
-  // Mock console.error to avoid noise during error case testing
-  let originalConsoleError: typeof console.error;
-
-  beforeAll(() => {
-    originalConsoleError = console.error;
-    console.error = jest.fn();
+  beforeEach(() => {
+    installTestLoggerAdapters();
   });
 
-  afterAll(() => {
-    console.error = originalConsoleError;
+  afterEach(() => {
+    resetTestLoggerState();
   });
 
   describe("S3Provider", () => {
@@ -103,6 +104,20 @@ describe("Storage Library", () => {
 
         expect(result.success).toBe(false);
         expect(result.error).toBe("Upload failed");
+        expect(getLoggedEntries()).toContainEqual(
+          expect.objectContaining({
+            level: "error",
+            scope: "storage",
+            event: "storage.upload.failed",
+            context: expect.objectContaining({
+              operation: "upload",
+              provider: "s3",
+              bucket: "test-bucket",
+              region: "us-east-1",
+              key: testKey,
+            }),
+          })
+        );
       });
 
       it("should include metadata when provided", async () => {
@@ -192,6 +207,20 @@ describe("Storage Library", () => {
 
         expect(result.success).toBe(false);
         expect(result.error).toBe("Download failed");
+        expect(getLoggedEntries()).toContainEqual(
+          expect.objectContaining({
+            level: "error",
+            scope: "storage",
+            event: "storage.download.failed",
+            context: expect.objectContaining({
+              operation: "download",
+              provider: "s3",
+              bucket: "test-bucket",
+              region: "us-east-1",
+              key: testKey,
+            }),
+          })
+        );
       });
 
       it("should handle missing body", async () => {
@@ -230,6 +259,20 @@ describe("Storage Library", () => {
         await expect(provider.getSignedUrl(testKey, 3600)).rejects.toThrow(
           "URL generation failed"
         );
+        expect(getLoggedEntries()).toContainEqual(
+          expect.objectContaining({
+            level: "error",
+            scope: "storage",
+            event: "storage.signed_url.failed",
+            context: expect.objectContaining({
+              operation: "getSignedUrl",
+              provider: "s3",
+              bucket: "test-bucket",
+              region: "us-east-1",
+              key: testKey,
+            }),
+          })
+        );
       });
     });
 
@@ -245,6 +288,20 @@ describe("Storage Library", () => {
         mockSend.mockRejectedValue(new Error("Delete failed"));
 
         await expect(provider.delete(testKey)).rejects.toThrow("Delete failed");
+        expect(getLoggedEntries()).toContainEqual(
+          expect.objectContaining({
+            level: "error",
+            scope: "storage",
+            event: "storage.delete.failed",
+            context: expect.objectContaining({
+              operation: "delete",
+              provider: "s3",
+              bucket: "test-bucket",
+              region: "us-east-1",
+              key: testKey,
+            }),
+          })
+        );
       });
     });
 
@@ -284,6 +341,20 @@ describe("Storage Library", () => {
 
         expect(result.success).toBe(false);
         expect(result.error).toBe("List failed");
+        expect(getLoggedEntries()).toContainEqual(
+          expect.objectContaining({
+            level: "error",
+            scope: "storage",
+            event: "storage.list.failed",
+            context: expect.objectContaining({
+              operation: "list",
+              provider: "s3",
+              bucket: "test-bucket",
+              region: "us-east-1",
+              prefix: "prefix/",
+            }),
+          })
+        );
       });
 
       it("should handle empty list", async () => {
@@ -337,6 +408,33 @@ describe("Storage Library", () => {
           contentType: testContentType,
         });
         expect(result).toEqual(expectedResult);
+      });
+
+      it("should log failed upload results from the provider", async () => {
+        mockProvider.upload.mockResolvedValue({
+          success: false,
+          key: testKey,
+          error: "provider failed",
+        });
+
+        const result = await service.uploadFile(testKey, testData, testContentType);
+
+        expect(result).toEqual({
+          success: false,
+          key: testKey,
+          error: "provider failed",
+        });
+        expect(getLoggedEntries()).toContainEqual(
+          expect.objectContaining({
+            level: "error",
+            scope: "storage",
+            event: "storage.service.upload.failed",
+            context: expect.objectContaining({
+              operation: "upload",
+              key: testKey,
+            }),
+          })
+        );
       });
     });
 

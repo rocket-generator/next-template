@@ -1,3 +1,5 @@
+import { createLogger, type LogContext } from "@/libraries/logger";
+
 // Storage Service Interface
 export interface StorageService {
   uploadFile(
@@ -88,6 +90,20 @@ export interface GCSProviderConfig {
   region?: string;
 }
 
+const storageLogger = createLogger("storage");
+
+function buildS3LogContext(
+  config: S3ProviderConfig,
+  context: LogContext
+): LogContext {
+  return {
+    provider: "s3",
+    bucket: config.bucket,
+    region: config.region,
+    ...context,
+  };
+}
+
 // S3 Provider Implementation
 export class S3Provider implements StorageProvider {
   private config: S3ProviderConfig;
@@ -122,7 +138,13 @@ export class S3Provider implements StorageProvider {
         url,
       };
     } catch (error) {
-      console.error("S3 upload failed:", error);
+      storageLogger.error("storage.upload.failed", "S3 upload failed", {
+        context: buildS3LogContext(this.config, {
+          operation: "upload",
+          key: options.key,
+        }),
+        error,
+      });
       return {
         success: false,
         key: options.key,
@@ -195,7 +217,17 @@ export class S3Provider implements StorageProvider {
           const bodyString = (result.Body as any).toString();
           data = Buffer.from(bodyString, "utf-8");
         } catch (error) {
-          console.error("S3Provider: Failed to convert Body to string:", error);
+          storageLogger.error(
+            "storage.download.body_serialize_failed",
+            "S3 download body serialization failed",
+            {
+              context: buildS3LogContext(this.config, {
+                operation: "download",
+                key,
+              }),
+              error,
+            }
+          );
           return {
             success: false,
             error: `Unsupported Body type: ${typeof result.Body}`,
@@ -211,15 +243,12 @@ export class S3Provider implements StorageProvider {
         lastModified: result.LastModified,
       };
     } catch (error) {
-      console.error("S3Provider: Download failed:", {
-        key,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        config: {
-          bucket: this.config.bucket,
-          region: this.config.region,
-          endpoint: this.config.endpoint,
-        },
+      storageLogger.error("storage.download.failed", "S3 download failed", {
+        context: buildS3LogContext(this.config, {
+          operation: "download",
+          key,
+        }),
+        error,
       });
       return {
         success: false,
@@ -247,7 +276,17 @@ export class S3Provider implements StorageProvider {
 
       return signedUrl;
     } catch (error) {
-      console.error("S3 signed URL generation failed:", error);
+      storageLogger.error(
+        "storage.signed_url.failed",
+        "S3 signed URL generation failed",
+        {
+          context: buildS3LogContext(this.config, {
+            operation: "getSignedUrl",
+            key,
+          }),
+          error,
+        }
+      );
       throw new Error(
         `Failed to generate signed URL: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -270,7 +309,13 @@ export class S3Provider implements StorageProvider {
       const command = new DeleteObjectCommand(params);
       await s3Client.send(command);
     } catch (error) {
-      console.error("S3 delete failed:", error);
+      storageLogger.error("storage.delete.failed", "S3 delete failed", {
+        context: buildS3LogContext(this.config, {
+          operation: "delete",
+          key,
+        }),
+        error,
+      });
       throw new Error(
         `Failed to delete file: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -314,7 +359,13 @@ export class S3Provider implements StorageProvider {
         hasMore: result.IsTruncated || false,
       };
     } catch (error) {
-      console.error("S3 list failed:", error);
+      storageLogger.error("storage.list.failed", "S3 list failed", {
+        context: buildS3LogContext(this.config, {
+          operation: "list",
+          ...(prefix ? { prefix } : {}),
+        }),
+        error,
+      });
       return {
         success: false,
         files: [],
@@ -542,7 +593,17 @@ export class StorageServiceImpl implements StorageService {
 
     const result = await this.provider.upload(options);
     if (!result.success) {
-      console.error(`Failed to upload file ${key}:`, result.error);
+      storageLogger.error(
+        "storage.service.upload.failed",
+        "Storage service upload failed",
+        {
+          context: {
+            operation: "upload",
+            key,
+          },
+          error: result.error,
+        }
+      );
     }
 
     return result;
@@ -551,7 +612,17 @@ export class StorageServiceImpl implements StorageService {
   async downloadFile(key: string): Promise<DownloadResult> {
     const result = await this.provider.download(key);
     if (!result.success) {
-      console.error(`Failed to download file ${key}:`, result.error);
+      storageLogger.error(
+        "storage.service.download.failed",
+        "Storage service download failed",
+        {
+          context: {
+            operation: "download",
+            key,
+          },
+          error: result.error,
+        }
+      );
     }
 
     return result;
@@ -580,7 +651,18 @@ export class StorageServiceImpl implements StorageService {
   async listFiles(prefix?: string, maxKeys?: number): Promise<ListResult> {
     const result = await this.provider.list(prefix, maxKeys);
     if (!result.success) {
-      console.error(`Failed to list files:`, result.error);
+      storageLogger.error(
+        "storage.service.list.failed",
+        "Storage service list failed",
+        {
+          context: {
+            operation: "list",
+            ...(prefix ? { prefix } : {}),
+            ...(maxKeys !== undefined ? { maxKeys } : {}),
+          },
+          error: result.error,
+        }
+      );
     }
 
     return result;

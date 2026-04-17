@@ -22,6 +22,7 @@ const config = {
     "<rootDir>/node_modules/",
     "<rootDir>/e2e/",
     "<rootDir>/.next/",
+    "<rootDir>/__tests__/helpers/",
   ],
   // ESM モジュールの変換を設定
   transformIgnorePatterns: [

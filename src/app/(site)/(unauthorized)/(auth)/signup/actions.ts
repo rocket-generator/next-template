@@ -8,6 +8,9 @@ import {
   Success,
   EmailVerificationRequired,
 } from "@/constants/auth";
+import { createLogger } from "@/libraries/logger";
+
+const signUpActionsLogger = createLogger("signup_actions");
 
 export async function signUpAction(
   rawInput: SignUpRequest
@@ -33,7 +36,16 @@ export async function signUpAction(
       ? EmailVerificationRequired
       : Success;
   } catch (error) {
-    console.error("Sign up error:", error);
+    signUpActionsLogger.error(
+      "signup_actions.sign_up.failed",
+      "Failed to sign up",
+      {
+        context: {
+          action: "sign_up",
+        },
+        error,
+      }
+    );
     return InvalidCredentials;
   }
 }

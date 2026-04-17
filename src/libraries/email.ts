@@ -1,3 +1,5 @@
+import { createLogger, type LogContext } from "@/libraries/logger";
+
 // Email Service Interface
 export interface EmailService {
   sendPasswordResetEmail(to: string, resetUrl: string): Promise<void>;
@@ -39,6 +41,33 @@ export interface SMTPProviderConfig {
   secure: boolean;
   user?: string;
   pass?: string;
+}
+
+const emailLogger = createLogger("email");
+
+function getEmailDomain(email: string): string | undefined {
+  const [, domain] = email.split("@");
+  return domain || undefined;
+}
+
+function maskEmailAddress(email: string): string {
+  const [localPart, domain] = email.split("@");
+
+  if (!localPart || !domain) {
+    return "[invalid-email]";
+  }
+
+  return `${localPart[0]}***@${domain}`;
+}
+
+function buildRecipientContext(email: string, extra?: LogContext): LogContext {
+  const recipientDomain = getEmailDomain(email);
+
+  return {
+    toMasked: maskEmailAddress(email),
+    ...(recipientDomain ? { recipientDomain } : {}),
+    ...(extra ?? {}),
+  };
 }
 
 // SES Provider Implementation
@@ -116,7 +145,16 @@ export class SESProvider implements EmailProvider {
         messageId: result.MessageId,
       };
     } catch (error) {
-      console.error("SES email sending failed:", error);
+      emailLogger.error(
+        "email.provider.ses.send.failed",
+        "SES email sending failed",
+        {
+          context: buildRecipientContext(options.to, {
+            provider: "ses",
+          }),
+          error,
+        }
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -191,13 +229,22 @@ export class EmailServiceImpl implements EmailService {
     const result = await this.provider.sendEmail(emailOptions);
 
     if (!result.success) {
-      console.error("Failed to send password reset email:", result.error);
+      emailLogger.error(
+        "email.password_reset.failed",
+        "Password reset email delivery failed",
+        {
+          context: buildRecipientContext(to),
+          error: result.error,
+        }
+      );
       throw new Error("Failed to send password reset email");
     }
 
-    console.log(
-      `Password reset email sent to ${to}, messageId: ${result.messageId}`
-    );
+    emailLogger.info("email.password_reset.sent", "Password reset email sent", {
+      context: buildRecipientContext(to, {
+        ...(result.messageId ? { messageId: result.messageId } : {}),
+      }),
+    });
   }
 
   async sendVerificationEmail(
@@ -214,13 +261,22 @@ export class EmailServiceImpl implements EmailService {
     const result = await this.provider.sendEmail(emailOptions);
 
     if (!result.success) {
-      console.error("Failed to send verification email:", result.error);
+      emailLogger.error(
+        "email.verification.failed",
+        "Verification email delivery failed",
+        {
+          context: buildRecipientContext(to),
+          error: result.error,
+        }
+      );
       throw new Error("Failed to send verification email");
     }
 
-    console.log(
-      `Verification email sent to ${to}, messageId: ${result.messageId}`
-    );
+    emailLogger.info("email.verification.sent", "Verification email sent", {
+      context: buildRecipientContext(to, {
+        ...(result.messageId ? { messageId: result.messageId } : {}),
+      }),
+    });
   }
 
   private generatePasswordResetEmailHTML(resetUrl: string): string {
@@ -355,7 +411,10 @@ function resolveFromEmail(): string {
   }
 
   if (process.env.SES_FROM_EMAIL) {
-    console.warn("SES_FROM_EMAIL is deprecated. Use EMAIL_FROM instead.");
+    emailLogger.warn(
+      "email.from.deprecated_env",
+      "SES_FROM_EMAIL is deprecated. Use EMAIL_FROM instead."
+    );
     return process.env.SES_FROM_EMAIL;
   }
 

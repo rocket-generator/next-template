@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { BaseRepository, BaseRepositoryInterface } from "./base_repository";
 import { prisma } from "@/libraries/prisma";
+import { createLogger } from "@/libraries/logger";
 import { SearchCondition } from "./base_repository";
+
+const prismaRepositoryLogger = createLogger("prisma_repository");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getPrismaModel(modelName: string): any {
@@ -13,6 +16,18 @@ type TransformFunction<T extends z.ZodObject<z.ZodRawShape, "strip">> = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prismaData: any
 ) => z.infer<T>;
+
+function describeValueType(value: unknown): string {
+  if (value instanceof Date) {
+    return "date";
+  }
+
+  if (Array.isArray(value)) {
+    return "array";
+  }
+
+  return typeof value;
+}
 
 export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
   extends BaseRepository<T>
@@ -170,6 +185,20 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
       .map((condition): Record<string, unknown> => {
         const { column, value } = condition;
         const operator = condition.operator ?? "=";
+        const warnInvalidCondition = () => {
+          prismaRepositoryLogger.warn(
+            "prisma_repository.search_condition.invalid",
+            "Invalid search condition",
+            {
+              context: {
+                modelName: this.modelName,
+                column,
+                operator,
+                actualType: describeValueType(value),
+              },
+            }
+          );
+        };
 
         switch (operator) {
           case "=":
@@ -178,9 +207,7 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
             return { [column]: { not: value } };
           case "contains":
             if (typeof value !== "string") {
-              console.warn(
-                `Operator 'contains' requires string value for column '${column}'. Got ${typeof value}`
-              );
+              warnInvalidCondition();
               return {};
             }
             return { [column]: { contains: value, mode: "insensitive" } };
@@ -190,9 +217,7 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
               typeof value !== "string" &&
               !(value instanceof Date)
             ) {
-              console.warn(
-                `Operator '>' requires number, string or Date value for column '${column}'. Got ${typeof value}`
-              );
+              warnInvalidCondition();
               return {};
             }
             return { [column]: { gt: value } };
@@ -202,9 +227,7 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
               typeof value !== "string" &&
               !(value instanceof Date)
             ) {
-              console.warn(
-                `Operator '>=' requires number, string or Date value for column '${column}'. Got ${typeof value}`
-              );
+              warnInvalidCondition();
               return {};
             }
             return { [column]: { gte: value } };
@@ -214,9 +237,7 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
               typeof value !== "string" &&
               !(value instanceof Date)
             ) {
-              console.warn(
-                `Operator '<' requires number, string or Date value for column '${column}'. Got ${typeof value}`
-              );
+              warnInvalidCondition();
               return {};
             }
             return { [column]: { lt: value } };
@@ -226,17 +247,13 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
               typeof value !== "string" &&
               !(value instanceof Date)
             ) {
-              console.warn(
-                `Operator '<=' requires number, string or Date value for column '${column}'. Got ${typeof value}`
-              );
+              warnInvalidCondition();
               return {};
             }
             return { [column]: { lte: value } };
           case "in":
             if (!Array.isArray(value)) {
-              console.warn(
-                `Operator 'in' requires an array value for column '${column}'. Got ${typeof value}`
-              );
+              warnInvalidCondition();
               return {};
             }
             // Prisma expects array elements to be of consistent type, e.g., string[] or number[]
@@ -244,9 +261,7 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
             return { [column]: { in: value } };
           default:
             // Should not happen with TypeScript checking SearchOperator type
-            console.warn(
-              `Unsupported operator detected: ${operator as string}`
-            );
+            warnInvalidCondition();
             return {};
         }
       })

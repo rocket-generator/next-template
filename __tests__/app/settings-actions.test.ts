@@ -25,6 +25,11 @@ import {
   updateProfile,
   uploadAvatar,
 } from "@/app/(site)/(authorized)/(app)/settings/actions";
+import {
+  getLoggedEntries,
+  installTestLoggerAdapters,
+  resetTestLoggerState,
+} from "../helpers/logger";
 
 type AuthModule = {
   auth: jest.Mock;
@@ -65,11 +70,10 @@ describe("settings actions", () => {
     deleteUserAvatar: jest.Mock;
     getUserById: jest.Mock;
   };
-  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    installTestLoggerAdapters();
 
     authService = {
       updateProfile: jest.fn(),
@@ -92,7 +96,7 @@ describe("settings actions", () => {
   });
 
   afterEach(() => {
-    consoleErrorSpy.mockRestore();
+    resetTestLoggerState();
   });
 
   describe("updateProfile", () => {
@@ -142,6 +146,30 @@ describe("settings actions", () => {
         message: "profile_updated",
       });
     });
+
+    it("例外時は error.message を返し logger.error を呼ぶ", async () => {
+      authService.updateProfile.mockRejectedValue(new Error("profile_error"));
+
+      const result = await updateProfile({
+        name: "Alice",
+        email: "alice@example.com",
+      });
+
+      expect(result).toEqual({
+        success: false,
+        error: "profile_error",
+      });
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "settings_actions",
+          event: "settings_actions.update_profile.failed",
+          context: expect.objectContaining({
+            action: "update_profile",
+          }),
+        }),
+      ]);
+    });
   });
 
   describe("changePassword", () => {
@@ -161,6 +189,16 @@ describe("settings actions", () => {
         error: "invalid_current_password",
         field: "currentPassword",
       });
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "settings_actions",
+          event: "settings_actions.change_password.failed",
+          context: expect.objectContaining({
+            action: "change_password",
+          }),
+        }),
+      ]);
     });
   });
 
@@ -251,6 +289,36 @@ describe("settings actions", () => {
         avatarUrl: "http://localhost:3000/avatar.png",
       });
     });
+
+    it("例外時は error.message を返し logger.error を呼ぶ", async () => {
+      userRepository.uploadUserAvatar.mockRejectedValue(new Error("avatar_error"));
+
+      const formData = new FormData();
+      const file = new File(["avatar"], "avatar.png", {
+        type: "image/png",
+      });
+      Object.defineProperty(file, "arrayBuffer", {
+        value: async () => new TextEncoder().encode("avatar").buffer,
+      });
+      formData.set("avatar", file);
+
+      const result = await uploadAvatar(formData);
+
+      expect(result).toEqual({
+        success: false,
+        error: "avatar_error",
+      });
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "settings_actions",
+          event: "settings_actions.upload_avatar.failed",
+          context: expect.objectContaining({
+            action: "upload_avatar",
+          }),
+        }),
+      ]);
+    });
   });
 
   describe("removeAvatar", () => {
@@ -289,6 +357,16 @@ describe("settings actions", () => {
         success: false,
         error: "storage_error",
       });
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "settings_actions",
+          event: "settings_actions.remove_avatar.failed",
+          context: expect.objectContaining({
+            action: "remove_avatar",
+          }),
+        }),
+      ]);
     });
   });
 
@@ -327,6 +405,16 @@ describe("settings actions", () => {
       const result = await getCurrentUser();
 
       expect(result).toBeNull();
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "settings_actions",
+          event: "settings_actions.get_current_user.failed",
+          context: expect.objectContaining({
+            action: "get_current_user",
+          }),
+        }),
+      ]);
     });
   });
 });

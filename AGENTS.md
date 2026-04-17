@@ -120,6 +120,13 @@ docs/guides/               # 詳細ガイド
 - Server Actions / API エンドポイントでは Zod で入力検証
 - テキストコンテンツは常に HTML エスケープ
 
+### ロギング / 監視
+
+- `src/libraries` / `src/repositories` / `src/app` のサーバサイドログは `src/libraries/logger.ts` を使う
+- 上記範囲で直接 `console.*` を使わない（`src/libraries/logger.ts` の console adapter を除く）
+- raw email / URL / token / query string をログへ出さない
+- logger の使い方・命名・テスト方法は [docs/guides/logging.md](./docs/guides/logging.md) を参照する
+
 ### 国際化（i18n）
 
 - UI に表示する全テキストは next-intl 経由。ハードコード禁止
@@ -279,6 +286,7 @@ docs/guides/               # 詳細ガイド
 | データアクセス | [docs/guides/data-access.md](./docs/guides/data-access.md) |
 | 国際化 | [docs/guides/i18n.md](./docs/guides/i18n.md) |
 | Unit Testing | [docs/guides/unit-testing.md](./docs/guides/unit-testing.md) |
+| ロギング / 監視 | [docs/guides/logging.md](./docs/guides/logging.md) |
 | Component Testing | [docs/guides/component-testing.md](./docs/guides/component-testing.md) |
 | Storybook | [docs/guides/storybook.md](./docs/guides/storybook.md) |
 | 管理画面構築 | [docs/guides/admin-pages.md](./docs/guides/admin-pages.md) |

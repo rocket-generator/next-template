@@ -1,5 +1,10 @@
 import { UserRepository } from "@/repositories/user_repository";
 import { getPrismaModel } from "@/repositories/prisma_repository";
+import {
+  getLoggedEntries,
+  installTestLoggerAdapters,
+  resetTestLoggerState,
+} from "../helpers/logger";
 
 jest.mock("@/libraries/auth", () => ({
   auth: jest.fn(),
@@ -48,19 +53,15 @@ const createPrismaUser = (overrides: Record<string, unknown> = {}) => ({
 
 describe("UserRepository methods", () => {
   let repository: UserRepository;
-  let consoleErrorSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     repository = new UserRepository();
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    installTestLoggerAdapters();
   });
 
   afterEach(() => {
-    consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
+    resetTestLoggerState();
   });
 
   describe("getUserById", () => {
@@ -216,7 +217,18 @@ describe("UserRepository methods", () => {
 
       await repository.deleteUserAvatar("user-1");
 
-      expect(consoleWarnSpy).toHaveBeenCalled();
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "warn",
+          scope: "user_repository",
+          event: "user_repository.avatar.delete.failed",
+          context: expect.objectContaining({
+            userId: "user-1",
+            avatarKey: "avatars/user-1/current",
+            operation: "delete",
+          }),
+        }),
+      ]);
       expect(updateSpy).toHaveBeenCalledWith("user-1", {
         avatarKey: undefined,
       });
@@ -293,7 +305,18 @@ describe("UserRepository methods", () => {
 
       const result = await repository.generateUserAvatarUrl("user-1");
 
-      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "user_repository",
+          event: "user_repository.avatar.signed_url.failed",
+          context: expect.objectContaining({
+            userId: "user-1",
+            avatarKey: "avatars/user-1/current",
+            operation: "signed_url",
+          }),
+        }),
+      ]);
       expect(result).toBeNull();
     });
   });
@@ -356,7 +379,18 @@ describe("UserRepository methods", () => {
 
       const result = await repository.downloadUserAvatar("user-1");
 
-      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "user_repository",
+          event: "user_repository.avatar.download.failed",
+          context: expect.objectContaining({
+            userId: "user-1",
+            avatarKey: "avatars/user-1/current",
+            operation: "download",
+          }),
+        }),
+      ]);
       expect(result).toBeNull();
     });
   });

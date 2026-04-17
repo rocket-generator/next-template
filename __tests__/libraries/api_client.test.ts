@@ -1,5 +1,10 @@
 import { APIClient } from "@/libraries/api_client";
 import AuthError from "@/exceptions/auth_error";
+import {
+  getLoggedEntries,
+  installTestLoggerAdapters,
+  resetTestLoggerState,
+} from "../helpers/logger";
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -11,12 +16,12 @@ describe("API Client Library", () => {
     delete process.env.NEXT_SERVER_COMPONENT_BACKEND_API_BASE_URL;
     delete process.env.NEXT_PUBLIC_CLIENT_COMPONENT_BACKEND_API_BASE_URL;
     delete process.env.NEXT_BACKEND_API_BASE_URL;
-    // Mock console.log to prevent test output pollution
-    jest.spyOn(console, "log").mockImplementation(() => {});
+    delete process.env.LOG_LEVEL;
+    installTestLoggerAdapters();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    resetTestLoggerState();
   });
 
   describe("APIClient", () => {
@@ -38,6 +43,7 @@ describe("API Client Library", () => {
         }
       );
       expect(result).toEqual(mockResponse);
+      expect(getLoggedEntries()).toEqual([]);
     });
 
     it("should make POST request with body", async () => {
@@ -165,7 +171,7 @@ describe("API Client Library", () => {
       await APIClient({ path: "/test" });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/test"),
+        "https://server.api.com/test",
         expect.any(Object)
       );
     });
@@ -186,7 +192,7 @@ describe("API Client Library", () => {
       await APIClient({ path: "/test" });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/test"),
+        "https://client.api.com/test",
         expect.any(Object)
       );
 
@@ -205,9 +211,40 @@ describe("API Client Library", () => {
       await APIClient({ path: "/test" });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/test"),
+        "https://fallback.api.com/test",
         expect.any(Object)
       );
+    });
+
+    it("should log request path only when LOG_LEVEL is debug", async () => {
+      process.env.NEXT_BACKEND_API_BASE_URL = "https://fallback.api.com";
+      process.env.LOG_LEVEL = "debug";
+      const mockResponse = { data: "test" };
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        json: async () => mockResponse,
+        status: 200,
+      });
+
+      await APIClient({
+        method: "POST",
+        path: "/test",
+        params: { token: "secret", page: 2 },
+      });
+
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "debug",
+          scope: "api_client",
+          event: "api_client.request",
+          context: expect.objectContaining({
+            method: "POST",
+            pathname: "/test",
+          }),
+        }),
+      ]);
+      expect(getLoggedEntries()[0]?.context).not.toHaveProperty("query");
+      expect(getLoggedEntries()[0]?.context).not.toHaveProperty("queryKeys");
+      expect(getLoggedEntries()[0]?.context).not.toHaveProperty("url");
     });
 
     it("should handle PUT request", async () => {

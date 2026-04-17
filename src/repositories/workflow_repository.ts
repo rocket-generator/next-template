@@ -8,7 +8,31 @@ import type {
   WorkflowRunOptions,
   UploadedFile,
 } from "@/requests/workflow_request";
+import { createLogger } from "@/libraries/logger";
 import { APIRepository } from "./api_repository";
+
+const workflowRepositoryLogger = createLogger("workflow_repository");
+const MAX_LOG_TEXT_LENGTH = 512;
+
+function truncateForLog(value: string): string {
+  return value.length > MAX_LOG_TEXT_LENGTH
+    ? `${value.slice(0, MAX_LOG_TEXT_LENGTH)}...`
+    : value;
+}
+
+function buildFailureContext(
+  operation: "upload" | "run" | "stop",
+  status: number,
+  statusText: string,
+  errorText: string
+) {
+  return {
+    operation,
+    status,
+    statusText,
+    errorText: truncateForLog(errorText),
+  };
+}
 
 export class WorkflowRepository extends APIRepository<
   typeof WorkflowExecutionSchema
@@ -61,7 +85,18 @@ export class WorkflowRepository extends APIRepository<
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Failed to upload file:", errorText);
+      workflowRepositoryLogger.error(
+        "workflow_repository.upload.failed",
+        "Failed to upload file",
+        {
+          context: buildFailureContext(
+            "upload",
+            response.status,
+            response.statusText,
+            errorText
+          ),
+        }
+      );
       throw new Error(`Failed to upload file: ${response.statusText}`);
     }
 
@@ -81,7 +116,18 @@ export class WorkflowRepository extends APIRepository<
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Failed to stop workflow:", errorText);
+      workflowRepositoryLogger.error(
+        "workflow_repository.run.failed",
+        "Failed to run workflow",
+        {
+          context: buildFailureContext(
+            "run",
+            response.status,
+            response.statusText,
+            errorText
+          ),
+        }
+      );
       throw new Error(`Failed to run workflow: ${response.statusText}`);
     }
 
@@ -90,12 +136,27 @@ export class WorkflowRepository extends APIRepository<
 
     // Extract and parse the JSON string from the text output
     const outputText = data.data.outputs.text;
-    const cleanedData = this.cleanJsonString(outputText);
     try {
+      const cleanedData = this.cleanJsonString(outputText);
       data.data.outputs = JSON.parse(cleanedData);
     } catch (error) {
-      console.error("Failed to parse JSON from markdown block:", error);
-      throw new Error("Failed to parse JSON from markdown block");
+      workflowRepositoryLogger.error(
+        "workflow_repository.run.parse_failed",
+        "Failed to parse workflow output JSON",
+        {
+          context: {
+            operation: "run",
+            outputPreview: truncateForLog(outputText),
+          },
+          error,
+        }
+      );
+
+      if (error instanceof SyntaxError) {
+        throw new Error("Failed to parse JSON from markdown block");
+      }
+
+      throw error;
     }
 
     return {
@@ -149,7 +210,17 @@ export class WorkflowRepository extends APIRepository<
                       WorkflowStreamChunkSchema.parse(parsed);
                     controller.enqueue(validatedChunk);
                   } catch (e) {
-                    console.error("Failed to parse chunk:", e);
+                    workflowRepositoryLogger.warn(
+                      "workflow_repository.run_streaming.chunk_parse_failed",
+                      "Failed to parse streaming workflow chunk",
+                      {
+                        context: {
+                          operation: "run_streaming",
+                          chunkPreview: truncateForLog(jsonStr),
+                        },
+                        error: e,
+                      }
+                    );
                   }
                 }
               }
@@ -175,7 +246,19 @@ export class WorkflowRepository extends APIRepository<
     );
 
     if (!response.ok) {
-      console.error("Failed to stop workflow:", response.statusText);
+      const errorText = await response.text();
+      workflowRepositoryLogger.error(
+        "workflow_repository.stop.failed",
+        "Failed to stop workflow",
+        {
+          context: buildFailureContext(
+            "stop",
+            response.status,
+            response.statusText,
+            errorText
+          ),
+        }
+      );
       throw new Error(`Failed to stop workflow: ${response.statusText}`);
     }
 

@@ -1,6 +1,11 @@
 import { PrismaRepository, getPrismaModel } from "@/repositories/prisma_repository";
 import { SearchCondition } from "@/repositories/base_repository";
 import { z } from "zod";
+import {
+  getLoggedEntries,
+  installTestLoggerAdapters,
+  resetTestLoggerState,
+} from "../helpers/logger";
 
 // Mock Prisma client
 jest.mock("@/libraries/prisma", () => {
@@ -57,6 +62,11 @@ describe("PrismaRepository", () => {
       }
     ).prisma.testModel;
     jest.clearAllMocks();
+    installTestLoggerAdapters();
+  });
+
+  afterEach(() => {
+    resetTestLoggerState();
   });
 
   describe("getPrismaModel", () => {
@@ -469,20 +479,26 @@ describe("PrismaRepository", () => {
         { column: "name", operator: "invalid" as any, value: "test" },
       ];
 
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
-
       await repository.get(0, 20, undefined, undefined, undefined, conditions);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Unsupported operator detected: invalid"
-      );
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "warn",
+          scope: "prisma_repository",
+          event: "prisma_repository.search_condition.invalid",
+          context: expect.objectContaining({
+            modelName: "testModel",
+            column: "name",
+            operator: "invalid",
+            actualType: "string",
+          }),
+        }),
+      ]);
       expect(mockPrismaModel.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {},
         })
       );
-
-      consoleSpy.mockRestore();
     });
 
     it("should handle invalid value type for contains operator", async () => {
@@ -490,15 +506,21 @@ describe("PrismaRepository", () => {
         { column: "name", operator: "contains", value: 123 as any },
       ];
 
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
-
       await repository.get(0, 20, undefined, undefined, undefined, conditions);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Operator 'contains' requires string value for column 'name'. Got number"
-      );
-
-      consoleSpy.mockRestore();
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "warn",
+          scope: "prisma_repository",
+          event: "prisma_repository.search_condition.invalid",
+          context: expect.objectContaining({
+            modelName: "testModel",
+            column: "name",
+            operator: "contains",
+            actualType: "number",
+          }),
+        }),
+      ]);
     });
 
     it("should handle invalid value type for in operator", async () => {
@@ -506,15 +528,21 @@ describe("PrismaRepository", () => {
         { column: "name", operator: "in", value: "not-an-array" as any },
       ];
 
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
-
       await repository.get(0, 20, undefined, undefined, undefined, conditions);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Operator 'in' requires an array value for column 'name'. Got string"
-      );
-
-      consoleSpy.mockRestore();
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "warn",
+          scope: "prisma_repository",
+          event: "prisma_repository.search_condition.invalid",
+          context: expect.objectContaining({
+            modelName: "testModel",
+            column: "name",
+            operator: "in",
+            actualType: "string",
+          }),
+        }),
+      ]);
     });
   });
 

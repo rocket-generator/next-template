@@ -11,7 +11,10 @@ import {
 import { UserRepository } from "@/repositories/user_repository";
 import { AuthService } from "@/services/auth_service";
 import { auth } from "@/libraries/auth";
+import { createLogger } from "@/libraries/logger";
 import { revalidatePath } from "next/cache";
+
+const settingsActionsLogger = createLogger("settings_actions");
 
 export type ProfileUpdateResult =
   | { success: true; message: string }
@@ -53,7 +56,16 @@ export async function updateProfile(
     revalidatePath("/settings");
     return { success: true, message: "profile_updated" };
   } catch (error) {
-    console.error("Profile update failed:", error);
+    settingsActionsLogger.error(
+      "settings_actions.update_profile.failed",
+      "Failed to update profile",
+      {
+        context: {
+          action: "update_profile",
+        },
+        error,
+      }
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "system_error",
@@ -93,7 +105,16 @@ export async function changePassword(
     revalidatePath("/settings");
     return { success: true, message: "password_updated" };
   } catch (error) {
-    console.error("Password change failed:", error);
+    settingsActionsLogger.error(
+      "settings_actions.change_password.failed",
+      "Failed to change password",
+      {
+        context: {
+          action: "change_password",
+        },
+        error,
+      }
+    );
 
     // エラーメッセージの翻訳
     let errorMessage = "system_error";
@@ -160,7 +181,16 @@ export async function uploadAvatar(
       avatarUrl: avatarUrl || undefined,
     };
   } catch (error) {
-    console.error("Avatar upload failed:", error);
+    settingsActionsLogger.error(
+      "settings_actions.upload_avatar.failed",
+      "Failed to upload avatar",
+      {
+        context: {
+          action: "upload_avatar",
+        },
+        error,
+      }
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "system_error",
@@ -184,7 +214,16 @@ export async function removeAvatar(): Promise<AvatarUploadResult> {
     revalidatePath("/settings");
     return { success: true, message: "avatar_updated" };
   } catch (error) {
-    console.error("Avatar removal failed:", error);
+    settingsActionsLogger.error(
+      "settings_actions.remove_avatar.failed",
+      "Failed to remove avatar",
+      {
+        context: {
+          action: "remove_avatar",
+        },
+        error,
+      }
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "system_error",
@@ -215,7 +254,16 @@ export async function getCurrentUser() {
       avatarUrl,
     };
   } catch (error) {
-    console.error("Failed to get current user:", error);
+    settingsActionsLogger.error(
+      "settings_actions.get_current_user.failed",
+      "Failed to get current user",
+      {
+        context: {
+          action: "get_current_user",
+        },
+        error,
+      }
+    );
     return null;
   }
 }

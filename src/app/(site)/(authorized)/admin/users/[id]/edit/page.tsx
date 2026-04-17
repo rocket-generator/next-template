@@ -7,7 +7,10 @@ import { notFound } from "next/navigation";
 import { updateUser } from "./actions";
 import { UserUpdateRequest } from "@/requests/admin/user_update_request";
 import { redirect } from "next/navigation";
+import { createLogger } from "@/libraries/logger";
 import { createMetadata } from "@/libraries/metadata";
+
+const adminUserEditPageLogger = createLogger("admin_user_edit_page");
 
 export async function generateMetadata() {
   const t = await getTranslations("Meta");
@@ -31,7 +34,16 @@ export default async function Page({ params }: Props) {
     const repository = new UserRepository();
     data = await repository.findById(id);
   } catch (error) {
-    console.log(error);
+    adminUserEditPageLogger.error(
+      "admin_user_edit_page.load_failed",
+      "Failed to load admin user edit page",
+      {
+        context: {
+          userId: id,
+        },
+        error,
+      }
+    );
     return notFound();
   }
 

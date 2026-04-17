@@ -7,7 +7,10 @@ import {
   Success,
   EmailVerificationRequired,
 } from "@/constants/auth";
+import { createLogger } from "@/libraries/logger";
 import { AuthService } from "@/services/auth_service";
+
+const signInActionsLogger = createLogger("signin_actions");
 
 export async function signInAction(
   rawInput: SignInRequest
@@ -36,7 +39,16 @@ export async function signInAction(
 
     return InvalidCredentials;
   } catch (error) {
-    console.error("Sign in error:", error);
+    signInActionsLogger.error(
+      "signin_actions.sign_in.failed",
+      "Failed to sign in",
+      {
+        context: {
+          action: "sign_in",
+        },
+        error,
+      }
+    );
     return InvalidCredentials;
   }
 }

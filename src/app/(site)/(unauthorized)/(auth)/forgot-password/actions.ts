@@ -5,7 +5,10 @@ import {
   ForgotPasswordRequest,
 } from "@/requests/forgot_password_request";
 import { InvalidInput, Success } from "@/constants/auth";
+import { createLogger } from "@/libraries/logger";
 import { AuthService } from "@/services/auth_service";
+
+const forgotPasswordActionsLogger = createLogger("forgot_password_actions");
 
 export async function forgotPasswordAction(
   rawInput: ForgotPasswordRequest
@@ -21,7 +24,16 @@ export async function forgotPasswordAction(
 
     return Success;
   } catch (error) {
-    console.error("Password reset error:", error);
+    forgotPasswordActionsLogger.error(
+      "forgot_password_actions.forgot_password.failed",
+      "Failed to request password reset",
+      {
+        context: {
+          action: "forgot_password",
+        },
+        error,
+      }
+    );
     return InvalidInput;
   }
 }

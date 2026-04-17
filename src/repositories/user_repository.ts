@@ -1,9 +1,12 @@
 import { transformPrismToModel, User } from "@/models/user";
 import { AuthSchema } from "@/models/auth";
 import { AuthRepository } from "./auth_repository";
+import { createLogger } from "@/libraries/logger";
 import { createStorageServiceInstance } from "@/libraries/storage";
 import { getPrismaModel } from "./prisma_repository";
 import { z } from "zod";
+
+const userRepositoryLogger = createLogger("user_repository");
 
 // AuthSchemaベースの変換関数を作成
 function transformPrismaToAuth(data: unknown): z.infer<typeof AuthSchema> {
@@ -16,6 +19,18 @@ function transformPrismaToAuth(data: unknown): z.infer<typeof AuthSchema> {
     permissions: userData.permissions,
     isActive: userData.isActive,
     emailVerified: userData.emailVerified,
+  };
+}
+
+function buildAvatarLogContext(
+  userId: string,
+  avatarKey: string,
+  operation: "delete" | "signed_url" | "download"
+) {
+  return {
+    userId,
+    avatarKey,
+    operation,
   };
 }
 
@@ -98,7 +113,14 @@ export class UserRepository extends AuthRepository {
       try {
         await this.storageService.deleteFile(user.avatarKey);
       } catch (error) {
-        console.warn(`Failed to delete avatar file ${user.avatarKey}:`, error);
+        userRepositoryLogger.warn(
+          "user_repository.avatar.delete.failed",
+          "Failed to delete avatar file",
+          {
+            context: buildAvatarLogContext(userId, user.avatarKey, "delete"),
+            error,
+          }
+        );
         // ファイル削除に失敗してもユーザー更新は続行
       }
 
@@ -131,9 +153,13 @@ export class UserRepository extends AuthRepository {
         expiresIn
       );
     } catch (error) {
-      console.error(
-        `Failed to generate signed URL for avatar ${user.avatarKey}:`,
-        error
+      userRepositoryLogger.error(
+        "user_repository.avatar.signed_url.failed",
+        "Failed to generate avatar signed URL",
+        {
+          context: buildAvatarLogContext(userId, user.avatarKey, "signed_url"),
+          error,
+        }
       );
       return null;
     }
@@ -160,7 +186,14 @@ export class UserRepository extends AuthRepository {
 
       return null;
     } catch (error) {
-      console.error(`Failed to download avatar ${user.avatarKey}:`, error);
+      userRepositoryLogger.error(
+        "user_repository.avatar.download.failed",
+        "Failed to download avatar",
+        {
+          context: buildAvatarLogContext(userId, user.avatarKey, "download"),
+          error,
+        }
+      );
       return null;
     }
   }

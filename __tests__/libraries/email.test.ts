@@ -3,6 +3,11 @@ import {
   createSESProviderConfig,
   type EmailProvider,
 } from "@/libraries/email";
+import {
+  getLoggedEntries,
+  installTestLoggerAdapters,
+  resetTestLoggerState,
+} from "../helpers/logger";
 
 const mockSendMail = jest.fn();
 const mockCreateTransport = jest.fn(() => ({
@@ -30,14 +35,9 @@ const loadEmailModule = () => require("@/libraries/email") as EmailModule;
 
 describe("email library", () => {
   const originalNodeEnv = process.env.NODE_ENV;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    installTestLoggerAdapters();
     mockCreateTransport.mockClear();
     mockSendMail.mockReset();
     mockSendMail.mockResolvedValue({ messageId: "smtp-message-id" });
@@ -58,9 +58,7 @@ describe("email library", () => {
     delete process.env.SMTP_SECURE;
     delete process.env.SMTP_USER;
     delete process.env.SMTP_PASS;
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
+    resetTestLoggerState();
   });
 
   describe("createSESProviderConfig", () => {
@@ -160,6 +158,18 @@ describe("email library", () => {
           subject: "パスワードリセットのご案内",
         })
       );
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "info",
+          scope: "email",
+          event: "email.password_reset.sent",
+          context: expect.objectContaining({
+            recipientDomain: "example.test",
+            toMasked: "u***@example.test",
+            messageId: "smtp-message-id",
+          }),
+        })
+      );
     });
 
     it("EMAIL_FROM が無い場合は SES_FROM_EMAIL にフォールバックし警告する", async () => {
@@ -175,14 +185,18 @@ describe("email library", () => {
         "https://example.test/verify?token=abc"
       );
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("SES_FROM_EMAIL is deprecated")
-      );
       expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           from: "legacy@example.test",
           to: "user@example.test",
           subject: "メールアドレス認証のご案内",
+        })
+      );
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "warn",
+          scope: "email",
+          event: "email.from.deprecated_env",
         })
       );
     });
@@ -280,6 +294,17 @@ describe("email library", () => {
           "http://localhost:3000/verify-email?token=abc"
         )
       ).rejects.toThrow("Failed to send verification email");
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          scope: "email",
+          event: "email.verification.failed",
+          context: expect.objectContaining({
+            recipientDomain: "example.com",
+            toMasked: "u***@example.com",
+          }),
+        })
+      );
     });
   });
 });

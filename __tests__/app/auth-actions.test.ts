@@ -17,6 +17,11 @@ import {
   verifyEmailAction,
   resendVerificationEmailAction,
 } from "@/app/(site)/(unauthorized)/(auth)/verify-email/actions";
+import {
+  getLoggedEntries,
+  installTestLoggerAdapters,
+  resetTestLoggerState,
+} from "../helpers/logger";
 
 type AuthServiceModule = {
   AuthService: jest.Mock;
@@ -35,11 +40,10 @@ describe("auth actions", () => {
     verifyEmail: jest.Mock;
     resendVerificationEmail: jest.Mock;
   };
-  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    installTestLoggerAdapters();
 
     authService = {
       signIn: jest.fn(),
@@ -54,7 +58,7 @@ describe("auth actions", () => {
   });
 
   afterEach(() => {
-    consoleErrorSpy.mockRestore();
+    resetTestLoggerState();
   });
 
   describe("signInAction", () => {
@@ -107,6 +111,27 @@ describe("auth actions", () => {
       });
 
       expect(result).toBe(Success);
+    });
+
+    it("例外時は InvalidCredentials を返し logger.error を呼ぶ", async () => {
+      authService.signIn.mockRejectedValue(new Error("sign_in_failed"));
+
+      const result = await signInAction({
+        email: "user@example.com",
+        password: "Password123!",
+      });
+
+      expect(result).toBe(InvalidCredentials);
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "signin_actions",
+          event: "signin_actions.sign_in.failed",
+          context: expect.objectContaining({
+            action: "sign_in",
+          }),
+        }),
+      ]);
     });
   });
 
@@ -170,6 +195,29 @@ describe("auth actions", () => {
 
       expect(result).toBe(Success);
     });
+
+    it("例外時は InvalidCredentials を返し logger.error を呼ぶ", async () => {
+      authService.signUp.mockRejectedValue(new Error("sign_up_failed"));
+
+      const result = await signUpAction({
+        email: "user@example.com",
+        password: "Password123!",
+        confirm_password: "Password123!",
+        name: "Alice",
+      });
+
+      expect(result).toBe(InvalidCredentials);
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "signup_actions",
+          event: "signup_actions.sign_up.failed",
+          context: expect.objectContaining({
+            action: "sign_up",
+          }),
+        }),
+      ]);
+    });
   });
 
   describe("forgotPasswordAction / resetPasswordAction", () => {
@@ -193,6 +241,26 @@ describe("auth actions", () => {
       expect(authService.forgotPassword).toHaveBeenCalledWith({
         email: "user@example.com",
       });
+    });
+
+    it("forgotPasswordAction は例外時に InvalidInput を返し logger.error を呼ぶ", async () => {
+      authService.forgotPassword.mockRejectedValue(new Error("forgot_failed"));
+
+      const result = await forgotPasswordAction({
+        email: "user@example.com",
+      });
+
+      expect(result).toBe(InvalidInput);
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "forgot_password_actions",
+          event: "forgot_password_actions.forgot_password.failed",
+          context: expect.objectContaining({
+            action: "forgot_password",
+          }),
+        }),
+      ]);
     });
 
     it("resetPasswordAction は safeParse 失敗時に InvalidInput を返す", async () => {
@@ -222,6 +290,28 @@ describe("auth actions", () => {
         confirm_password: "Password123!",
       });
     });
+
+    it("resetPasswordAction は例外時に InvalidInput を返し logger.error を呼ぶ", async () => {
+      authService.resetPassword.mockRejectedValue(new Error("reset_failed"));
+
+      const result = await resetPasswordAction({
+        token: "reset-token",
+        password: "Password123!",
+        confirm_password: "Password123!",
+      });
+
+      expect(result).toBe(InvalidInput);
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "reset_password_actions",
+          event: "reset_password_actions.reset_password.failed",
+          context: expect.objectContaining({
+            action: "reset_password",
+          }),
+        }),
+      ]);
+    });
   });
 
   describe("verifyEmailAction / resendVerificationEmailAction", () => {
@@ -235,6 +325,16 @@ describe("auth actions", () => {
         message: "認証処理中にエラーが発生しました。",
         code: 500,
       });
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "verify_email_actions",
+          event: "verify_email_actions.verify_email.failed",
+          context: expect.objectContaining({
+            action: "verify_email",
+          }),
+        }),
+      ]);
     });
 
     it("resendVerificationEmailAction は例外時にフォールバックメッセージを返す", async () => {
@@ -247,6 +347,16 @@ describe("auth actions", () => {
         message: "認証メールの再送信中にエラーが発生しました。",
         code: 500,
       });
+      expect(getLoggedEntries()).toEqual([
+        expect.objectContaining({
+          level: "error",
+          scope: "verify_email_actions",
+          event: "verify_email_actions.resend_verification_email.failed",
+          context: expect.objectContaining({
+            action: "resend_verification_email",
+          }),
+        }),
+      ]);
     });
   });
 });

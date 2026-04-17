@@ -8,7 +8,10 @@ import { User } from "@/models/user";
 import { deleteUser } from "./actions";
 import { Pencil, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import { createLogger } from "@/libraries/logger";
 import { createMetadata } from "@/libraries/metadata";
+
+const adminUserPageLogger = createLogger("admin_user_page");
 
 export async function generateMetadata() {
   const t = await getTranslations("Meta");
@@ -30,7 +33,16 @@ export default async function Page({ params }: Props) {
     const repository = new UserRepository();
     data = await repository.findById(id);
   } catch (error) {
-    console.log(error);
+    adminUserPageLogger.error(
+      "admin_user_page.load_failed",
+      "Failed to load admin user detail",
+      {
+        context: {
+          userId: id,
+        },
+        error,
+      }
+    );
     return notFound();
   }
 

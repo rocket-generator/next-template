@@ -10,6 +10,7 @@
 - [x] §4 `package.json` のバージョン不整合修正
 - [x] §7 ドキュメント整合のうち、`proxy.ts` リネーム反映と関連ガイド更新
 - [x] §11 `npm outdated` による棚卸しと低リスク依存更新
+- [x] §13 `GEMINI.md` の縮約 or 除外方針決定
 
 ### 未完了
 
@@ -21,7 +22,6 @@
 - [ ] §10 `docker-compose.yml` の例示値 / 非公式イメージ改善
 - [ ] §11 major 更新候補（Tailwind CSS 4 / Zod 4 / Storybook 10 など）の個別移行判断
 - [ ] §12 Jest / Vitest の一本化検討
-- [ ] §13 `GEMINI.md` の縮約 or 除外方針決定
 - [ ] §14 残留生成物 / ワーキングツリー注意書き整備
 - [ ] §15 PostgreSQL 固定方針の明文化 or DB 切替戦略検討
 
