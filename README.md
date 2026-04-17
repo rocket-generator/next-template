@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org) project with TypeScript, using App Route
 
 ## 🚀 Technologies
 
-- **Framework**: Next.js 16.2.0 with App Router
+- **Framework**: Next.js 16.2.3 with App Router
 - **Language**: TypeScript
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Better Auth (with cookie-backed sessions)
@@ -22,11 +22,12 @@ src/
 │   ├── (site)/(authorized)/    # Protected routes
 │   ├── (site)/(unauthorized)/  # Public auth routes
 │   └── api/auth/               # Better Auth handler
+├── proxy.ts            # Route guard for protected pages
 ├── components/          # UI components (Atomic Design)
 │   ├── atoms/          # Basic UI elements
 │   ├── molecules/      # Composite components
 │   └── organisms/      # Complex feature components
-├── models/             # TypeScript interfaces
+├── models/             # Zod schemas and domain models
 ├── repositories/       # Data access layer
 ├── libraries/          # Utility functions
 ├── requests/           # Zod schemas for validation

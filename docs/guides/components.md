@@ -46,8 +46,8 @@ src/components/
 
 ### 型定義
 
-- プロジェクト共通型: `src/types/index.ts`
-- コンポーネント固有型（Props 等）: コンポーネントファイル（`index.tsx`）内に記述
+- プロジェクト共通型は用途ごとに `src/types/` 配下へ配置する（例: `src/types/auth.d.ts`）
+- コンポーネント固有型（Props 等）はコンポーネントファイル（`index.tsx`）内に記述
 
 ## Server Components と Client Components
 
@@ -89,7 +89,7 @@ src/components/
 
 - Tailwind CSS を使用
 - JSX に直接クラス名を記述
-- 共通の色・テーマは `tailwind.config.js` の定義を使用
+- 共通の色・テーマは `tailwind.config.ts` の定義を使用
 
 ## Server Actions (`actions.ts`)
 

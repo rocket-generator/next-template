@@ -46,7 +46,7 @@
 
 ### レスポンスモデル（`src/models/`）
 
-ユーザー向けモデルを `src/models/` に配置する。ファイル名はモデルの複数形スネークケース（例: `users.ts`）。zod でスキーマ定義する。
+ユーザー向けモデルを `src/models/` に配置する。ファイル名は単数形スネークケース（例: `user.ts`）。zod でスキーマ定義する。
 
 ```typescript
 import { z } from "zod";

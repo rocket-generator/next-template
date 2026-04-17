@@ -2,25 +2,25 @@
 
 Next.js App Router を使った管理画面（`/admin/` 配下）の構築方法。
 
-`/src/app/(site)/(authorized)/admin/users` を参考実装として参照すること。
+参照実装は `/src/app/(site)/(authorized)/admin/users`。
 
 ## ディレクトリ構造
 
 ### 基本構造
 
-```
+```text
 /src/app/(site)/(authorized)/admin/
-├── layout.tsx                          # 共通レイアウト
+├── layout.tsx
 ├── dashboard/
-│   └── page.tsx                        # ダッシュボード
-└── [entity-name]/                      # 各エンティティ
-    ├── page.tsx                        # 一覧
+│   └── page.tsx
+└── [entity]/
+    ├── page.tsx
     ├── create/
     │   ├── page.tsx
     │   └── actions.ts
     └── [id]/
-        ├── page.tsx                    # 詳細
-        ├── actions.ts                  # 削除等
+        ├── page.tsx
+        ├── actions.ts
         └── edit/
             ├── page.tsx
             └── actions.ts
@@ -28,347 +28,384 @@ Next.js App Router を使った管理画面（`/admin/` 配下）の構築方法
 
 ### 関連ファイル
 
-```
-/src/repositories/admin/
-└── [entity]_repository.ts
-
-/src/requests/admin/
-├── [entity]_create_request.ts
-└── [entity]_update_request.ts
-
-/messages/
-├── ja.json
-└── en.json
+```text
+/src/repositories/[entity]_repository.ts
+/src/requests/admin/[entity]_create_request.ts
+/src/requests/admin/[entity]_update_request.ts
+/src/components/molecules/AdminPageHeader/
+/src/components/organisms/DataTable/
+/src/components/organisms/DataView/
+/src/components/organisms/DataForm/
+/messages/ja.json
+/messages/en.json
 ```
 
 ## 命名規則
 
 ### URL
 
-- 複数形の kebab-case: `/admin/billing-records`
-- ID パラメータ: `/admin/subscriptions/[id]`
-- アクション: `/admin/subscriptions/[id]/edit`, `/admin/subscriptions/create`
+- 一覧: `/admin/users`
+- 詳細: `/admin/users/[id]`
+- 新規作成: `/admin/users/create`
+- 編集: `/admin/users/[id]/edit`
 
 ### ファイル・型
 
 - ページ: `page.tsx`
-- アクション: `actions.ts`
-- Repository: `[entity]_repository.ts` / `[Entity]Repository`
-- Request: `[entity]_[action]_request.ts` / `[Entity][Action]RequestSchema`
+- Server Action: `actions.ts`
+- Repository: `src/repositories/[entity]_repository.ts`
+- Request schema: `src/requests/admin/[entity]_[action]_request.ts`
+
+## レイアウトと認可
+
+`/src/app/(site)/(authorized)/admin/layout.tsx` が管理画面共通レイアウト。
+
+- `requireAdminSession()` で admin 権限を確認する
+- 必要に応じて `UserRepository` からログインユーザーを読み直す
+- メニューやサイドバーは layout 側で構築する
+
+新しい管理画面ページでは、各ページで認可を重複実装する前に layout 側で吸収できないかを確認する。
+
+## 主要コンポーネント
+
+### `AdminPageHeader`
+
+`src/components/molecules/AdminPageHeader`
+
+- `breadcrumbLinks`
+- `title`
+- `buttons`
+
+ボタンは `href` 付きリンクか、`action` を持つ server action form のどちらでも使える。
+
+### `DataTable`
+
+`src/components/organisms/DataTable`
+
+一覧ページでは以下の props を揃える。
+
+- `basePath`
+- `count`
+- `offset`
+- `limit`
+- `order`
+- `direction`
+- `query`
+- `data`
+- `structure`
+
+検索・並び替えのクエリ名は実装上 `offset` / `limit` / `order` / `direction` / `query` を使う。
+
+### `DataView`
+
+`src/components/organisms/DataView`
+
+- `data`
+- `structure`
+
+詳細ページの description list 表示に使う。
+
+### `DataForm`
+
+`src/components/organisms/DataForm`
+
+- `structure`
+- `submitAction`
+
+`submitAction` は `Promise<boolean>` を返す async function を渡す。`DataForm<T>` の generic は request type と合わせる。
 
 ## 実装パターン
 
 ### 一覧画面
 
-```typescript
+```ts
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import DataTable from "@/components/admin/DataTable";
-import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { EntityRepository } from "@/repositories/admin/entity_repository";
+import { Plus } from "lucide-react";
 
-type SearchParams = Promise<{
-  page?: string;
-  sort?: string;
+import AdminPageHeader from "@/components/molecules/AdminPageHeader";
+import DataTableSkeleton from "@/components/molecules/DataTableSkeleton";
+import DataTable from "@/components/organisms/DataTable";
+import { EntityRepository } from "@/repositories/entity_repository";
+
+type SearchParams = {
+  offset?: string;
+  limit?: string;
+  order?: string;
   direction?: string;
-  search?: string;
-}>;
+  query?: string;
+  [key: string]: string | string[] | undefined;
+};
 
-async function EntityTable({ searchParams }: { searchParams: SearchParams }) {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const params = await searchParams;
-  const page = parseInt(params.page || "1", 10);
-  const sort = params.sort || "createdAt";
-  const direction = params.direction || "desc";
-  const search = params.search || "";
+  const offset = params.offset ? parseInt(params.offset, 10) : 0;
+  const limit = params.limit ? parseInt(params.limit, 10) : 20;
+  const order = params.order ? String(params.order) : "name";
+  const direction = params.direction ? String(params.direction) : "asc";
+  const query = params.query ? String(params.query) : "";
 
-  const t = await getTranslations("Entity");
+  const tMenu = await getTranslations("Menu.Admin");
+  const tEntity = await getTranslations("Entities");
+  const tCrud = await getTranslations("Crud");
+
   const repository = new EntityRepository();
-  const { entities, total } = await repository.findAll({ page, sort, direction, search });
+  const result = await repository.get(offset, limit, order, direction, query);
 
-  const structure = [ /* カラム定義 */ ];
-  const limit = 20;
-  const offset = (page - 1) * limit;
-
-  return (
-    <DataTable
-      data={entities}
-      structure={structure}
-      count={total}
-      offset={offset}
-      limit={limit}
-      order={sort}
-      direction={direction}
-      query={search}
-      basePath="/admin/entities"
-    />
-  );
-}
-
-export default async function EntitiesPage({ searchParams }: { searchParams: SearchParams }) {
-  const t = await getTranslations("Entity");
-  const breadcrumbs = [
-    { label: t("admin"), href: "/admin/dashboard" },
-    { label: t("entities"), href: "/admin/entities" },
+  const structure = [
+    { name: tEntity("name"), key: "name", type: "text", options: {}, isSortable: true },
+    { name: tEntity("created_at"), key: "createdAt", type: "datetime", options: {}, isSortable: true },
   ];
 
   return (
-    <>
+    <Suspense fallback={<DataTableSkeleton columnCount={structure.length} />}>
       <AdminPageHeader
-        title={t("entities")}
-        breadcrumbLinks={breadcrumbs}
-        buttons={[{ label: t("create"), href: "/admin/entities/create", variant: "primary" }]}
+        breadcrumbLinks={[{ href: "/admin/dashboard", label: tMenu("dashboard") }]}
+        title={tEntity("title")}
+        buttons={[
+          {
+            href: "/admin/entities/create",
+            label: tCrud("create"),
+            icon: <Plus className="w-5 h-5" />,
+          },
+        ]}
       />
-      <Suspense fallback={<div>{t("loading")}</div>}>
-        <EntityTable searchParams={searchParams} />
-      </Suspense>
-    </>
+      <DataTable
+        basePath="/admin/entities"
+        count={result.count}
+        offset={offset}
+        limit={limit}
+        order={order}
+        direction={direction}
+        query={query}
+        data={result.data}
+        structure={structure}
+      />
+    </Suspense>
   );
 }
 ```
 
 ### 詳細画面
 
-```typescript
-import { notFound } from "next/navigation";
-import DataView from "@/components/admin/DataView";
-import AdminPageHeader from "@/components/admin/AdminPageHeader";
+```ts
+import { notFound, redirect } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-export default async function EntityDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const t = await getTranslations("Entity");
-  const entity = await new EntityRepository().findById(id);
-  if (!entity) notFound();
+import AdminPageHeader from "@/components/molecules/AdminPageHeader";
+import DataView from "@/components/organisms/DataView";
+import { EntityRepository } from "@/repositories/entity_repository";
+import { deleteEntity } from "./actions";
 
-  const breadcrumbs = [ /* ... */ ];
-  const actions = [
-    { label: t("edit"), href: `/admin/entities/${entity.id}/edit`, variant: "primary" as const },
-    { label: t("delete"), action: "delete", variant: "danger" as const },
-  ];
-  const structure = [ /* フィールド定義 */ ];
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const id = (await params).id;
+  const repository = new EntityRepository();
+  const data = await repository.findById(id).catch(() => null);
 
-  return (
-    <>
-      <AdminPageHeader title={entity.name} breadcrumbLinks={breadcrumbs} buttons={actions} />
-      <DataView data={entity} structure={structure} />
-    </>
-  );
-}
-```
+  if (!data) {
+    return notFound();
+  }
 
-### 編集画面
-
-```typescript
-import DataForm from "@/components/admin/DataForm";
-import { updateEntity } from "./actions";
-
-export default async function EntityEditPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const t = await getTranslations("Entity");
-  const entity = await new EntityRepository().findById(id);
-  if (!entity) notFound();
+  const tMenu = await getTranslations("Menu.Admin");
+  const tEntity = await getTranslations("Entities");
+  const tCrud = await getTranslations("Crud");
 
   return (
     <>
-      <AdminPageHeader title={t("edit_entity")} breadcrumbLinks={breadcrumbs} />
-      <DataForm
-        action={updateEntity.bind(null, entity.id)}
-        structure={[ /* フォームフィールド */ ]}
-        submitLabel={t("update")}
-        cancelHref={`/admin/entities/${entity.id}`}
+      <AdminPageHeader
+        breadcrumbLinks={[
+          { href: "/admin/dashboard", label: tMenu("dashboard") },
+          { href: "/admin/entities", label: tMenu("entities") },
+        ]}
+        title={data.name}
+        buttons={[
+          {
+            href: `/admin/entities/${id}/edit`,
+            label: tCrud("edit"),
+            icon: <Pencil className="w-5 h-5" />,
+          },
+          {
+            action: async () => {
+              "use server";
+              await deleteEntity(id);
+              redirect("/admin/entities");
+            },
+            label: tCrud("delete"),
+            variant: "danger",
+            icon: <Trash2 className="w-5 h-5" />,
+          },
+        ]}
+      />
+      <DataView
+        data={data}
+        structure={[
+          { name: tEntity("name"), key: "name", type: "text", options: {} },
+          { name: tEntity("created_at"), key: "createdAt", type: "datetime", options: {} },
+        ]}
       />
     </>
   );
 }
 ```
 
-### Repository
+### 作成 / 編集画面
 
-```typescript
-import { prisma } from "@/lib/prisma";
-
-export class EntityRepository {
-  private readonly pageSize = 20;
-
-  async findAll({ page, sort, direction, search }: FindAllParams) {
-    const skip = (page - 1) * this.pageSize;
-    const where = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: "insensitive" as const } },
-            { user: { name: { contains: search, mode: "insensitive" as const } } },
-          ],
-        }
-      : {};
-
-    const [entities, total] = await Promise.all([
-      prisma.entity.findMany({
-        where, skip, take: this.pageSize,
-        orderBy: this.getOrderBy(sort, direction),
-        include: { user: true },
-      }),
-      prisma.entity.count({ where }),
-    ]);
-
-    return { entities, total };
-  }
-
-  async findById(id: string) {
-    return prisma.entity.findUnique({ where: { id }, include: { user: true } });
-  }
-
-  async create(data: EntityCreateData) { return prisma.entity.create({ data }); }
-  async update(id: string, data: EntityUpdateData) { return prisma.entity.update({ where: { id }, data }); }
-  async delete(id: string) { return prisma.entity.delete({ where: { id } }); }
-
-  private getOrderBy(sort: string, direction: string) {
-    const dir = direction === "desc" ? "desc" : "asc";
-    switch (sort) {
-      case "user.name": return { user: { name: dir } };
-      case "name": return { name: dir };
-      default: return { createdAt: dir };
-    }
-  }
-}
-```
-
-### Server Actions
-
-```typescript
-"use server";
-
+```ts
 import { redirect } from "next/navigation";
-import { z } from "zod";
-import { EntityRepository } from "@/repositories/admin/entity_repository";
-import { EntityUpdateRequestSchema } from "@/requests/admin/entity_update_request";
+import { getTranslations } from "next-intl/server";
 
-export async function updateEntity(id: string, formData: FormData) {
-  const data = {
-    name: formData.get("name") as string,
-    description: (formData.get("description") as string) || null,
-  };
+import AdminPageHeader from "@/components/molecules/AdminPageHeader";
+import DataForm from "@/components/organisms/DataForm";
+import { createEntity } from "./actions";
+import { EntityCreateRequest } from "@/requests/admin/entity_create_request";
 
-  try {
-    const validated = EntityUpdateRequestSchema.parse(data);
-    await new EntityRepository().update(id, validated);
-  } catch (error) {
-    if (error instanceof z.ZodError) throw new Error(error.errors[0].message);
-    console.error("Error updating entity:", error);
-    throw new Error("Failed to update entity");
-  }
-  redirect(`/admin/entities/${id}`);
-}
+export default async function Page() {
+  const tMenu = await getTranslations("Menu.Admin");
+  const tEntity = await getTranslations("Entities");
 
-export async function deleteEntity(id: string) {
-  try {
-    await new EntityRepository().delete(id);
-  } catch (error) {
-    console.error("Error deleting entity:", error);
-    throw new Error("Failed to delete entity");
-  }
-  redirect("/admin/entities");
+  const structure = [
+    {
+      name: tEntity("name"),
+      key: "name",
+      type: "text",
+      value: "",
+      required: true,
+      placeholder: tEntity("name"),
+    },
+  ];
+
+  return (
+    <>
+      <AdminPageHeader
+        breadcrumbLinks={[{ href: "/admin/dashboard", label: tMenu("dashboard") }]}
+        title={tEntity("title")}
+        buttons={[]}
+      />
+      <DataForm<EntityCreateRequest>
+        structure={structure}
+        submitAction={async (data) => {
+          "use server";
+          const id = await createEntity(data);
+          if (id) {
+            redirect(`/admin/entities/${id}`);
+          }
+          return false;
+        }}
+      />
+    </>
+  );
 }
 ```
 
-## データ構造定義
+## `structure` 定義の考え方
 
-### 一覧テーブル
+### 一覧 / 詳細用
 
-```typescript
+```ts
 const structure = [
-  { name: t("field_name"), key: "fieldName", type: undefined, isSortable: true },
+  { name: tEntity("name"), key: "name", type: "text", options: {}, isSortable: true },
+  { name: tEntity("owner"), key: "owner", type: "link", options: { key: "id", base_url: "/admin/users/", display: "name" } },
+  { name: tEntity("created_at"), key: "createdAt", type: "datetime", options: {}, isSortable: true },
+  { name: tEntity("is_active"), key: "isActive", type: "boolean", options: {} },
+];
+```
+
+### フォーム用
+
+```ts
+const structure = [
   {
-    name: t("user"), key: "user", type: "link",
-    options: { key: "id", base_url: "/admin/users/", display: "name" },
-    isSortable: true,
+    name: tEntity("name"),
+    key: "name",
+    type: "text",
+    value: data.name,
+    required: true,
+    placeholder: tEntity("name"),
   },
-  { name: t("created_at"), key: "createdAt", type: "datetime", isSortable: true },
-  { name: t("is_active"), key: "isActive", type: "boolean", isSortable: false },
-];
-```
-
-### 詳細表示
-
-```typescript
-const structure = [
-  { name: t("id"), key: "id", value: entity.id },
-  { name: t("name"), key: "name", value: entity.name },
-  { name: t("description"), key: "description", value: entity.description || t("none") },
-  { name: t("created_at"), key: "createdAt", value: entity.createdAt, type: "date" },
-  { name: t("settings"), key: "settings", value: JSON.stringify(entity.settings, null, 2), type: "code" },
-];
-```
-
-### フォーム
-
-```typescript
-const structure = [
-  { name: t("name"), key: "name", type: "text", value: entity.name, required: true },
-  { name: t("description"), key: "description", type: "textarea", value: entity.description || "", required: false },
   {
-    name: t("status"), key: "status", type: "select", value: entity.status, required: true,
+    name: tEntity("permissions"),
+    key: "permissions",
+    type: "checkbox_multi",
+    value: data.permissions,
+    required: true,
+    placeholder: tEntity("permissions"),
     options: {
-      choices: [
-        { label: "Active", value: "active" },
-        { label: "Inactive", value: "inactive" },
-      ],
+      options: [{ name: "Admin", value: "admin" }],
     },
   },
-  { name: t("settings"), key: "settings", type: "json", value: JSON.stringify(entity.settings, null, 2) },
 ];
 ```
 
-## バリデーション
+`DataForm` が現在サポートしている代表的な type は `text` / `password` / `select_single` / `checkbox_multi` / `datetime`。
 
-### 作成
+## Repository の置き場所
 
-```typescript
-import { z } from "zod";
+Repository は `src/repositories/` 直下に置く。`src/repositories/admin/` は現行構成では使っていない。
 
-export const EntityCreateRequestSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().nullable().optional(),
-  status: z.enum(["active", "inactive"]),
-});
+DB-backed な管理画面では、既存の `PrismaRepository` / `AuthRepository` パターンに合わせる。
 
-export type EntityCreateRequest = z.infer<typeof EntityCreateRequestSchema>;
-```
+- 通常の Prisma entity: `PrismaRepository`
+- 認証ユーザーに近い entity: `AuthRepository`
 
-### 更新
+## Server Actions
 
-```typescript
-export const EntityUpdateRequestSchema = z.object({
-  name: z.string().min(1, "Name is required").optional(),
-  description: z.string().nullable().optional(),
-  status: z.enum(["active", "inactive"]).optional(),
-});
+管理画面の `actions.ts` では以下を徹底する。
+
+- 先頭に `"use server";`
+- request schema で入力検証
+- repository / service を経由して更新
+- UI に返す値はシンプルに保つ（`string | null`, `boolean`, `Status` など）
+
+例:
+
+```ts
+"use server";
+
+import { EntityUpdateRequest } from "@/requests/admin/entity_update_request";
+import { EntityService } from "@/services/entity_service";
+
+export async function updateEntity(
+  id: string,
+  data: EntityUpdateRequest
+): Promise<boolean> {
+  const service = new EntityService();
+
+  try {
+    await service.updateEntity(id, data);
+    return true;
+  } catch (error) {
+    console.error("Failed to update entity:", error);
+    throw new Error("Failed to update entity");
+  }
+}
 ```
 
 ## ベストプラクティス
 
-- 認証・認可は `layout.tsx` で実装済み
-- try-catch でエラー処理し、コンソールに詳細、ユーザーにはフレンドリーなメッセージを
-- Zod スキーマでバリデーション、`any` 禁止
-- Suspense でローディング表示、ページネーション必須（20件）
-- URL は RESTful / kebab-case
-- 日付は `type: "datetime"`
-- リンクは `type: "link"`
-- null 値は "なし" / "None" 表示
-- 全テキストに翻訳キー
-- パンくずリストで現在位置を明示
+- 権限チェックは admin layout 側を基本にする
+- 一覧は `offset` / `limit` / `order` / `direction` / `query` を共通で使う
+- 表示コンポーネントは `AdminPageHeader` + `DataTable` / `DataView` / `DataForm` を組み合わせる
+- 文字列はすべて `next-intl` から取得する
+- request schema は `src/requests/admin/` 配下に置く
+- 詳細ページの削除ボタンは `AdminPageHeader.buttons[].action` で server action を渡せる
+- 既存の `users` 実装に寄せ、独自 UI を増やしすぎない
 
 ## チェックリスト
 
-- [ ] ディレクトリ・ファイル構造作成
-- [ ] Repository 実装（findAll, findById, create, update, delete）
-- [ ] 一覧画面（DataTable）
-- [ ] 詳細画面（DataView）
-- [ ] 編集画面（DataForm）※必要な場合
-- [ ] 新規作成画面 ※必要な場合
-- [ ] Server Actions
-- [ ] バリデーションスキーマ
-- [ ] 翻訳メッセージ（日英）
-- [ ] レイアウトメニューに追加
-- [ ] breadcrumbs の href 設定
-- [ ] 日付・リンクフィールドの type 設定
-- [ ] エラーハンドリング
-- [ ] 動作テスト
+- [ ] `src/app/(site)/(authorized)/admin/[entity]` 配下に一覧 / 詳細 / create / edit を配置した
+- [ ] `src/repositories/[entity]_repository.ts` を追加 / 更新した
+- [ ] `src/requests/admin/[entity]_create_request.ts` / `_update_request.ts` を追加 / 更新した
+- [ ] `messages/ja.json` / `messages/en.json` を更新した
+- [ ] 一覧ページが `DataTable` のクエリ契約（`offset`, `limit`, `order`, `direction`, `query`）に従っている
+- [ ] 詳細ページが `DataView` を使っている
+- [ ] create / edit ページが `DataForm` と `submitAction` を使っている
+- [ ] admin layout のメニューに導線を追加した

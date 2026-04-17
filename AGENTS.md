@@ -27,7 +27,7 @@
 | 国際化 | next-intl 4 |
 | DB | PostgreSQL + Prisma 7 |
 | 認証 | Better Auth 1.3 |
-| ストレージ/メール | AWS S3 / AWS SES |
+| ストレージ/メール | S3 / S3互換 / GCS / SES / SMTP |
 | テスト | Jest / Testing Library / Playwright / Storybook 9 |
 
 **重要**: 技術スタックに記載されたバージョンを勝手に変更しないこと。必要な場合は理由を示して承認を得ること。
@@ -130,7 +130,7 @@ docs/guides/               # 詳細ガイド
 ### 認証
 
 - Better Auth + Prisma。サーバヘルパーは `src/libraries/auth.ts`、クライアントは `src/libraries/auth-client.ts`
-- 保護ページは `src/middleware.ts` の `PUBLIC_PAGES` 管理
+- 保護ページは `src/proxy.ts` の `PUBLIC_PATHS` 管理
 - **詳細**: [docs/guides/auth.md](./docs/guides/auth.md)
 
 ### 環境変数

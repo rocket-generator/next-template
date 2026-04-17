@@ -2,10 +2,11 @@
 
 ## 全体像
 
-- **Better Auth** をサーバ側に常駐させ、Prisma アダプターで PostgreSQL の `Session` / `Account` / `Verification` テーブルを管理
-- ログインフォームなど UI は Server Action 経由で `AuthService`（ドメインサービス）に委譲し、アクセストークンや権限情報を Better Auth セッションに書き戻す
-- クライアント側のセッション状態は `better-auth/react` クライアントをラップした `src/libraries/auth-client.ts` と `hooks/useAuthSession.ts` を使う
-- API クライアントや権限チェックは `session.permissions` / `session.accessToken` を使用
+- **Better Auth** を認証基盤として使い、Prisma adapter 経由で PostgreSQL の `User` / `Session` / `Account` / `Verification` を管理する
+- UI からの認証操作は Server Action 経由で `AuthService` に委譲し、内部で Better Auth API を呼ぶ
+- 保護ページの一次ガードは `src/proxy.ts`、レイアウト単位の認可は `requireAuthSession()` / `requireAdminSession()` で行う
+- クライアント側では `src/libraries/auth-client.ts` と `src/hooks/useAuthSession.ts` を使ってセッション状態を扱う
+- 権限情報は `Session` ではなく `User.permissions` に保持され、`auth()` / `useAuthSession()` 側で正規化して使う
 
 ## 主要依存
 
@@ -15,25 +16,26 @@
 - `pg` ^8.20.0
 - `next-intl` ^4.4.0
 
-Prisma CLI 設定は `prisma.config.ts`。生成物は `src/generated/prisma` に配置し、アプリ側は `src/generated/prisma/client` を import（`.gitignore` 対象、`npm run db:generate` で再生成）。
+Prisma CLI 設定は `prisma.config.ts`。生成物は `src/generated/prisma` に配置し、アプリ側は `src/generated/prisma/client` を import する。生成物はコミット対象ではなく、`npm run db:generate` で再生成する。
 
 ## ディレクトリ構造
 
-```
+```text
 src/
 ├── app/
-│   ├── api/auth/[...all]/route.ts    # Better Auth Next.js route handler
-│   ├── (site)/(unauthorized)/auth/
-│   │   └── signin/actions.ts         # Server Action
-│   └── middleware.ts                 # getSessionCookie() による保護
+│   ├── api/auth/[...all]/route.ts      # Better Auth route handler
+│   ├── (site)/(unauthorized)/(auth)/   # サインイン / サインアップ / 検証フロー
+│   └── (site)/(authorized)/            # 保護済みページ群
+├── proxy.ts                            # 未認証アクセスの一次ガード
 ├── libraries/
-│   ├── auth.ts                       # betterAuth() 設定・ヘルパー
-│   ├── auth-client.ts                # better-auth/react ラッパー
-│   └── hash.ts                       # PBKDF2 ハッシュ
-├── hooks/useAuthSession.ts           # セッション抽出
-├── services/auth_service.ts          # AuthService（DB・メール統括）
-├── repositories/                     # Prisma アクセス
-└── models/                           # Zod スキーマ
+│   ├── auth.ts                         # betterAuth() 設定・サーバヘルパー
+│   ├── auth-client.ts                  # better-auth/react ラッパー
+│   ├── hash.ts                         # PBKDF2 ハッシュ
+│   └── prisma.ts                       # Prisma client / DB TLS 設定
+├── hooks/useAuthSession.ts             # クライアント用セッション整形
+├── services/auth_service.ts            # 認証・ユーザー操作のドメインサービス
+├── requests/                           # Zod request schema
+└── models/                             # Zod domain/response schema
 
 prisma/
 ├── schema.prisma
@@ -44,252 +46,251 @@ prisma/
 
 | 変数 | 用途 | 備考 |
 |------|------|------|
-| `BETTER_AUTH_BASE_URL` | Better Auth の生成リンク用ベース URL | dev: `http://localhost:3000` |
-| `BETTER_AUTH_SECRET` | セッション暗号化秘密鍵 | 旧 `AUTH_SECRET` も fallback |
-| `NEXT_PUBLIC_BETTER_AUTH_BASE_PATH` | クライアントからの API パス | デフォルト `/api/auth` |
-| `ENABLE_EMAIL_VERIFICATION` | メール検証の有効/無効 | サインアップ動作切替 |
-| `LOCALSTACK_ENDPOINT` 等 | SES/S3 エミュレーション | LocalStack 利用時 |
-| `DATABASE_URL` | Postgres 接続文字列 | `sslmode` を付けると TLS 有効化（下記 DB TLS 参照） |
-| `DATABASE_SSL_REJECT_UNAUTHORIZED` | CA 検証の opt-out | `false` にすると証明書検証無効（非推奨） |
-| `DATABASE_SSL_CA_PATH` | CA 証明書ファイルパス | 標準経路。RDS 等で CA バンドルを読み込む場合に指定 |
-| `DATABASE_SSL_CA` | CA 証明書本文 | override。ファイル配置が難しい環境向け |
+| `BETTER_AUTH_BASE_URL` | サーバ側の Better Auth ベース URL | 最優先 |
+| `APP_URL` | サーバ側ベース URL の fallback | `BETTER_AUTH_BASE_URL` 未設定時 |
+| `NEXT_PUBLIC_APP_URL` | サーバ / クライアント両方の fallback | ローカル既定は `http://localhost:3000` |
+| `NEXT_PUBLIC_BETTER_AUTH_BASE_URL` | クライアント側ベース URL の override | `auth-client.ts` で使用 |
+| `BETTER_AUTH_SECRET` | Better Auth の秘密鍵 | `AUTH_SECRET` も fallback |
+| `NEXT_PUBLIC_BETTER_AUTH_BASE_PATH` | クライアントから叩く API パス | 既定 `/api/auth` |
+| `ENABLE_EMAIL_VERIFICATION` | メール検証の有効 / 無効 | `true` で検証メール送信 |
+| `ENABLE_AUTH_PAGE_REDIRECT` | 認証済みユーザーを auth ページから `/dashboard` へ戻すか | `false` で無効化 |
+| `DATABASE_URL` | Postgres 接続文字列 | `sslmode` は下記参照 |
+| `DATABASE_SSL_REJECT_UNAUTHORIZED` | TLS 証明書検証の opt-out | `false` は非推奨 |
+| `DATABASE_SSL_CA_PATH` | CA 証明書ファイルパス | Docker / VM / ECS など向け |
+| `DATABASE_SSL_CA` | CA 証明書本文 | env-only 環境向け override |
+| `LOCALSTACK_ENDPOINT` など | SES / S3 エミュレーション | ローカル開発用 |
 
-`src/libraries/auth.ts` では `BETTER_AUTH_SECRET` → `AUTH_SECRET` の順で解決。
+URL 解決順は以下。
+
+- `src/libraries/auth.ts`: `BETTER_AUTH_BASE_URL ?? APP_URL ?? NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"`
+- `src/libraries/auth-client.ts`: `NEXT_PUBLIC_BETTER_AUTH_BASE_URL ?? NEXT_PUBLIC_APP_URL ?? undefined`
+- secret: `BETTER_AUTH_SECRET ?? AUTH_SECRET`
 
 ### DB TLS（`DATABASE_URL` の `sslmode`）
 
-`src/libraries/prisma.ts` は DATABASE_URL の `sslmode` を以下のように解釈する。
+`src/libraries/prisma.ts` は `DATABASE_URL` の `sslmode` を以下のように解釈する。
 
 | `sslmode` | 挙動 |
 |-----------|------|
-| 未指定 | TLS を有効化しない（ローカル開発向け、pg ドライバのデフォルト） |
+| 未指定 | TLS を有効化しない |
 | `disable` | 明示的に TLS オフ |
-| `require` | TLS 有効化。既定で `rejectUnauthorized: true`（CA 検証 ON） |
+| `require` | TLS 有効化。既定で `rejectUnauthorized: true` |
 
-`prefer` と未知の値は本テンプレートではサポートしない。起動時に明示的エラーで停止させ、曖昧な設定を早期に検出する。
+`prefer` と未知の値はサポートしない。起動時エラーで止める。
 
-`sslmode` が有効なとき、追加で以下の env を参照する。
+`sslmode=require` のときは追加で以下を参照する。
 
-- `DATABASE_SSL_REJECT_UNAUTHORIZED=false` → `rejectUnauthorized` を false に（中間者攻撃に弱くなるため通常は避ける）
-- `DATABASE_SSL_CA_PATH=/path/to/ca.pem` → 標準経路。CA ファイルパスから読み込む（Docker / VM / ECS / Kubernetes / Amplify 向け）
-- `DATABASE_SSL_CA` → override。PEM 本文を直接渡す（Vercel / Cloudflare / env-only 環境向け。`\n` エスケープでも実改行でも可）
+- `DATABASE_SSL_REJECT_UNAUTHORIZED=false`
+- `DATABASE_SSL_CA_PATH=/path/to/ca.pem`
+- `DATABASE_SSL_CA="-----BEGIN CERTIFICATE-----\n..."`
 
-`DATABASE_SSL_CA` が設定されている場合は `DATABASE_SSL_CA_PATH` より優先される。
+`DATABASE_SSL_CA` がある場合は `DATABASE_SSL_CA_PATH` より優先される。
 
-#### 環境別の推奨設定
+推奨設定:
 
-- ローカル開発（Docker Compose Postgres）: `sslmode` 未指定
+- ローカル開発: `sslmode` 未指定
 - Amplify: `DATABASE_SSL_CA_PATH=./certs/rds-ca-bundle.pem`
 - Docker / VM / ECS / Kubernetes: `DATABASE_SSL_CA_PATH=/path/to/ca.pem`
-- Vercel / Cloudflare / env-only 環境: `DATABASE_SSL_CA` に PEM 本文を設定
-
-接続例:
-
-```bash
-# ローカル開発（Docker Compose Postgres）
-DATABASE_URL="postgres://user:pass@localhost:5432/app"
-
-# Neon / Supabase（TLS 必須、CA は公開 CA）
-DATABASE_URL="postgres://user:pass@host.neon.tech/app?sslmode=require"
-
-# Amplify / AWS RDS（標準の CA ファイル経路）
-DATABASE_URL="postgres://user:pass@rds-host/app?sslmode=require"
-DATABASE_SSL_CA_PATH=./certs/rds-ca-bundle.pem
-
-# Vercel / Cloudflare / env-only 環境
-DATABASE_URL="postgres://user:pass@rds-host/app?sslmode=require"
-DATABASE_SSL_CA="-----BEGIN CERTIFICATE-----\nMIID...\n-----END CERTIFICATE-----"
-```
+- Vercel / Cloudflare など env-only 環境: `DATABASE_SSL_CA`
 
 ## サーバ実装のポイント
 
-`src/libraries/auth.ts`:
+`src/libraries/auth.ts` の Better Auth 設定は以下の構成。
 
 ```ts
 const authInstance = betterAuth({
-  baseURL,
-  secret,
-  database: prismaAdapter(prisma, { transaction: true, usePlural: false }),
+  baseURL: getBaseUrl(),
+  secret: getAuthSecret(),
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+    transaction: true,
+    usePlural: false,
+  }),
   plugins: [nextCookies()],
   session: {
-    additionalFields: {
-      accessToken: { type: "string", fieldName: "accessToken", returned: true },
-      permissions: { type: "json", fieldName: "permissions", returned: true, defaultValue: () => [] },
+    modelName: "session",
+    fields: {
+      userId: "userId",
+      expiresAt: "expiresAt",
+      createdAt: "createdAt",
+      updatedAt: "updatedAt",
+      ipAddress: "ipAddress",
+      userAgent: "userAgent",
+      token: "token",
     },
     cookieCache: { enabled: true, maxAge: 60 * 5 },
     storeSessionInDatabase: true,
+    preserveSessionInDatabase: true,
     expiresIn: 60 * 60 * 24,
     updateAge: 60 * 60 * 4,
   },
+  user: {
+    modelName: "user",
+    fields: {
+      emailVerified: "emailVerified",
+      createdAt: "createdAt",
+      updatedAt: "updatedAt",
+      image: "avatarKey",
+    },
+    additionalFields: {
+      permissions: { type: "json", fieldName: "permissions", defaultValue: () => [] },
+      isActive: { type: "boolean", fieldName: "isActive", defaultValue: true },
+      language: { type: "string", fieldName: "language", defaultValue: "", required: false },
+    },
+  },
+  account: {
+    modelName: "account",
+    fields: {
+      userId: "userId",
+      providerId: "providerId",
+      accountId: "accountId",
+      accessToken: "accessToken",
+      refreshToken: "refreshToken",
+      accessTokenExpiresAt: "accessTokenExpiresAt",
+      refreshTokenExpiresAt: "refreshTokenExpiresAt",
+      idToken: "idToken",
+      createdAt: "createdAt",
+      updatedAt: "updatedAt",
+      scope: "scope",
+      password: "password",
+    },
+  },
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true,
-    requireEmailVerification: process.env.ENABLE_EMAIL_VERIFICATION === "true",
-    password: {
-      hash: hashPassword,
-      verify: async ({ hash, password }) => verifyPassword(password, hash),
-    },
+    disableSignUp: false,
+    autoSignIn: true,
+    revokeSessionsOnPasswordReset: true,
   },
 });
 ```
 
 ### 公開ヘルパー
 
+- `getBetterAuthHandler()` — Better Auth instance を返す
+- `getHandlers()` — `/api/auth/[...all]` 用の GET / POST handler を返す
 - `auth(options)` — `authInstance.api.getSession` のラッパー
-- `signIn(options)` / `signOut()` — セッション制御
-- `establishSession()` — `signInEmail` 呼び出し後、`Session` に `accessToken` / `permissions` を書き戻し
-- `syncCredentialAccount()` — `Account` と `User` を同期（AuthService で生成したハッシュを保持）
-- `handlers` — `/api/auth/[...all]` 用
+- `signOut(options)` — `authInstance.api.signOut` のラッパー
+- `requireAuthSession()` — 未認証なら `/signin` へ redirect
+- `requireAdminSession()` — 未認証は redirect、非 admin は `notFound()`
+- `buildAppUrl()` / `buildHeaders()` — Better Auth API 呼び出し補助
 
 ## クライアント実装
 
-`src/libraries/auth-client.ts` で `createAuthClient` を初期化し、`signIn`, `signOut`, `useSession` をエクスポート。サーバと同じベース URL / パスを共有する。
+`src/libraries/auth-client.ts` では `createAuthClient` を初期化し、以下を export する。
 
-`hooks/useAuthSession.ts` は `useSession()` の戻り値を正規化し、`session`, `user`, `permissions`, `accessToken` をまとめて返す。
+- `signIn`
+- `signOut`
+- `useSession`
+- `authFetch`
 
-## サーバアクションのフロー
+`src/hooks/useAuthSession.ts` は `useSession()` の戻り値を正規化し、以下を返す。
+
+- `session`
+- `user`
+- `permissions`
+- `isPending`
+- `error`
+- `refetch`
+
+`accessToken` は `useAuthSession()` の返り値には含まれない。
+
+## `AuthService` の責務
+
+`src/services/auth_service.ts` は Better Auth API とアプリ固有の振る舞いをまとめる。
 
 ### サインイン
 
-1. `AuthService.signIn()` で資格情報検証・アクセストークン発行
-2. `syncCredentialAccount()` で `Account` を更新
-3. `signIn()` で Better Auth セッション確立、`Session` に `accessToken` / `permissions` 保存
-4. エラー時は `invalid_credentials` / `email_not_verified` にマップ
+1. `User.isActive` を確認
+2. `authHandler.api.signInEmail()` を呼ぶ
+3. Better Auth が Cookie / Session を確立
+4. エラーは `invalid_credentials` / `email_not_verified` に正規化
 
 ### サインアップ
 
-- `AuthService.signUp()` でユーザー作成
-- `ENABLE_EMAIL_VERIFICATION` が有効ならアクセストークンを返さずメール検証要求
-- アクセストークンが返るケースはそのまま `signIn()`
+1. `authHandler.api.signUpEmail()` を呼ぶ
+2. `ENABLE_EMAIL_VERIFICATION !== "true"` の場合は `user.emailVerified = true` に更新
+3. `token == null` の場合はメール検証待ちとして扱う
 
-### サインアウト
+### メール検証 / 再送
 
-- `signOut()` が `authInstance.api.signOut` を呼び Cookie / DB セッションを無効化
+- `verifyEmail()` → `authHandler.api.verifyEmail()`
+- `resendVerificationEmail()` → `authHandler.api.sendVerificationEmail()`
 
-## ミドルウェア
+### パスワード再設定
 
-`src/middleware.ts` で `getSessionCookie()` と `auth()` を組み合わせ：
+- `forgotPassword()` → `authHandler.api.requestPasswordReset()`
+- `resetPassword()` → `authHandler.api.resetPassword()`
 
-- `PUBLIC_PAGES` リストは常に許可
-- 認証必須パスで未ログインならサインインへリダイレクト
-- Cookie キャッシュを尊重してセッション更新を最小化
+### プロフィール・管理操作
 
-新規保護ページ追加時は `PUBLIC_PAGES` と route グループを必ず見直すこと。
+- `updateProfile()` → `updateUser()` / `changeEmail()` を使い分ける
+- `changePassword()` → `authHandler.api.changePassword()`
+- `createUser()` / `updateUser()` → 管理画面からのユーザー作成・更新に使用する
+
+## ルート保護
+
+### `src/proxy.ts`
+
+`src/proxy.ts` は `getSessionCookie()` を使い、Cookie の有無だけで未認証アクセスを弾く。
+
+- 公開パスは `PUBLIC_PATHS` で管理
+- `/data/*` と `/images/*` も公開扱い
+- 保護ページに未認証で入ると `/signin?callback_url=...` に redirect
+
+新しい公開ページを追加したら、`PUBLIC_PATHS` を更新する。
+
+### auth ページ側のリダイレクト
+
+`src/app/(site)/(unauthorized)/(auth)/layout.tsx` は認証済みユーザーを `/dashboard` に戻す。
+
+- 既定では有効
+- `ENABLE_AUTH_PAGE_REDIRECT=false` で無効化可能
+
+### レイアウト側の認可
+
+- `src/app/(site)/(authorized)/(app)/layout.tsx` → `requireAuthSession()`
+- `src/app/(site)/(authorized)/admin/layout.tsx` → `requireAdminSession()`
+
+proxy は一次ガード、レイアウトは権限チェックと必要データの読込を担当する。
 
 ## セキュリティ
 
-- パスワードハッシュは PBKDF2 (`hash.ts`)。変更時は `verifyPassword` との整合性維持
-- `Session.accessToken` は API 認証で使用。再生成時のインバリデーション方針を文書化すること
-- メール検証は `EmailVerification` テーブル、Unix タイムスタンプ (`BigInt`)
-- `permissions` は JSON 配列。UI 側でも `Array<string>` への正規化を忘れずに
+- パスワードハッシュは PBKDF2（`src/libraries/hash.ts`）
+- `permissions` は `User.permissions` に保持し、`auth()` / `useAuthSession()` 側で `string[]` に正規化する
+- `accessToken` / `refreshToken` / `idToken` は `Account` モデル側で管理される
+- メール検証や再設定トークンは Better Auth API と `Verification` テーブルを使う
+- 現在の Prisma schema には `PasswordReset` / `EmailVerification` の独自モデルは存在しない
 
 ## テスト
 
-- `jest.setup.ts` で better-auth の主要モジュールをモック（ESM 取り込み回避）。構造変更時はモック戻り値（`useSession` の shape 等）も更新
-- ユニットテストでは `@/libraries/auth` を直接モックするケース多数。新ヘルパー追加時はモックも拡張
-- Playwright E2E (`e2e/auth.spec.ts`) は `/signin` → `/dashboard` フローで Cookie 検証。リダイレクト先変更時はテストも更新
+- `__tests__/libraries/auth.test.ts` — Better Auth ラッパーとヘルパー
+- `__tests__/proxy.test.ts` — `PUBLIC_PATHS` とリダイレクト挙動
+- `e2e/auth.spec.ts` — サインインフロー
+- `e2e/email-verification.spec.ts` / `e2e/resend-verification.spec.ts` — 検証メール周り
+
+認証の戻り値 shape を変えたら、`jest.setup.ts` や `@/libraries/auth-client` のモックも合わせて更新する。
 
 ## DB スキーマ全体像
 
-`prisma/schema.prisma` で定義する主要モデル：
+現在の `prisma/schema.prisma` の主要モデルは以下。
 
-| モデル | 役割 | 関連 |
-|--------|------|------|
-| `User` | ユーザー情報の中核 | `Session`, `Account`, `PasswordReset`, `EmailVerification` |
-| `Session` | Better Auth セッション | `User` |
-| `Account` | プロバイダー単位のクレデンシャル（credential で PBKDF2 ハッシュ保持） | `User` |
-| `Verification` | Better Auth 汎用検証トークン | なし |
-| `PasswordReset` | パスワードリセットトークン（ドメイン発行） | `User` |
-| `EmailVerification` | サービス独自のメール検証トークン | `User` |
+| モデル | 役割 | 主なフィールド |
+|--------|------|----------------|
+| `User` | アプリのユーザー本体 | `email`, `permissions`, `language`, `avatarKey`, `isActive`, `emailVerified` |
+| `Session` | Better Auth セッション | `token`, `expiresAt`, `ipAddress`, `userAgent` |
+| `Account` | 認証手段ごとの資格情報 | `providerId`, `accountId`, `password`, `accessToken`, `refreshToken`, `idToken` |
+| `Verification` | Better Auth の汎用検証トークン | `identifier`, `token`, `expiresAt` |
 
-### User
+補足:
 
-```prisma
-model User {
-  id            String   @id @default(uuid()) @db.Uuid
-  name          String
-  email         String   @unique
-  password      String
-  permissions   Json
-  language      String   @default("")
-  avatarKey     String?  @map("avatar_key")
-  isActive      Boolean  @default(true) @map("is_active")
-  emailVerified Boolean  @default(false) @map("email_verified")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  // relations...
-  @@map("users")
-}
-```
-
-- `permissions`: JSON 配列。Better Auth セッション書き戻し時にマージ
-- `language`: UI 既定言語
-- `emailVerified`: ドメイン側と Better Auth 両方で使用、ミドルウェアのアクセス制御にも関与
-
-### Session
-
-```prisma
-model Session {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id") @db.Uuid
-  token       String   @unique
-  expiresAt   DateTime @map("expires_at")
-  accessToken String?  @map("access_token")
-  permissions Json?    @map("permissions")
-  ipAddress   String?  @map("ip_address")
-  userAgent   String?  @map("user_agent")
-  // ...
-  @@map("sessions")
-}
-```
-
-- `session.additionalFields` と同期。`accessToken` / `permissions` はサーバアクションで付与
-- `cookieCache` 有効のため `updatedAt` 更新頻度に注意（`updateAge = 4h`）
-- 監査ログ・IP 制限は `ipAddress` / `userAgent` を参照
-
-### Account
-
-```prisma
-model Account {
-  id                    String    @id @default(cuid())
-  userId                String    @map("user_id") @db.Uuid
-  providerId            String    @map("provider_id")
-  accountId             String    @map("account_id")
-  password              String?
-  // accessToken/refreshToken/idToken, expiresAt, scope...
-  @@unique([providerId, accountId])
-  @@map("accounts")
-}
-```
-
-- 現状は `providerId = "credential"` のみ想定、`password` に PBKDF2 ハッシュ保持
-- 外部 IdP 追加時は `providerId` / `accountId` の一意制約に注意
-
-### Verification
-
-Better Auth 内部 API が利用する汎用トークンテーブル。アプリから直接参照することは現状なし。クリーンアップ時は `expiresAt` で削除。
-
-### PasswordReset / EmailVerification
-
-- `expiresAt` / `usedAt` は `BigInt`（Unix time）
-- `AuthService.cleanupExpiredTokens()` で期限切れクリーンアップ
-- メール検証再送・状態表示のために `EmailVerification` を `Verification` とは別に管理
-
-### 整合性
-
-- 全従属テーブルは `onDelete: Cascade`
-- サインイン時は `AuthService.signIn()` → `establishSession()` で `Session` / `Account` 更新
-- 外部プロバイダー実装時は `Account` のカラム（refresh token 等）を確認、不足ならマイグレーション
-
-## マイグレーション運用
-
-- `prisma/migrations/` に記録
-- Better Auth 関連の変更はマイグレーションに **意図とリスク** をコメントで残す
-- 本番: `prisma migrate deploy`
-- ローカル: `prisma migrate dev` または `npm run docker:db:setup`
+- `User.permissions` は JSON 配列
+- `Session` に `accessToken` / `permissions` カラムは存在しない
+- `Account.password` には credential provider 用のハッシュが入る
+- `Verification` はメール検証や再設定系の内部処理で使われる
 
 ## 開発チェックリスト
 
-1. 新フィールド追加時: `src/models/user.ts` や `AuthSchema` を同期、サーバアクション/テストの型通過確認
-2. Better Auth 追加フィールド時: `Session` モデルと `session.additionalFields` の両方を更新、`jest.setup.ts` のモックも
-3. 削除・データ移行時: `syncCredentialAccount()` / `AuthService` ロジックが期待通り動くか E2E (`e2e/auth.spec.ts`) で確認
+1. `auth.ts` の Better Auth fields / additionalFields を変えたら、`prisma/schema.prisma` と型を同期する
+2. `auth-client.ts` や `useAuthSession()` の返り値を変えたら、関連テストとモックを更新する
+3. 公開 / 保護ページを増減したら、`src/proxy.ts` と E2E を更新する
+4. メール検証の挙動を変えたら、`ENABLE_EMAIL_VERIFICATION` の on/off 両方を確認する
