@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org) project with TypeScript, using App Route
 
 ## 🚀 Technologies
 
-- **Framework**: Next.js 16.2.3 with App Router
+- **Framework**: Next.js 16.2.4 with App Router
 - **Language**: TypeScript
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Better Auth (with cookie-backed sessions)

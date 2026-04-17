@@ -1,7 +1,32 @@
 # Next.js テンプレート リファクタリング計画
 
+## 対応状況（2026-04-17 時点）
+
+### 対応完了
+
+- [x] §1 Prisma の SSL 実装の安全化
+- [x] §2 セキュリティヘッダの付与
+- [x] §3 Storage / Email プロバイダ切替機構の完成
+- [x] §4 `package.json` のバージョン不整合修正
+- [x] §7 ドキュメント整合のうち、`proxy.ts` リネーム反映と関連ガイド更新
+- [x] §11 `npm outdated` による棚卸しと低リスク依存更新
+
+### 未完了
+
+- [ ] §7 未認証アクセスの E2E 追加
+- [ ] §5 `output: "standalone"` 対応
+- [ ] §6 デプロイターゲット分離 / `deploy/` サンプル整備
+- [ ] §8 CI / GitHub Actions 整備
+- [ ] §9 ロギング / 監視の抽象化
+- [ ] §10 `docker-compose.yml` の例示値 / 非公式イメージ改善
+- [ ] §11 major 更新候補（Tailwind CSS 4 / Zod 4 / Storybook 10 など）の個別移行判断
+- [ ] §12 Jest / Vitest の一本化検討
+- [ ] §13 `GEMINI.md` の縮約 or 除外方針決定
+- [ ] §14 残留生成物 / ワーキングツリー注意書き整備
+- [ ] §15 PostgreSQL 固定方針の明文化 or DB 切替戦略検討
+
 作成日: 2026-04-14
-最終更新: 2026-04-16（Codex 第 3 回レビューを反映 + 子計画へのリンク追加）
+最終更新: 2026-04-17（§4 完了、§7 ドキュメント整合反映、§11 低リスク依存更新、対応状況一覧を更新）
 
 ## 子計画（実行計画書）
 
@@ -149,17 +174,26 @@ url.searchParams.delete("sslmode");
 
 ### 11. 依存の鮮度
 
-（Codex 指摘を受けて、具体バージョンは着手時点で再確認する方針に変更。以下は「更新候補」であって実行計画ではない）
+2026-04-17 に `npm outdated` を実行し、破壊的変更を避けて low-risk な patch/minor 更新のみ反映した。
 
-- `tailwindcss@3` → v4 系が安定。`tailwindcss-animate` は v4 では `tw-animate-css` への置換が一般的。
-- `tailwind-merge@2` → メジャー更新あり。
-- `@hookform/resolvers@3` → メジャー更新あり（現時点で 5.x が存在）。
-- `zod@3.23` → 4.x が存在。破壊的変更あり、慎重に。
-- `date-fns@3` → 4.x が存在（大きな変更あり）。
-- `lucide-react@0.454` → 0.5xx 系まで進行。
-- テンプレートである以上、古い起点となるのは避けたい。
+- 更新済み: `next` / `eslint-config-next` → `16.2.4`
+- 更新済み: `better-auth` → `1.6.5`
+- 更新済み: `postcss` → `8.5.10`
+- 更新済み: `@aws-sdk/client-s3` / `@aws-sdk/client-ses` / `@aws-sdk/s3-request-presigner` → `3.1031.0`
+- 検証: `npm run type-check` / `npm run build` pass
 
-**推奨アクション**: 着手時に `npm outdated` を実行して最新を確認し、個別に migration コストを評価してから上げる。一括上げ禁止。
+以下は引き続きメジャー更新の検討対象。影響が広いため、個別に migration コストを見て段階的に実施する。
+
+- `tailwindcss@3` → v4 系。`tailwindcss-animate` は `tw-animate-css` 置換も含めて検討。
+- `tailwind-merge@2` → v3 系。
+- `@hookform/resolvers@3` → v5 系。
+- `zod@3` → v4 系。
+- `date-fns@3` → v4 系。
+- `lucide-react@0.x` → v1 系。
+- Storybook 9 系 → 10 系。
+- `vitest@3` / `jest@29` / `typescript@5` → 次メジャー。
+
+**残アクション**: `npm outdated` を基点に、一括更新は避けてパッケージ群ごとに移行する。特に Tailwind / Zod / Storybook は別タスク化が妥当。
 
 ### 12. `jest` と `vitest` の二重メンテ
 

@@ -10,7 +10,7 @@
 
 ## 主要依存
 
-- `better-auth` ^1.3.29
+- `better-auth` ^1.6.5
 - `@better-fetch/fetch` ^1.1.18
 - `@prisma/client`, `@prisma/adapter-pg` ^7.5.0
 - `pg` ^8.20.0
