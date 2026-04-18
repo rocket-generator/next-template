@@ -293,3 +293,16 @@ docs/guides/               # 詳細ガイド
 | 認証（Better Auth + DB 設計） | [docs/guides/auth.md](./docs/guides/auth.md) |
 | メールプロバイダー追加 | [docs/guides/email-provider.md](./docs/guides/email-provider.md) |
 | ストレージプロバイダー追加 | [docs/guides/storage-provider.md](./docs/guides/storage-provider.md) |
+
+---
+
+## Claude Code 向け Skill
+
+`.claude/skills/` 配下に、上記ガイドと連動したタスク別 Skill を用意している。Claude Code は `Skill` ツール経由で必要時にロードする。
+
+- `creating-pages-components` / `data-access-repository` / `i18n-messages`
+- `auth-implementation` / `admin-page-scaffolding`
+- `adding-email-provider` / `adding-storage-provider`
+- `writing-tests` / `writing-storybook`
+
+各 Skill は `docs/guides/` を正本として参照する薄い gateway。ルール変更は `docs/guides/` 側で行う。

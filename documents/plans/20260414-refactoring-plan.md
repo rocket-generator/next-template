@@ -9,6 +9,7 @@
 - [x] §3 Storage / Email プロバイダ切替機構の完成
 - [x] §4 `package.json` のバージョン不整合修正
 - [x] §7 ドキュメント整合のうち、`proxy.ts` リネーム反映と関連ガイド更新
+- [x] §9 ロギング / 監視の抽象化
 - [x] §11 `npm outdated` による棚卸しと低リスク依存更新
 - [x] §13 `GEMINI.md` の縮約 or 除外方針決定
 
@@ -18,7 +19,6 @@
 - [ ] §5 `output: "standalone"` 対応
 - [ ] §6 デプロイターゲット分離 / `deploy/` サンプル整備
 - [ ] §8 CI / GitHub Actions 整備
-- [ ] §9 ロギング / 監視の抽象化
 - [ ] §10 `docker-compose.yml` の例示値 / 非公式イメージ改善
 - [ ] §11 major 更新候補（Tailwind CSS 4 / Zod 4 / Storybook 10 など）の個別移行判断
 - [ ] §12 Jest / Vitest の一本化検討
