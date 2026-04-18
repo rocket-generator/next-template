@@ -296,13 +296,21 @@ docs/guides/               # 詳細ガイド
 
 ---
 
-## Claude Code 向け Skill
+## エージェント向け Skill
 
-`.claude/skills/` 配下に、上記ガイドと連動したタスク別 Skill を用意している。Claude Code は `Skill` ツール経由で必要時にロードする。
+`.agents/skills/` 配下に、上記ガイドと連動したタスク別 Skill を用意している。Claude Code / Codex / Copilot CLI など各エージェントが `Skill` 経由で必要時にロードする。`.claude/skills/` は `.agents/skills/` への symlink。
 
-- `creating-pages-components` / `data-access-repository` / `i18n-messages`
+### このテンプレ固有（`docs/guides/` と連動）
+
+- `nextjs-component-design` / `data-access-repository` / `i18n-messages`
 - `auth-implementation` / `admin-page-scaffolding`
-- `adding-email-provider` / `adding-storage-provider`
+- `email-provider` / `storage-provider`
 - `writing-tests` / `writing-storybook`
+
+### 汎用 / プロジェクト横断
+
+- `typescript-development` / `database-schema-design` / `restful-api-design`
+- `frontend-design` / `ui-design` / `docker-expert` / `python-development`
+- `skill-creator` / `dify-integration`
 
 各 Skill は `docs/guides/` を正本として参照する薄い gateway。ルール変更は `docs/guides/` 側で行う。

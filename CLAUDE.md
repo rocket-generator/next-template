@@ -15,18 +15,20 @@
 - タスクに合致する Skill / Subagent があれば必ず起動する（1% でも該当可能性があれば確認する）
 - 設計・ブレインストーミング・実装計画・レビューなど、対応 Skill があるものは Skill 経由で進める
 
-#### プロジェクト固有 Skill（`.claude/skills/`）
+#### プロジェクト固有 Skill（`.agents/skills/`）
 
-タスクに応じて以下の Skill が `docs/guides/` と連動して発火する。
+実体は `.agents/skills/`。`.claude/skills` はそこへの symlink。タスクに応じて以下の Skill が `docs/guides/` と連動して発火する。
 
-- `creating-pages-components` — `src/app/` / `src/components/` の追加・改修
+- `nextjs-component-design` — `src/app/` / `src/components/` の追加・改修
 - `data-access-repository` — `src/repositories/` / `src/models/` / `src/requests/` の追加・改修
 - `i18n-messages` — 翻訳追加、`messages/*.json` 更新、next-intl 設定変更
 - `auth-implementation` — Better Auth / Prisma 認証（`src/libraries/auth*.ts` / `src/proxy.ts` / 認証 actions / `prisma/schema.prisma`）
 - `admin-page-scaffolding` — `src/app/(site)/(authorized)/admin/` 配下のページ作成
-- `adding-email-provider` / `adding-storage-provider` — `src/libraries/email.ts` / `storage.ts` のプロバイダー追加
+- `email-provider` / `storage-provider` — `src/libraries/email.ts` / `storage.ts` のプロバイダー追加
 - `writing-tests` — Jest / RTL テスト作成（`__tests__/` 配下）
 - `writing-storybook` — `*.stories.tsx` の追加・更新
+
+汎用 Skill（`typescript-development` / `database-schema-design` / `restful-api-design` / `frontend-design` / `ui-design` / `docker-expert` / `python-development` / `skill-creator` / `dify-integration`）も同ディレクトリに存在。
 
 ### タスク管理
 

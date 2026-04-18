@@ -1,13 +1,15 @@
 ---
-name: creating-pages-components
-description: Use when adding or modifying pages under src/app, or components under src/components (atoms/molecules/organisms). Covers Server/Client Component boundary, Atomic Design placement, Server Actions in actions.ts, URL-based state management, sidebar active-state, and shadcn-only atoms rule.
+name: nextjs-component-design
+description: Use when adding or modifying pages under src/app, or components under src/components (atoms/molecules/organisms) in this Next.js App Router project. Covers Server/Client Component boundary, Atomic Design placement, Server Actions in actions.ts, URL-based state management, sidebar active-state, and shadcn-only atoms rule.
 ---
 
-# Creating Pages and Components
+# Next.js Component Design
+
+Read [`docs/guides/components.md`](../../../docs/guides/components.md) first — it is the authoritative source.
 
 ## Overview
 
-Next.js App Router + Atomic Design でページとコンポーネントを作るガイド。**Server Components First**、インタラクティブ部分のみ最小限の Client Component。正本は `docs/guides/components.md`。
+Next.js App Router + Atomic Design でページとコンポーネントを作るガイド。**Server Components First**、インタラクティブ部分のみ最小限の Client Component。
 
 ## When to Use
 
@@ -27,6 +29,7 @@ Next.js App Router + Atomic Design でページとコンポーネントを作る
 5. **ページ全体に影響する状態は URL クエリパラメータ**で管理（`useRouter` + `page.tsx` の再実行）
 6. **molecules / organisms は `PascalCase/index.tsx` 形式**（Storybook 共存のため）
 7. **`any` 禁止 / `React.FC` 不使用 / コンポーネントは `const` 宣言**
+8. **コンポーネントにビジネスロジックを持たせない**。アクションやデータは Props で注入
 
 ## ディレクトリ
 
@@ -42,6 +45,10 @@ src/components/
 └── organisms/AppHeader/index.tsx
 ```
 
+- **atoms**: shadcn/ui 提供の最小要素。カスタム要素は置かない。拡張する場合は `molecules` 以上でラップ
+- **molecules**: 複数の atom を組み合わせた具体的 UI 部品
+- **organisms**: ページセクション・独立 UI 領域
+
 ## Server / Client の分離方針
 
 - **NG**: ページ全体を大きな Client Component でラップ
@@ -53,6 +60,24 @@ src/components/
 - `src/components/organisms/AppSidebar/index.tsx` / `AdminSidebar/index.tsx`
 - `usePathname()` で現在パス取得、`href` と前方一致で active 判定
 - `src/components/atoms/sidebar.tsx` の `SidebarMenuButton` に `data-[active=true]:font-semibold`
+
+```ts
+const normalizePath = (path: string) => {
+  if (!path || path === "/") return "/";
+  return path.replace(/\/+$/, "");
+};
+const isActivePath = (pathname: string, href: string) => {
+  const current = normalizePath(pathname);
+  const target = normalizePath(href);
+  if (target === "/") return current === "/";
+  return current === target || current.startsWith(`${target}/`);
+};
+```
+
+## 型定義
+
+- プロジェクト共通型は `src/types/` 配下へ用途別に配置（例: `src/types/auth.d.ts`）
+- コンポーネント固有型（Props 等）は `index.tsx` 内に記述
 
 ## Key Files
 
@@ -66,9 +91,7 @@ src/components/
 
 - **正本**: `docs/guides/components.md`
 - `AGENTS.md §コンポーネント設計`
-- Storybook: `writing-storybook` Skill
-- テスト: `writing-tests` Skill
-- i18n: `i18n-messages` Skill
+- 関連 skill: `admin-page-scaffolding`, `writing-tests`, `writing-storybook`, `i18n-messages`, `data-access-repository`
 
 ## Checklist
 
