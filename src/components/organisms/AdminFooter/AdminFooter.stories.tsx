@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import AdminFooter from "./index";
 
 const meta: Meta<typeof AdminFooter> = {

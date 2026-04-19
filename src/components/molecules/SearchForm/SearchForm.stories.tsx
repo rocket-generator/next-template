@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import SearchForm from "./index";
 
 const meta: Meta<typeof SearchForm> = {

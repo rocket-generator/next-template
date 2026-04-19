@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Users, Settings, Home, BarChart2, CheckCircle } from "lucide-react";
 import AdminSidebar from "./index";
 import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";

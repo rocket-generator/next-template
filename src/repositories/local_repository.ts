@@ -1,13 +1,13 @@
 import { z } from "zod";
 import path from "path";
-import { BaseRepository } from "./base_repository";
+import { BaseRepository, RepositorySchema } from "./base_repository";
 
 interface LocalConfig {
   directory: string;
 }
 
 export abstract class LocalRepository<
-  T extends z.ZodObject<z.ZodRawShape, "strip">
+  T extends RepositorySchema
 > extends BaseRepository<T> {
   private readonly directory: string;
 
@@ -83,7 +83,12 @@ export abstract class LocalRepository<
           const factor = direction === "desc" ? -1 : 1;
           const aValue = a[order as keyof z.infer<T>];
           const bValue = b[order as keyof z.infer<T>];
-          if (aValue === undefined || bValue === undefined) return 0;
+          if (aValue == null || bValue == null) {
+            return 0;
+          }
+          if (aValue === bValue) {
+            return 0;
+          }
           return factor * (aValue > bValue ? 1 : -1);
         });
       }

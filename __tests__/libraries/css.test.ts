@@ -129,5 +129,10 @@ describe("CSS Library", () => {
       const result = cn("px-[23px]", "px-[45px]");
       expect(result).toBe("px-[45px]");
     });
+
+    it("should merge Tailwind v4 size utilities correctly", () => {
+      const result = cn("size-4", "size-6");
+      expect(result).toBe("size-6");
+    });
   });
 });

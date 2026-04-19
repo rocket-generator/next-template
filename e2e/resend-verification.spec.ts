@@ -10,7 +10,7 @@ test.describe('メール認証再送信機能', () => {
     await page.goto('/verify-email/resend');
     
     // ページが正常に読み込まれることを確認
-    await expect(page).toHaveURL(/\/auth\/verify-email\/resend/);
+    await expect(page).toHaveURL(/\/verify-email\/resend/);
     
     // ページ要素が表示されることを確認
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();
@@ -110,21 +110,21 @@ test.describe('メール認証再送信機能', () => {
     await page.click('[data-testid="signin-link"]');
     
     // サインインページにリダイレクトされることを確認
-    await expect(page).toHaveURL(/\/auth\/signin/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/signin/, { timeout: 10000 });
   });
 
   test('pendingページから再送信ページにアクセスできる', async ({ page }) => {
     await page.goto('/verify-email/pending');
     
     // ページが正常に読み込まれることを確認
-    await expect(page).toHaveURL(/\/auth\/verify-email\/pending/);
+    await expect(page).toHaveURL(/\/verify-email\/pending/);
     
     // 再送信リンクをクリック
     // 認証メール再送信リンクをクリック（pendingページから）
     await page.click('a[href*="/resend"]');
     
     // 再送信ページにリダイレクトされることを確認
-    await expect(page).toHaveURL(/\/auth\/verify-email\/resend/);
+    await expect(page).toHaveURL(/\/verify-email\/resend/);
     
     // 再送信ページの要素が表示されることを確認
     await expect(page.locator('[data-testid="resend-verification-title"]')).toBeVisible();

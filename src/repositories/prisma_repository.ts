@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { BaseRepository, BaseRepositoryInterface } from "./base_repository";
+import {
+  BaseRepository,
+  BaseRepositoryInterface,
+  RepositorySchema,
+} from "./base_repository";
 import { prisma } from "@/libraries/prisma";
 import { createLogger } from "@/libraries/logger";
 import { SearchCondition } from "./base_repository";
@@ -12,7 +16,7 @@ export function getPrismaModel(modelName: string): any {
   return prisma[modelName as keyof typeof prisma];
 }
 
-type TransformFunction<T extends z.ZodObject<z.ZodRawShape, "strip">> = (
+type TransformFunction<T extends RepositorySchema> = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prismaData: any
 ) => z.infer<T>;
@@ -29,19 +33,17 @@ function describeValueType(value: unknown): string {
   return typeof value;
 }
 
-export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
+export class PrismaRepository<T extends RepositorySchema>
   extends BaseRepository<T>
   implements BaseRepositoryInterface<T>
 {
   protected modelName: string;
   protected searchFields: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected transform: TransformFunction<T>;
 
   protected constructor(
     schema: T,
     modelName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     transform: TransformFunction<T>,
     searchFields: string[]
   ) {
@@ -97,7 +99,6 @@ export class PrismaRepository<T extends z.ZodObject<z.ZodRawShape, "strip">>
     return this.schema.parse(transformedData);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async create(item: Omit<z.infer<T>, "id">): Promise<z.infer<T>> {
     // Note: We assume the input 'item' already matches the Zod schema structure,
     // potentially needing transformation *before* sending to Prisma if structures differ significantly.

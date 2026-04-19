@@ -2,12 +2,16 @@ import { z } from "zod";
 import { ApiError } from "@/exceptions/api_error";
 import { APIClient } from "@/libraries/api_client";
 import { createLogger } from "@/libraries/logger";
-import { BaseRepository, SearchCondition } from "./base_repository";
+import {
+  BaseRepository,
+  RepositorySchema,
+  SearchCondition,
+} from "./base_repository";
 
 const apiRepositoryLogger = createLogger("api_repository");
 
 export abstract class APIRepository<
-  T extends z.ZodObject<z.ZodRawShape, "strip">
+  T extends RepositorySchema
 > extends BaseRepository<T> {
   protected endpoint: string;
   protected accessToken?: string;
@@ -34,9 +38,7 @@ export abstract class APIRepository<
           context: {
             count: conditions.length,
             columns: conditions.map((condition) => condition.column),
-            operators: conditions.map(
-              (condition) => condition.operator ?? "="
-            ),
+            operators: conditions.map((condition) => condition.operator ?? "="),
           },
         }
       );
@@ -61,7 +63,7 @@ export abstract class APIRepository<
   }
 
   async findById(id: string): Promise<z.infer<T>> {
-    const data = await APIClient<T>({
+    const data = await APIClient<z.infer<T>>({
       path: `${this.endpoint}/${id}`,
       accessToken: this.accessToken,
     });
@@ -69,7 +71,7 @@ export abstract class APIRepository<
   }
 
   async create(item: Omit<z.infer<T>, "id">): Promise<z.infer<T>> {
-    const data = await APIClient<T>({
+    const data = await APIClient<z.infer<T>>({
       method: "POST",
       path: this.endpoint,
       body: item,
@@ -79,7 +81,7 @@ export abstract class APIRepository<
   }
 
   async update(id: string, item: Partial<z.infer<T>>): Promise<z.infer<T>> {
-    const data = await APIClient<T>({
+    const data = await APIClient<z.infer<T>>({
       method: "PUT",
       path: `${this.endpoint}/${id}`,
       body: item,
@@ -89,7 +91,7 @@ export abstract class APIRepository<
   }
 
   async delete(id: string): Promise<void> {
-    const data = await APIClient<T>({
+    const data = await APIClient<z.infer<T>>({
       method: "DELETE",
       path: `${this.endpoint}/${id}`,
       accessToken: this.accessToken,

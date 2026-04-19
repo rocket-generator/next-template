@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import DataForm from "./index";
 // Mock function for form submission
 const mockSubmitAction = async (data: Record<string, unknown>) => {

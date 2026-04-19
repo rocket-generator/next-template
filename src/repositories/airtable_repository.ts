@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseRepository } from "./base_repository";
+import { BaseRepository, RepositorySchema } from "./base_repository";
 
 interface AirTableConfig {
   baseId: string;
@@ -18,7 +18,7 @@ interface AirTableResponse<T> {
 }
 
 export abstract class AirTableRepository<
-  T extends z.ZodObject<z.ZodRawShape, "strip">
+  T extends RepositorySchema
 > extends BaseRepository<T> {
   private readonly baseId: string;
   private readonly viewId: string;

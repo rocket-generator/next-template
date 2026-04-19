@@ -1,10 +1,18 @@
 import * as z from "zod";
 
+const createRequiredStringSchema = (
+  requiredMessage: string,
+  invalidTypeMessage: string = requiredMessage
+) =>
+  z.string({
+    error: (issue) =>
+      issue.input === undefined ? requiredMessage : invalidTypeMessage,
+  });
+
 export const createPasswordSchema = (t: (key: string) => string) =>
-  z
-    .string({
-      required_error: t("validation.password_required"),
-      invalid_type_error: t("validation.password_required"),
+  createRequiredStringSchema(t("validation.password_required"))
+    .min(1, {
+      message: t("validation.password_required"),
     })
     .min(8, {
       message: t("validation.password_min_length"),
@@ -17,14 +25,9 @@ export const createPasswordSchema = (t: (key: string) => string) =>
     });
 
 export const createTokenSchema = (t: (key: string) => string) =>
-  z
-    .string({
-      required_error: t("validation.token_required"),
-      invalid_type_error: t("validation.token_required"),
-    })
-    .min(1, {
-      message: t("validation.token_min_length"),
-    });
+  createRequiredStringSchema(t("validation.token_required")).min(1, {
+    message: t("validation.token_min_length"),
+  });
 
 export const createResetPasswordRequestSchema = (
   t: (key: string) => string

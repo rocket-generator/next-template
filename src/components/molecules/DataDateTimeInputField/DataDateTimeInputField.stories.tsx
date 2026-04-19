@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import DataDateTimeInputField from "./index";
 // Mock function for onChange handlers
 const mockOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -82,10 +82,10 @@ class ConsoleLogSink implements LogSink {
       entry.level === "debug"
         ? console.debug
         : entry.level === "info"
-          ? console.info
-          : entry.level === "warn"
-            ? console.warn
-            : console.error;
+        ? console.info
+        : entry.level === "warn"
+        ? console.warn
+        : console.error;
 
     target.call(console, rendered);
   }
@@ -125,7 +125,9 @@ function shouldLog(level: LogLevel): boolean {
   return LOG_LEVEL_ORDER[level] >= LOG_LEVEL_ORDER[resolveLogLevel()];
 }
 
-export function resolveLogFormat(format?: LogFormat): Exclude<LogFormat, "auto"> {
+export function resolveLogFormat(
+  format?: LogFormat
+): Exclude<LogFormat, "auto"> {
   const value = format ?? getEnvValue("LOG_FORMAT") ?? "auto";
 
   if (value === "json" || value === "pretty") {
@@ -236,8 +238,8 @@ function serializeError(error: unknown): SerializedError {
       typeof error === "string"
         ? error
         : error === undefined
-          ? "Unknown error"
-          : String(error),
+        ? "Unknown error"
+        : String(error),
   };
 }
 
@@ -250,15 +252,12 @@ function toCaptureError(error: unknown, message: string): Error {
     typeof error === "string"
       ? error
       : error === undefined
-        ? message
-        : String(error)
+      ? message
+      : String(error)
   );
 }
 
-export function formatLogEntry(
-  entry: LogEntry,
-  format?: LogFormat
-): string {
+export function formatLogEntry(entry: LogEntry, format?: LogFormat): string {
   const resolvedFormat = resolveLogFormat(format);
 
   if (resolvedFormat === "json") {

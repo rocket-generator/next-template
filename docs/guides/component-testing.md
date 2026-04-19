@@ -63,12 +63,22 @@ expect(btn).toHaveAttribute("aria-expanded", "false");
 
 ### アイコンの data-testid
 
+`lucide-react@1` は named export のアイコンコンポーネントを使う。テストでは default export を仮定せず、利用するアイコン名を named export として個別に mock し、必要なら `className` や `aria-hidden` を props で透過する。
+
 ```tsx
 jest.mock("lucide-react", () => ({
-  User: () => <div data-testid="user-icon">User Icon</div>,
-  Settings: () => <div data-testid="settings-icon">Settings Icon</div>,
-  LogOut: () => <div data-testid="logout-icon">Logout Icon</div>,
-  ChevronDown: () => <div data-testid="chevron-down-icon">Chevron Down</div>,
+  User: ({ className }: { className?: string }) => (
+    <div className={className} data-testid="user-icon">User Icon</div>
+  ),
+  Settings: ({ className }: { className?: string }) => (
+    <div className={className} data-testid="settings-icon">Settings Icon</div>
+  ),
+  LogOut: ({ className }: { className?: string }) => (
+    <div className={className} data-testid="logout-icon">Logout Icon</div>
+  ),
+  ChevronDown: ({ className }: { className?: string }) => (
+    <div className={className} data-testid="chevron-down-icon">Chevron Down</div>
+  ),
 }));
 ```
 
@@ -80,7 +90,9 @@ import "@testing-library/jest-dom";
 import ComponentName from "@/components/path/ComponentName";
 
 jest.mock("lucide-react", () => ({
-  IconName: () => <div data-testid="icon-name">Icon</div>,
+  IconName: ({ className }: { className?: string }) => (
+    <div className={className} data-testid="icon-name">Icon</div>
+  ),
 }));
 
 jest.mock("next/navigation", () => ({

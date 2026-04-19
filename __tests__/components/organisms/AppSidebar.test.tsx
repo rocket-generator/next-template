@@ -79,7 +79,6 @@ jest.mock("@/app/(site)/(authorized)/(app)/actions", () => ({
 describe("AppSidebar", () => {
   const mockPush = jest.fn();
   const mockOnSignOut = jest.fn();
-  const originalLocation = window.location;
 
   const mockUser: User = {
     id: "user-1",
@@ -111,15 +110,6 @@ describe("AppSidebar", () => {
     mockPush.mockClear();
     mockOnSignOut.mockClear();
     mockUsePathname.mockReturnValue("/dashboard");
-    delete (window as any).location;
-    (window as any).location = {
-      ...originalLocation,
-      reload: jest.fn(),
-    };
-  });
-
-  afterAll(() => {
-    (window as any).location = originalLocation;
   });
 
   const renderSidebar = (overrideProps = {}) =>

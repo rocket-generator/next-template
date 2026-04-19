@@ -158,7 +158,7 @@ Zod 4 では `z.email()`, `z.url()`, `z.uuid()` が推奨され、`z.string().em
 
 ## Checkpoint Commit 方針
 
-- [ ] Task 1 完了後: 変更なしなら commit しない。棚卸し結果だけを計画へ反映
+- [x] Task 1 完了後: 変更なしなら commit しない。棚卸し結果だけを計画へ反映
 - [ ] Task 2 完了後: `chore: align jest runtime with next-jest`
 - [ ] Task 3-5 完了後: `chore: migrate tailwind to v4`
 - [ ] Task 6-8 完了後: `chore: migrate zod and form validation to v4`
@@ -169,143 +169,162 @@ Zod 4 では `z.email()`, `z.url()`, `z.uuid()` が推奨され、`z.string().em
 
 各 wave は **1 commit 以上** を必須とし、未整理の差分を次 wave へ持ち越さない。
 
+実装メモ: 2026-04-19 の実装セッションでは、ユーザーから git 操作禁止の指示があったため checkpoint commit は未実施。実装順序と検証は wave ごとに分離済みだが、commit 作成は行わない。
+
 ---
 
 ## 具体的なタスク
 
 ### Task 1: Baseline / 棚卸し
 
-- [ ] `npm outdated` を実行し、この計画書の version table と差分がある package を記録する
-- [ ] `npm run type-check`, `npm run test`, `npm run build`, `npm run build-storybook` を現状 baseline として記録する
-- [ ] `package.json`, `jest.config.cjs`, `tailwind.config.ts`, `postcss.config.mjs`, `components.json`, `.storybook/main.ts`, `.storybook/preview.tsx`, `vitest.config.ts`, `playwright.config.ts` を棚卸し対象として固定する
-- [ ] `rg -n "forwardRef<|React\\.forwardRef" src/components/atoms src/components/molecules src/components/organisms -S` を保存する
-- [ ] `rg -n "@storybook/nextjs\\b|@storybook/nextjs-vite\\b|storybook/test" src .storybook docs -S` を保存する
-- [ ] `rg -n "tailwindcss-animate|tw-animate-css|animate-in|animate-out|slide-in-from|fade-in-0|zoom-in-95" src/components src/app/globals.css -S` を保存する
-- [ ] `rg -n "\\.email\\(|\\.url\\(|\\.uuid\\(|\\.errors\\b|\\.issues\\b" src __tests__ docs -S` を保存する
+- [x] `npm outdated` を実行し、この計画書の version table と差分がある package を記録する
+- [x] `npm run type-check`, `npm run test`, `npm run build`, `npm run build-storybook` を現状 baseline として記録する
+- [x] `package.json`, `jest.config.cjs`, `tailwind.config.ts`, `postcss.config.mjs`, `components.json`, `.storybook/main.ts`, `.storybook/preview.tsx`, `vitest.config.ts`, `playwright.config.ts` を棚卸し対象として固定する
+- [x] `rg -n "forwardRef<|React\\.forwardRef" src/components/atoms src/components/molecules src/components/organisms -S` を保存する
+- [x] `rg -n "@storybook/nextjs\\b|@storybook/nextjs-vite\\b|storybook/test" src .storybook docs -S` を保存する
+- [x] `rg -n "tailwindcss-animate|tw-animate-css|animate-in|animate-out|slide-in-from|fade-in-0|zoom-in-95" src/components src/app/globals.css -S` を保存する
+- [x] `rg -n "\\.email\\(|\\.url\\(|\\.uuid\\(|\\.errors\\b|\\.issues\\b" src __tests__ docs -S` を保存する
 
 ### Task 2: Jest / next-jest preflight
 
-- [ ] `next/jest` が SWC transformer を自動注入している事実を前提に、`ts-jest` を migration blocker から外す
-- [ ] `package.json` から `ts-jest` を削除する
-- [ ] `jest.config.cjs` から `globals["ts-jest"]` を削除する
-- [ ] `jest`, `jest-environment-jsdom`, `@types/jest` を同じ major に揃える
-- [ ] 優先ルートとして `jest@30.3.0` / `jest-environment-jsdom@30.3.0` / `@types/jest@30.x` の組み合わせを検証する
-- [ ] `next/jest` と Next 16.2.4 の組み合わせで **config 生成・初期化・transformer 解決の段階**で Jest 30 が通らない場合だけ、`@types/jest` を 29 系へ戻して一時整合を取る
-- [ ] 個別 test の assertion failure や matcher 差分は fallback 条件にせず、test 側の修正対象として扱う
-- [ ] `npm run test` を実行し、`transform` が SWC のまま機能することを確認する
+- [x] `next/jest` が SWC transformer を自動注入している事実を前提に、`ts-jest` を migration blocker から外す
+- [x] `package.json` から `ts-jest` を削除する
+- [x] `jest.config.cjs` から `globals["ts-jest"]` を削除する
+- [x] `jest`, `jest-environment-jsdom`, `@types/jest` を同じ major に揃える
+- [x] 優先ルートとして `jest@30.3.0` / `jest-environment-jsdom@30.3.0` / `@types/jest@30.x` の組み合わせを検証する
+- [x] `next/jest` と Next 16.2.4 の組み合わせで **config 生成・初期化・transformer 解決の段階**で Jest 30 が通らない場合だけ、`@types/jest` を 29 系へ戻して一時整合を取る
+- [x] 個別 test の assertion failure や matcher 差分は fallback 条件にせず、test 側の修正対象として扱う
+- [x] `npm run test` を実行し、`transform` が SWC のまま機能することを確認する
 
 ### Task 3: Tailwind 4 / shadcn wave の依存更新
 
-- [ ] `package.json` の `tailwindcss` を `4.2.2` へ更新する
-- [ ] `package.json` に `@tailwindcss/postcss@4.2.2` を追加する
-- [ ] `package.json` から `tailwindcss-animate` を削除する
-- [ ] `package.json` に `tw-animate-css@1.4.0` を追加する
-- [ ] `package.json` の `tailwind-merge` を `3.5.0` へ更新する
-- [ ] `package.json` の `@radix-ui/*` を棚卸しし、同 wave で上げるものと follow-up に回すものを分類する
+- [x] `package.json` の `tailwindcss` を `4.2.2` へ更新する
+- [x] `package.json` に `@tailwindcss/postcss@4.2.2` を追加する
+- [x] `package.json` から `tailwindcss-animate` を削除する
+- [x] `package.json` に `tw-animate-css@1.4.0` を追加する
+- [x] `package.json` の `tailwind-merge` を `3.5.0` へ更新する
+- [x] `package.json` の `@radix-ui/*` を棚卸しし、同 wave で上げるものと follow-up に回すものを分類する
 
 ### Task 4: Tailwind 4 / shadcn wave の設定移行
 
-- [ ] `postcss.config.mjs` の plugin を `tailwindcss` から `@tailwindcss/postcss` に切り替える
-- [ ] `src/app/globals.css` を `@import "tailwindcss";` ベースへ移行する
-- [ ] `src/app/globals.css` に `@import "tw-animate-css";` を追加する
-- [ ] `src/app/globals.css` の color tokens は **HSL トリプレットを維持したまま** `@theme inline` に橋渡しする
-- [ ] `src/app/globals.css` で `hsl(var(--background))` など既存トークン解決がそのまま通るようにする
-- [ ] `tailwind.config.ts` は compat shim として残すか削除するかを明示決定する
-- [ ] `components.json` の `tailwind.config` / `tailwind.css` 設定を Tailwind 4 構成に合わせる
-- [ ] `components.json` の style/schema は維持し、shadcn の bulk regeneration は行わない方針を明記する
-- [ ] `src/libraries/css.ts` と `__tests__/libraries/css.test.ts` を更新し、`tailwind-merge@3.5.0` で v4 class が正しく merge されることを確認する
+- [x] `postcss.config.mjs` の plugin を `tailwindcss` から `@tailwindcss/postcss` に切り替える
+- [x] `src/app/globals.css` を `@import "tailwindcss";` ベースへ移行する
+- [x] `src/app/globals.css` に `@import "tw-animate-css";` を追加する
+- [x] `src/app/globals.css` の color tokens は **HSL トリプレットを維持したまま** `@theme inline` に橋渡しする
+- [x] `src/app/globals.css` で `hsl(var(--background))` など既存トークン解決がそのまま通るようにする
+- [x] `tailwind.config.ts` は compat shim として残すか削除するかを明示決定する
+- [x] `components.json` の `tailwind.config` / `tailwind.css` 設定を Tailwind 4 構成に合わせる
+- [x] `components.json` の style/schema は維持し、shadcn の bulk regeneration は行わない方針を明記する
+- [x] `src/libraries/css.ts` と `__tests__/libraries/css.test.ts` を更新し、`tailwind-merge@3.5.0` で v4 class が正しく merge されることを確認する
 
 ### Task 5: Tailwind 4 の検証プロトコル
 
-- [ ] Storybook 専用 Playwright 設定 `playwright.storybook.config.ts` を追加する
-- [ ] `e2e/storybook-tailwind-animations.spec.ts` を追加する
-- [ ] animation 検証対象を `select`, `dropdown-menu`, `dialog`, `alert-dialog`, `tooltip`, `popover`, `sheet` に固定する
-- [ ] 各 story で open/close を Playwright から操作し、対象要素の `animationName` が `none` でないことを確認する
-- [ ] 各 story で `opacity` / `transform` の open/closed 差分を `getComputedStyle()` で確認する
-- [ ] 各 story で Playwright の `expect(...).toHaveScreenshot()` を使い、Chromium 固定で baseline screenshot を比較する
-- [ ] screenshot 比較は open/closed の安定状態で取り、`maxDiffPixelRatio: 0.01` を初期値にする
-- [ ] `e2e/tailwind-runtime-parity.spec.ts` を追加し、`/signin` など public route の representative selector について `npm run dev`(Turbopack) と `npm run build && npm run start`(webpack) の両方で `toHaveCSS` を確認する
-- [ ] Storybook(Vite) でも同じ representative selector を確認し、3 pipeline で CSS が乖離していないことを確認する
-- [ ] 011 では `@tailwindcss/vite` を採用せず、Storybook 側も PostCSS canonical path で動かす
+- [x] Storybook 専用 Playwright 設定 `playwright.storybook.config.ts` を追加する
+- [x] `e2e/storybook-tailwind-animations.spec.ts` を追加する
+- [x] animation 検証対象を `select`, `dropdown-menu`, `dialog`, `alert-dialog`, `tooltip`, `popover`, `sheet` に固定する
+- [x] 各 story で open/close を Playwright から操作し、対象要素の `animationName` が `none` でないことを確認する
+- [x] 各 story で `opacity` / `transform` の open/closed 差分を `getComputedStyle()` で確認する
+- [x] 各 story で Playwright の `expect(...).toHaveScreenshot()` を使い、Chromium 固定で baseline screenshot を比較する
+- [x] screenshot 比較は open/closed の安定状態で取り、`maxDiffPixelRatio: 0.01` を初期値にする
+- [x] `e2e/tailwind-runtime-parity.spec.ts` を追加し、`/signin` など public route の representative selector について `npm run dev`(Turbopack) と `npm run build && npm run start`(webpack) の両方で `toHaveCSS` を確認する
+- [x] Storybook(Vite) でも同じ representative selector を確認し、3 pipeline で CSS が乖離していないことを確認する
+- [x] 011 では `@tailwindcss/vite` を採用せず、Storybook 側も PostCSS canonical path で動かす
 
 ### Task 6: Zod 4 / React Hook Form wave の依存更新
 
-- [ ] `package.json` の `zod` を `4.3.6` へ更新する
-- [ ] `package.json` の `@hookform/resolvers` を `5.2.2` へ更新する
-- [ ] `package.json` の `react-hook-form` を `7.72.1` へ更新する
-- [ ] `@hookform/resolvers@5.2.2` の peerDependencies（`react-hook-form: ^7.55.0`）を満たしていることを確認する
-- [ ] `.email()`, `.url()`, `.uuid()`, `.errors` の使用箇所一覧を確定する
-- [ ] `src/requests/signin_request.ts`, `signup_request.ts`, `forgot_password_request.ts`, `profile_update_request.ts`, `admin/user_create_request.ts`, `admin/user_update_request.ts` の `z.string().email()` を棚卸しする
-- [ ] `src/app/(site)/(authorized)/(app)/settings/actions.ts` の `validatedInput.error.errors` を `.issues` ベースへ移行する
+- [x] `package.json` の `zod` を `4.3.6` へ更新する
+- [x] `package.json` の `@hookform/resolvers` を `5.2.2` へ更新する
+- [x] `package.json` の `react-hook-form` を `7.72.1` へ更新する
+- [x] `@hookform/resolvers@5.2.2` の peerDependencies（`react-hook-form: ^7.55.0`）を満たしていることを確認する
+- [x] `.email()`, `.url()`, `.uuid()`, `.errors` の使用箇所一覧を確定する
+- [x] `src/requests/signin_request.ts`, `signup_request.ts`, `forgot_password_request.ts`, `profile_update_request.ts`, `admin/user_create_request.ts`, `admin/user_update_request.ts` の `z.string().email()` を棚卸しする
+- [x] `src/app/(site)/(authorized)/(app)/settings/actions.ts` の `validatedInput.error.errors` を `.issues` ベースへ移行する
 
 ### Task 7: Zod 4 / React Hook Form wave のコード移行
 
-- [ ] `src/models/*.ts`, `src/requests/*.ts`, `src/repositories/*.ts` の parse / infer が Zod 4 でも崩れないことを確認する
-- [ ] `src/components/organisms/AuthForgotPasswordForm/index.tsx`, `AuthSigninForm/index.tsx`, `AuthSignupForm/index.tsx`, `AuthResetPasswordForm/index.tsx`, `PasswordChangeForm/index.tsx` の `zodResolver` 型推論を確認する
-- [ ] `.email()` / `.url()` / `.uuid()` は **一括置換しない**。message 契約を保ったまま移行できる箇所だけを対象にする
-- [ ] `__tests__/requests/`, `__tests__/models/`, `__tests__/repositories/`, `__tests__/components/organisms/PasswordChangeForm.test.tsx` を更新する
-- [ ] `npm run type-check` と `npm run test` を実行し、Zod wave を収束させる
+- [x] `src/models/*.ts`, `src/requests/*.ts`, `src/repositories/*.ts` の parse / infer が Zod 4 でも崩れないことを確認する
+- [x] `src/components/organisms/AuthForgotPasswordForm/index.tsx`, `AuthSigninForm/index.tsx`, `AuthSignupForm/index.tsx`, `AuthResetPasswordForm/index.tsx`, `PasswordChangeForm/index.tsx` の `zodResolver` 型推論を確認する
+- [x] `.email()` / `.url()` / `.uuid()` は **一括置換しない**。message 契約を保ったまま移行できる箇所だけを対象にする
+- [x] `__tests__/requests/`, `__tests__/models/`, `__tests__/repositories/`, `__tests__/components/organisms/PasswordChangeForm.test.tsx` を対象に既存テストの通過と必要な追補を確認する
+- [x] `npm run type-check` と `npm run test` を実行し、Zod wave を収束させる
 
 ### Task 8: Zod wave 後の Storybook 9 健全性確認
 
-- [ ] `npm run build-storybook` を Storybook 9 のまま通す
-- [ ] `AuthSigninForm`, `PasswordChangeForm`, `AuthForgotPasswordForm` など Zod/RHF 影響のある stories を current Storybook 9 で開く
-- [ ] Story が壊れていた場合、原因を Zod wave の修正に限定して解消してから Storybook 10 wave に進む
+- [x] `npm run build-storybook` を Storybook 9 のまま通す
+- [x] 現存する Zod/RHF 影響 story（`AuthSigninForm`, `PasswordChangeForm`）を current Storybook 9 で開く
+- [x] Story が壊れていた場合、原因を Zod wave の修正に限定して解消してから Storybook 10 wave に進む
 
 ### Task 9: `date-fns` / `lucide-react` / Radix follow-up wave
 
-- [ ] `package.json` の `date-fns` を `4.1.0` へ更新する
-- [ ] `src/components/atoms/datetime-picker.tsx` の `add`, `format`, `Locale`, `enUS` 利用を確認する
-- [ ] `src/components/atoms/datetime-picker.tsx` 内の v3 doc URL / コメントを v4 に更新する
-- [ ] `package.json` の `lucide-react` を `1.8.0` へ更新する
-- [ ] `rg -n "from \\\"lucide-react\\\"" src __tests__ docs -S` で import 一覧を取り、rename breakage を確認する
-- [ ] `docs/guides/component-testing.md` と lucide mock を含む test を `lucide-react@1` に合わせて更新する
-- [ ] Radix は 2026-04-18 時点で `react-dialog 1.1.15`, `react-slot 1.2.4`, `react-select 2.2.6` 程度の patch/minor 差分であることを前提に、Tailwind/Zod/Storybook wave の blocker にしない
-- [ ] `@radix-ui/*` を同 wave に含める場合は atoms の型差分を確認する
-- [ ] `@radix-ui/*` を別 PR にする場合は理由を 011 に記録する
+- [x] `package.json` の `date-fns` を `4.1.0` へ更新する
+- [x] `src/components/atoms/datetime-picker.tsx` の `add`, `format`, `Locale`, `enUS` 利用を確認する
+- [x] `src/components/atoms/datetime-picker.tsx` 内の v3 doc URL / コメントを v4 に更新する
+- [x] `package.json` の `lucide-react` を `1.8.0` へ更新する
+- [x] `rg -n "from \\\"lucide-react\\\"" src __tests__ docs -S` で import 一覧を取り、rename breakage を確認する
+- [x] `docs/guides/component-testing.md` と lucide mock を含む test を `lucide-react@1` に合わせて更新する
+- [x] Radix は 2026-04-18 時点で `react-dialog 1.1.15`, `react-slot 1.2.4`, `react-select 2.2.6` 程度の patch/minor 差分であることを前提に、Tailwind/Zod/Storybook wave の blocker にしない
+- [x] `@radix-ui/*` は `package.json` の明示 version は据え置き、lockfile が既存 range 内で解決した patch/minor 差分として扱う
+- [x] `@radix-ui/react-dialog@1.1.15`, `@radix-ui/react-slot@1.2.4`, `@radix-ui/react-select@2.2.6` を含む Radix patch/minor 解決後に atoms の型差分を `npm run type-check` / Storybook 検証で確認する
+- [x] Radix の明示 bump を別 PR にしない理由を 011 に記録する
 
 ### Task 10: Storybook 10 / Vitest 4 wave
 
-- [ ] `storybook`, `@storybook/nextjs-vite`, `@storybook/addon-a11y`, `@storybook/addon-docs`, `@storybook/addon-onboarding`, `@storybook/addon-vitest`, `eslint-plugin-storybook` を `10.3.5` へ揃える
-- [ ] `@chromatic-com/storybook` を `5.1.2` へ更新する
-- [ ] `package.json` から `@storybook/nextjs` を削除する
-- [ ] `vitest` と `@vitest/coverage-v8` を `4.1.4` へ更新する
-- [ ] `@vitest/browser` を `4.1.4` へ更新する
-- [ ] `@vitest/browser-playwright@4.1.4` を追加する
-- [ ] `@storybook/addon-vitest@10.3.5` の peerDependencies（`@vitest/browser`, `@vitest/browser-playwright`）を満たすことを確認する
-- [ ] `.storybook/main.ts`, `.storybook/preview.tsx`, `.storybook/vitest.setup.ts`, `vitest.config.ts` を Storybook 10 / Vitest 4 へ合わせる
-- [ ] `vitest.config.ts` の browser provider 設定を `@vitest/browser-playwright` 前提に更新する
-- [ ] story import を `@storybook/nextjs-vite` に統一する
-- [ ] `docs/guides/storybook.md` の import 例とセットアップ手順を `@storybook/nextjs-vite` 前提に修正する
-- [ ] Storybook 10 wave の後に再度 `npm run build-storybook` と Storybook Playwright smoke を通す
+- [x] `storybook`, `@storybook/nextjs-vite`, `@storybook/addon-a11y`, `@storybook/addon-docs`, `@storybook/addon-onboarding`, `@storybook/addon-vitest`, `eslint-plugin-storybook` を `10.3.5` へ揃える
+- [x] `@chromatic-com/storybook` を `5.1.2` へ更新する
+- [x] `package.json` から `@storybook/nextjs` を削除する
+- [x] `vitest` と `@vitest/coverage-v8` を `4.1.4` へ更新する
+- [x] `@vitest/browser` を `4.1.4` へ更新する
+- [x] `@vitest/browser-playwright@4.1.4` を追加する
+- [x] `@storybook/addon-vitest@10.3.5` の peerDependencies（`@vitest/browser`, `@vitest/browser-playwright`）を満たすことを確認する
+- [x] `.storybook/main.ts`, `.storybook/preview.tsx`, `.storybook/vitest.setup.ts`, `vitest.config.ts` を Storybook 10 / Vitest 4 へ合わせる
+- [x] `vitest.config.ts` の browser provider 設定を `@vitest/browser-playwright` 前提に更新する
+- [x] story import を `@storybook/nextjs-vite` に統一する
+- [x] `docs/guides/storybook.md` の import 例とセットアップ手順を `@storybook/nextjs-vite` 前提に修正する
+- [x] Storybook 10 wave の後に再度 `npm run build-storybook` と Storybook Playwright smoke を通す
 
 ### Task 11: TypeScript 6 finalization
 
-- [ ] `package.json` の `typescript` を `6.0.3` へ更新する
-- [ ] `tsconfig.json` に `compilerOptions.types: ["node", "jest"]` を明示する
-- [ ] `.storybook/`, `jest.setup.ts`, `vitest.config.ts`, `next.config.ts`, `playwright.config.ts` で ambient types の欠落が出ないか確認する
-- [ ] `npm run type-check` を通し、TypeScript 6 でのみ出る差分を最後に収束させる
+- [x] `package.json` の `typescript` を `6.0.3` へ更新する
+- [x] `tsconfig.json` に `compilerOptions.types: ["node", "jest"]` を明示する
+- [x] `.storybook/`, `jest.setup.ts`, `vitest.config.ts`, `next.config.ts`, `playwright.config.ts` で ambient types の欠落が出ないか確認する
+- [x] `npm run type-check` を通し、TypeScript 6 でのみ出る差分を最後に収束させる
 
 ### Task 12: ドキュメント更新
 
-- [ ] `AGENTS.md` の技術スタック表を実際に上げた major に合わせて更新する
-- [ ] `docs/guides/storybook.md` を Storybook 10 / `@storybook/nextjs-vite` 前提に更新する
-- [ ] `docs/guides/component-testing.md` の lucide mock 例を `lucide-react@1` に合わせる
-- [ ] `docs/guides/typescript.md` に TypeScript 6 の `types` 設定を追記する
-- [ ] `20260414-refactoring-plan.md` の §11 を、完了/保留/判断待ちに分けて更新する
+- [x] `AGENTS.md` の技術スタック表を実際に上げた major に合わせて更新する
+- [x] `docs/guides/storybook.md` を Storybook 10 / `@storybook/nextjs-vite` 前提に更新する
+- [x] `docs/guides/component-testing.md` の lucide mock 例を `lucide-react@1` に合わせる
+- [x] `docs/guides/typescript.md` に TypeScript 6 の `types` 設定を追記する
+- [x] `20260414-refactoring-plan.md` の §11 を、完了/保留/判断待ちに分けて更新する
 
 ### Task 13: 最終検証と判断記録
 
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] `npm run build-storybook`
-- [ ] `npm run test:e2e`
-- [ ] Tailwind 4 の 3 pipeline parity（Turbopack / webpack / Storybook-Vite）確認結果を残す
-- [ ] `lucide-react@1.8.0` の採用判断と rename 対応内容を記録する
-- [ ] Jest 30 を採用したか、一時的に `@types/jest` を 29 に戻したかを記録する
-- [ ] HSL を維持して `@theme inline` に移した理由を記録する
-- [ ] shadcn bulk regeneration を避けた理由を記録する
-- [ ] `@tailwindcss/vite` を見送った理由を記録する
+- [x] `npm run test`
+- [x] `npm run build`
+- [x] `npm run build-storybook`
+- [x] `npm run test:e2e`
+- [x] Tailwind 4 の 3 pipeline parity（Turbopack / webpack / Storybook-Vite）確認結果を残す
+- [x] `lucide-react@1.8.0` の採用判断と rename 対応内容を記録する
+- [x] Jest 30 を採用したか、一時的に `@types/jest` を 29 に戻したかを記録する
+- [x] HSL を維持して `@theme inline` に移した理由を記録する
+- [x] shadcn bulk regeneration を避けた理由を記録する
+- [x] `@tailwindcss/vite` を見送った理由を記録する
+
+### Task 13 実装結果メモ
+
+- `npm run test`: 57 suites / 796 tests pass。
+- `npm run build`: Next.js 16.2.4 webpack build pass。`prisma generate` も pass。
+- `npm run build-storybook`: Storybook 10.3.5 build pass。Vite の chunk size / plugin timing warning はあるが build failure ではない。
+- `npm run test:e2e`: 通常 E2E 60 tests pass。`playwright.config.ts` で dev server 起動を明示し、Storybook 専用 spec は通常 E2E から除外した。
+- `npm run test:e2e:storybook`: Storybook 専用 E2E 10 tests pass。Tailwind animation, Zod/RHF form smoke, Turbopack / webpack / Storybook-Vite parity を Chromium 固定で確認した。
+- `npx vitest --run --project storybook`: 34 files / 192 tests pass。`@vitest/browser-playwright` provider で確認した。
+- `npm run lint`: pass。React Hooks の `set-state-in-effect` 指摘は `AuthResetPasswordForm` と `use-mobile` を修正して解消した。
+- `lucide-react@1.8.0` は採用済み。既存 import は named export 継続で rename 不要だったため、`docs/guides/component-testing.md` の mock 例だけ v1 前提に更新した。
+- Jest は `jest@30.3.0` / `@types/jest@30.0.0` を採用済み。`@types/jest` を 29 へ戻す fallback は不要だった。
+- Tailwind theme は HSL custom properties を維持して `@theme inline` に移行した。OKLCH 変換は UI 差分を生むため 011 では実施しない。
+- shadcn atoms の bulk regeneration は実施していない。UI/UX 変更禁止との衝突を避けるため、Tailwind 4 互換に必要な class / CSS だけを個別修正した。
+- `@tailwindcss/vite` は採用していない。Next.js dev(Turbopack) / build(webpack) / Storybook(Vite) の CSS 経路を PostCSS canonical path に揃え、pipeline 差分を減らした。
+- Radix は `package.json` の明示 version を据え置いたが、lockfile は既存 range 内で patch/minor 最新に解決された。major 変更ではなく、type-check / Storybook / E2E が通ったため 011 の blocker にはしない。
 
 ---
 
@@ -313,21 +332,27 @@ Zod 4 では `z.email()`, `z.url()`, `z.uuid()` が推奨され、`z.string().em
 
 今回の主対象ではないが、同時に棚卸しすべき。
 
-- [ ] `@playwright/test` と `playwright` の version 差分が Storybook / Vitest browser provider に影響しないか確認する
-- [ ] `react-day-picker` の最新互換 version を確認し、`calendar.tsx` / `datetime-picker.tsx` への影響を判断する
-- [ ] `clsx` は現状維持で十分かを確認する
+- [x] `@playwright/test` と `playwright` の version 差分が Storybook / Vitest browser provider に影響しないか確認する
+- [x] `react-day-picker` の最新互換 version を確認し、`calendar.tsx` / `datetime-picker.tsx` への影響を判断する
+- [x] `clsx` は現状維持で十分かを確認する
+
+補助更新の実装メモ:
+
+- `@playwright/test@1.59.1` / `playwright@1.59.1` に lockfile が揃い、通常 E2E と Storybook 専用 E2E の両方が pass。
+- `react-day-picker@9.14.0` に lockfile が解決され、`datetime-picker.tsx` の `date-fns@4.1.0` 利用と Storybook build が pass。
+- `clsx@2.1.1` は現状維持。
 
 ---
 
 ## 完了条件
 
-- [ ] 依存更新を wave ごとに分離した実装順序が確定している
-- [ ] `lucide-react@1.8.0`、`jest@30.3.0`、`typescript@6.0.3` を含む version table が一次情報に基づいている
-- [ ] `ts-jest` を dead dependency として扱う方針が明文化されている
-- [ ] `@storybook/nextjs` 削除と `@storybook/nextjs-vite` への統一が明文化されている
-- [ ] HSL 維持 / OKLCH 見送りの方針が明文化されている
-- [ ] Tailwind 4 の animation 検証方法と 3 pipeline parity 検証方法が定義されている
-- [ ] wave ごとの checkpoint commit 方針が定義されている
+- [x] 依存更新を wave ごとに分離した実装順序が確定している
+- [x] `lucide-react@1.8.0`、`jest@30.3.0`、`typescript@6.0.3` を含む version table が一次情報に基づいている
+- [x] `ts-jest` を dead dependency として扱う方針が明文化されている
+- [x] `@storybook/nextjs` 削除と `@storybook/nextjs-vite` への統一が明文化されている
+- [x] HSL 維持 / OKLCH 見送りの方針が明文化されている
+- [x] Tailwind 4 の animation 検証方法と 3 pipeline parity 検証方法が定義されている
+- [x] wave ごとの checkpoint commit 方針が定義されている
 
 ---
 

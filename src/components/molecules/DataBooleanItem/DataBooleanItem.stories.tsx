@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import DataBooleanItem from ".";
 
 const meta: Meta<typeof DataBooleanItem> = {

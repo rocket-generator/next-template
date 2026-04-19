@@ -21,14 +21,14 @@
 | 領域 | 採用技術 |
 |------|----------|
 | フレームワーク | Next.js 16 (App Router) / React 19 |
-| 言語 | TypeScript 5 |
-| UI | Tailwind CSS 3 / shadcn/ui / Radix UI |
+| 言語 | TypeScript 6 |
+| UI | Tailwind CSS 4 / shadcn/ui / Radix UI |
 | フォーム | React Hook Form + Zod |
 | 国際化 | next-intl 4 |
 | DB | PostgreSQL + Prisma 7 |
-| 認証 | Better Auth 1.3 |
+| 認証 | Better Auth 1.6 |
 | ストレージ/メール | S3 / S3互換 / GCS / SES / SMTP |
-| テスト | Jest / Testing Library / Playwright / Storybook 9 |
+| テスト | Jest 30 / Vitest 4 / Testing Library / Playwright / Storybook 10 |
 
 **重要**: 技術スタックに記載されたバージョンを勝手に変更しないこと。必要な場合は理由を示して承認を得ること。
 
@@ -55,6 +55,7 @@ npm run docker:db:setup          # Docker 環境用
 npm run test                     # Jest
 npm run test:watch               # Jest ウォッチ
 npm run test:e2e                 # Playwright
+npm run test:e2e:storybook       # Storybook 専用 Playwright
 npm run storybook                # Storybook 起動
 npm run build-storybook          # Storybook ビルド
 ```

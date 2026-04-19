@@ -182,18 +182,17 @@ url.searchParams.delete("sslmode");
 - 更新済み: `@aws-sdk/client-s3` / `@aws-sdk/client-ses` / `@aws-sdk/s3-request-presigner` → `3.1031.0`
 - 検証: `npm run type-check` / `npm run build` pass
 
-以下は引き続きメジャー更新の検討対象。影響が広いため、個別に migration コストを見て段階的に実施する。
+2026-04-19 に 011 として major 更新 wave を実施した。依存単位の採用/保留は以下の通り。
 
-- `tailwindcss@3` → v4 系。`tailwindcss-animate` は `tw-animate-css` 置換も含めて検討。
-- `tailwind-merge@2` → v3 系。
-- `@hookform/resolvers@3` → v5 系。
-- `zod@3` → v4 系。
-- `date-fns@3` → v4 系。
-- `lucide-react@0.x` → v1 系。
-- Storybook 9 系 → 10 系。
-- `vitest@3` / `jest@29` / `typescript@5` → 次メジャー。
+- 完了: `tailwindcss@4.2.2` / `@tailwindcss/postcss@4.2.2` へ移行し、`tailwindcss-animate` は `tw-animate-css@1.4.0` へ置換。
+- 完了: `tailwind-merge@3.5.0` へ移行。
+- 完了: `@hookform/resolvers@5.2.2` / `react-hook-form@7.72.1` / `zod@4.3.6` へ移行。
+- 完了: `date-fns@4.1.0` / `lucide-react@1.8.0` へ移行。
+- 完了: Storybook 10.3.5 / Vitest 4.1.4 へ移行し、`@storybook/nextjs` は削除して `@storybook/nextjs-vite` に統一。
+- 完了: Jest 30.3.0 / TypeScript 6.0.3 へ移行。`ts-jest` は dead dependency として削除し、`next/jest` の SWC transformer に寄せる。
+- 保留: Radix UI patch/minor 更新は 011 の blocker ではないため別 PR 候補に分離。
 
-**残アクション**: `npm outdated` を基点に、一括更新は避けてパッケージ群ごとに移行する。特に Tailwind / Zod / Storybook は別タスク化が妥当。
+**残アクション**: Radix UI、`react-day-picker`、Playwright などの周辺 patch/minor 更新は、011 の検証完了後に別タスクとして棚卸しする。
 
 ### 12. `jest` と `vitest` の二重メンテ
 

@@ -42,7 +42,7 @@ export async function updateProfile(
 
     const validatedInput = ProfileUpdateRequestSchema.safeParse(request);
     if (!validatedInput.success) {
-      const firstError = validatedInput.error.errors[0];
+      const firstError = validatedInput.error.issues[0];
       return {
         success: false,
         error: firstError.message,
@@ -87,7 +87,7 @@ export async function changePassword(
 
     const validatedInput = PasswordChangeRequestSchema.safeParse(request);
     if (!validatedInput.success) {
-      const firstError = validatedInput.error.errors[0];
+      const firstError = validatedInput.error.issues[0];
       return {
         success: false,
         error: firstError.message,

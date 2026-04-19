@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export type RepositorySchema = z.ZodObject;
+
 // Define and export SearchOperator and SearchCondition here
 export type SearchOperator =
   | "="
@@ -17,9 +19,7 @@ export interface SearchCondition {
   operator?: SearchOperator; // Optional, defaults to '='
 }
 
-export interface BaseRepositoryInterface<
-  T extends z.ZodObject<z.ZodRawShape, "strip">
-> {
+export interface BaseRepositoryInterface<T extends RepositorySchema> {
   get(
     offset?: number,
     limit?: number,
@@ -34,9 +34,8 @@ export interface BaseRepositoryInterface<
   delete(id: string): Promise<void>;
 }
 
-export abstract class BaseRepository<
-  T extends z.ZodObject<z.ZodRawShape, "strip">
-> implements BaseRepositoryInterface<T>
+export abstract class BaseRepository<T extends RepositorySchema>
+  implements BaseRepositoryInterface<T>
 {
   protected schema: T;
   protected abstract searchFields: string[];

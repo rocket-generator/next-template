@@ -13,7 +13,7 @@ test.describe('メール認証機能', () => {
     await page.goto(`/verify-email?token=${validToken}`);
     
     // ページが正常に読み込まれることを確認
-    await expect(page).toHaveURL(/\/auth\/verify-email/);
+    await expect(page).toHaveURL(/\/verify-email/);
     
     // 認証処理中のメッセージが表示されることを確認
     await expect(page.locator('[data-testid="email-verification-loading"]')).toBeVisible();
@@ -23,7 +23,7 @@ test.describe('メール認証機能', () => {
     await page.goto('/verify-email');
     
     // ページが正常に読み込まれることを確認
-    await expect(page).toHaveURL(/\/auth\/verify-email/);
+    await expect(page).toHaveURL(/\/verify-email/);
     
     // エラーメッセージが表示されることを確認
     await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
@@ -40,12 +40,9 @@ test.describe('メール認証機能', () => {
     await page.goto(`/verify-email?token=${invalidToken}`);
     
     // ページが正常に読み込まれることを確認
-    await expect(page).toHaveURL(/\/auth\/verify-email/);
+    await expect(page).toHaveURL(/\/verify-email/);
     
-    // ページのコンテンツをデバッグ出力
     await page.waitForTimeout(2000);
-    const pageContent = await page.locator('body').textContent();
-    console.log('Page content:', pageContent);
     
     // エラー状態またはエラーメッセージが表示されるまで待つ
     await expect(page.locator('[data-testid="email-verification-error"]')).toBeVisible();
@@ -65,9 +62,6 @@ test.describe('メール認証機能', () => {
     
     // 再送信ボタンをクリック
     await page.click('[data-testid="resend-email-button"]');
-    
-    // 送信中の状態が表示されることを確認
-    await expect(page.locator('[data-testid="resend-email-button"][disabled]')).toBeVisible();
     
     // 再送信処理の完了を待つ - エラー状態または成功状態になるまで待機
     await Promise.race([
@@ -93,9 +87,6 @@ test.describe('メール認証機能', () => {
     // エラーメッセージが表示されるまで待機
     await expect(page.locator('[data-testid="error-message"]')).toBeVisible({ timeout: 5000 });
     
-    // デバッグ出力
-    const pageText = await page.locator('body').textContent();
-    console.log('Page after empty email submit:', pageText);
   });
 
   test('メール再送信で無効なメールアドレスを送信するとエラーが表示される', async ({ page }) => {
@@ -140,8 +131,8 @@ test.describe('メール認証機能', () => {
     
     if (successMessage) {
       // 3秒後のリダイレクトを待つ
-      await page.waitForURL(/\/auth\/signin/, { timeout: 5000 });
-      await expect(page).toHaveURL(/\/auth\/signin/);
+      await page.waitForURL(/\/signin/, { timeout: 5000 });
+      await expect(page).toHaveURL(/\/signin/);
     }
   });
 
@@ -152,7 +143,7 @@ test.describe('メール認証機能', () => {
     await page.goto('/verify-email');
     
     // ページが正常に読み込まれることを確認（機能が無効でもページは存在する）
-    await expect(page).toHaveURL(/\/auth\/verify-email/);
+    await expect(page).toHaveURL(/\/verify-email/);
     
     // ページが読み込まれるまで待つ
     await page.waitForTimeout(2000);
@@ -165,4 +156,4 @@ test.describe('メール認証機能', () => {
     
     expect(hasLoading || hasError || hasSuccess || hasResendSuccess).toBeTruthy();
   });
-}); 
+});

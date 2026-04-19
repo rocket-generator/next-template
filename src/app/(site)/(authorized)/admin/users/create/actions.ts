@@ -4,7 +4,9 @@ import { createLogger } from "@/libraries/logger";
 import { UserCreateRequest } from "@/requests/admin/user_create_request";
 import { AuthService } from "@/services/auth_service";
 
-const adminUsersCreateActionsLogger = createLogger("admin_users_create_actions");
+const adminUsersCreateActionsLogger = createLogger(
+  "admin_users_create_actions"
+);
 
 export async function createUser(
   data: UserCreateRequest

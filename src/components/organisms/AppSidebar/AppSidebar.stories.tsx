@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import AppSidebar from "./index";
 import { User } from "@/models/user";
+import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
 
 const meta: Meta<typeof AppSidebar> = {
   title: "Organisms/AppSidebar",
@@ -9,6 +10,27 @@ const meta: Meta<typeof AppSidebar> = {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
+  decorators: [
+    (Story) => (
+      <SidebarProvider>
+        <div className="flex h-screen">
+          <Story />
+          <div className="flex-1 bg-gray-50">
+            <header className="flex items-center gap-3 border-b px-4 py-3">
+              <SidebarTrigger className="md:hidden" label="サイドバーを開く" />
+              <span className="text-lg font-semibold">Main App</span>
+            </header>
+            <div className="p-4">
+              <h1>Main Content Area</h1>
+              <p>
+                This is the main content area to demonstrate the sidebar layout.
+              </p>
+            </div>
+          </div>
+        </div>
+      </SidebarProvider>
+    ),
+  ],
   argTypes: {},
 };
 

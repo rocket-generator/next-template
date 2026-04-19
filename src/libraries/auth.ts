@@ -218,6 +218,10 @@ type GetSessionOptions = {
   disableRefresh?: boolean;
 };
 
+function isUnauthorizedSessionError(error: unknown): boolean {
+  return error instanceof Error && error.message === "Unauthorized";
+}
+
 export async function auth(
   options: GetSessionOptions = {}
 ): Promise<AppSession | null> {
@@ -233,10 +237,17 @@ export async function auth(
   }
 
   const authInstance = getBetterAuthHandler();
-  const result = await authInstance.api.getSession({
-    headers,
-    query: Object.keys(query).length > 0 ? query : undefined,
-  });
+  const result = await authInstance.api
+    .getSession({
+      headers,
+      query: Object.keys(query).length > 0 ? query : undefined,
+    })
+    .catch((error: unknown) => {
+      if (isUnauthorizedSessionError(error)) {
+        return null;
+      }
+      throw error;
+    });
 
   if (!result) {
     return null;

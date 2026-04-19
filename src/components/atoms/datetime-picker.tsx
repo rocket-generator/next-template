@@ -679,7 +679,7 @@ type DateTimePickerProps = {
   yearRange?: number;
   /**
    * The format is derived from the `date-fns` documentation.
-   * @reference https://date-fns.org/v3.6.0/docs/format
+   * @reference https://date-fns.org/v4.1.0/docs/format
    **/
   displayFormat?: { hour24?: string; hour12?: string };
   /**

@@ -1,21 +1,28 @@
 import * as z from "zod";
 
+const createRequiredStringSchema = (
+  requiredMessage: string,
+  invalidTypeMessage: string = requiredMessage
+) =>
+  z.string({
+    error: (issue) =>
+      issue.input === undefined ? requiredMessage : invalidTypeMessage,
+  });
+
 // 国際化対応のスキーマ作成関数
 export const createEmailSchema = (t: (key: string) => string) =>
-  z
-    .string({
-      required_error: t("validation.email_required"),
-      invalid_type_error: t("validation.email_required"),
+  createRequiredStringSchema(t("validation.email_required"))
+    .min(1, {
+      message: t("validation.email_required"),
     })
     .email({
       message: t("validation.email_invalid"),
     });
 
 export const createPasswordSchema = (t: (key: string) => string) =>
-  z
-    .string({
-      required_error: t("validation.password_required"),
-      invalid_type_error: t("validation.password_required"),
+  createRequiredStringSchema(t("validation.password_required"))
+    .min(1, {
+      message: t("validation.password_required"),
     })
     .min(8, {
       message: t("validation.password_min_length"),
@@ -28,14 +35,9 @@ export const createPasswordSchema = (t: (key: string) => string) =>
     });
 
 export const createNameSchema = (t: (key: string) => string) =>
-  z
-    .string({
-      required_error: t("validation.name_required"),
-      invalid_type_error: t("validation.name_required"),
-    })
-    .min(1, {
-      message: t("validation.name_min_length"),
-    });
+  createRequiredStringSchema(t("validation.name_required")).min(1, {
+    message: t("validation.name_min_length"),
+  });
 
 export const createSignUpRequestSchema = (t: (key: string) => string) => {
   const emailSchema = createEmailSchema(t);

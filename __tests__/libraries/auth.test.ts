@@ -248,6 +248,21 @@ describe("auth helpers", () => {
     });
   });
 
+  it("auth が Better Auth の Unauthorized を未認証セッションとして扱う", async () => {
+    mockGetSession.mockRejectedValue(new Error("Unauthorized"));
+
+    const { auth } = loadAuthModule();
+    const result = await auth({
+      headers: new Headers({ accept: "text/html" }),
+    });
+
+    expect(result).toBeNull();
+    expect(mockGetSession).toHaveBeenCalledWith({
+      headers: expect.any(Headers),
+      query: undefined,
+    });
+  });
+
   it("requireAuthSession が未認証時に /signin へ redirect する", async () => {
     mockGetSession.mockResolvedValue(null);
 

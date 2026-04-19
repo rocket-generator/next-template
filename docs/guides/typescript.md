@@ -9,6 +9,12 @@
 - コンポーネントは `function` ではなく `const` で宣言する
 - React のコンポーザブルなパターンに従う
 
+## TypeScript 6 設定
+
+- `tsconfig.json` は TypeScript 6 を前提とし、Jest と Node の ambient types を明示する
+- `compilerOptions.types` は `["node", "jest"]` を基本値とする
+- Storybook / Vitest / Playwright 側で追加の ambient types が必要な場合は、個別の設定ファイル側で閉じ込める
+
 ## 状態管理とパフォーマンス
 
 - `useState` / `useEffect` の使用は最小限にする

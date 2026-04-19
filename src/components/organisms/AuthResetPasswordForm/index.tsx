@@ -48,12 +48,7 @@ export default function AuthResetPasswordForm({
     },
   });
 
-  // Set error if no token is provided
-  React.useEffect(() => {
-    if (!token) {
-      setError(tAuth("invalid_reset_link"));
-    }
-  }, [token, tAuth]);
+  const displayError = error ?? (!token ? tAuth("invalid_reset_link") : null);
 
   const handleFormSubmit = (formData: ResetPasswordRequest) => {
     setError(null);
@@ -82,9 +77,9 @@ export default function AuthResetPasswordForm({
           {tAuth("reset_password_description")}
         </p>
       </div>
-      {error && (
+      {displayError && (
         <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded">
-          <p>{error}</p>
+          <p>{displayError}</p>
           {!token && (
             <div className="mt-2">
               <Link
