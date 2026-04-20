@@ -3,12 +3,14 @@
 import { signOut } from "@/libraries/auth";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { auth } from "@/libraries/auth";
 import { UserRepository } from "@/repositories/user_repository";
 
 export async function signOutAction() {
   await signOut();
+  redirect("/");
 }
 
 export async function setLanguageAction(

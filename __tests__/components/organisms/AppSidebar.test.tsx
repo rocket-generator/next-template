@@ -138,10 +138,10 @@ describe("AppSidebar", () => {
 
   it("renders sign-out button and calls handler", () => {
     renderSidebar();
-    const menuTrigger = screen.getByText("山田太郎");
+    const menuTrigger = screen.getByTestId("app-user-menu-trigger");
     fireEvent.click(menuTrigger);
 
-    const signoutButton = screen.getByText("ログアウト");
+    const signoutButton = screen.getByTestId("app-signout-menu-item");
     fireEvent.click(signoutButton);
     expect(mockOnSignOut).toHaveBeenCalledTimes(1);
   });

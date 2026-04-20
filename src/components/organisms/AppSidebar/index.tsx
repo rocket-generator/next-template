@@ -155,7 +155,7 @@ export default function AppSidebar({
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
+                <SidebarMenuButton data-testid="app-user-menu-trigger">
                   {state === "collapsed" ? (
                     <UserIcon className="h-4 w-4" />
                   ) : (
@@ -184,7 +184,10 @@ export default function AppSidebar({
                     <span>{t("admin_console")}</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={onSignOut}>
+                <DropdownMenuItem
+                  onClick={onSignOut}
+                  data-testid="app-signout-menu-item"
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   <span>{t("signout")}</span>
                 </DropdownMenuItem>

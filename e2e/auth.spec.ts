@@ -38,4 +38,33 @@ test.describe('認証機能', () => {
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.locator('body')).toContainText('Dashboard');
   });
+
+  test('サイドバーからログアウトするとトップページに遷移する', async ({ page }) => {
+    await page.goto('/signin');
+
+    await expect(page).toHaveURL(/\/signin$/);
+
+    await page.fill('[data-testid="email-input"]', 'admin@example.com');
+    await page.fill('[data-testid="password-input"]', 'password');
+
+    await Promise.all([
+      page.waitForURL((url) => url.pathname !== '/signin', {
+        timeout: 10000,
+      }),
+      page.click('[data-testid="signin-submit-button"]'),
+    ]);
+
+    await expect(page).toHaveURL(/\/dashboard$/);
+
+    await page.locator('[data-testid="app-user-menu-trigger"]').click();
+    await Promise.all([
+      page.waitForURL((url) => url.pathname === '/', { timeout: 10000 }),
+      page.locator('[data-testid="app-signout-menu-item"]').click(),
+    ]);
+
+    await expect(page).toHaveURL('http://localhost:3000/');
+
+    await page.goto('/dashboard');
+    await expect(page).toHaveURL(/\/signin/);
+  });
 });
