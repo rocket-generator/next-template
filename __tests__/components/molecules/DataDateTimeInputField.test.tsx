@@ -194,12 +194,12 @@ describe("DataDateTimeInputField", () => {
     expect(hiddenInput).toHaveAttribute("id", "eventDate");
   });
 
-  it("should log props to console", () => {
+  it("should not log props to console during render", () => {
     const consoleSpy = jest.spyOn(console, "log");
     
     render(<DataDateTimeInputField {...defaultProps} />);
 
-    expect(consoleSpy).toHaveBeenCalledWith("props", defaultProps);
+    expect(consoleSpy).not.toHaveBeenCalled();
   });
 
   it("should handle large unix timestamps", () => {

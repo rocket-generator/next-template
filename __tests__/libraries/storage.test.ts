@@ -12,6 +12,24 @@ import {
   resetTestLoggerState,
 } from "../helpers/logger";
 
+const mockGcsSave = jest.fn();
+const mockGcsDownload = jest.fn();
+const mockGcsGetMetadata = jest.fn();
+const mockGcsGetSignedUrl = jest.fn();
+const mockGcsDelete = jest.fn();
+const mockGcsGetFiles = jest.fn();
+const mockGcsFile = jest.fn(() => ({
+  save: mockGcsSave,
+  download: mockGcsDownload,
+  getMetadata: mockGcsGetMetadata,
+  getSignedUrl: mockGcsGetSignedUrl,
+  delete: mockGcsDelete,
+}));
+const mockGcsBucket = jest.fn(() => ({
+  file: mockGcsFile,
+  getFiles: mockGcsGetFiles,
+}));
+
 // Mock AWS SDK
 jest.mock("@aws-sdk/client-s3", () => ({
   S3Client: jest.fn().mockImplementation(() => ({
@@ -25,6 +43,12 @@ jest.mock("@aws-sdk/client-s3", () => ({
 
 jest.mock("@aws-sdk/s3-request-presigner", () => ({
   getSignedUrl: jest.fn(),
+}));
+
+jest.mock("@google-cloud/storage", () => ({
+  Storage: jest.fn(() => ({
+    bucket: mockGcsBucket,
+  })),
 }));
 
 type StorageModule = typeof import("@/libraries/storage") & {
@@ -42,6 +66,14 @@ describe("Storage Library", () => {
 
   beforeEach(() => {
     installTestLoggerAdapters();
+    mockGcsSave.mockReset();
+    mockGcsDownload.mockReset();
+    mockGcsGetMetadata.mockReset();
+    mockGcsGetSignedUrl.mockReset();
+    mockGcsDelete.mockReset();
+    mockGcsGetFiles.mockReset();
+    mockGcsFile.mockClear();
+    mockGcsBucket.mockClear();
   });
 
   afterEach(() => {
@@ -676,6 +708,150 @@ describe("Storage Library", () => {
 
         expect(typeof storage.GCSProvider).toBe("function");
       });
+    });
+  });
+
+  describe("GCSProvider", () => {
+    const createProvider = () => {
+      const storage = loadStorageModule();
+      return new storage.GCSProvider!({
+        projectId: "gcs-project",
+        bucket: "gcs-bucket",
+        credentials: {
+          clientEmail: "service-account@example.test",
+          privateKey: "private-key",
+        },
+        region: "asia-southeast1",
+      });
+    };
+
+    it("should log upload failures", async () => {
+      mockGcsSave.mockRejectedValue(new Error("GCS upload failed"));
+      const provider = createProvider();
+
+      const result = await provider.upload({
+        key: testKey,
+        data: testData,
+        contentType: testContentType,
+      });
+
+      expect(result).toEqual({
+        success: false,
+        key: testKey,
+        error: "GCS upload failed",
+      });
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          scope: "storage",
+          event: "storage.gcs.upload.failed",
+          context: expect.objectContaining({
+            operation: "upload",
+            provider: "gcs",
+            bucket: "gcs-bucket",
+            region: "asia-southeast1",
+            key: testKey,
+          }),
+        })
+      );
+    });
+
+    it("should log download failures", async () => {
+      mockGcsDownload.mockRejectedValue(new Error("GCS download failed"));
+      const provider = createProvider();
+
+      const result = await provider.download(testKey);
+
+      expect(result).toEqual({
+        success: false,
+        error: "GCS download failed",
+      });
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          scope: "storage",
+          event: "storage.gcs.download.failed",
+          context: expect.objectContaining({
+            operation: "download",
+            provider: "gcs",
+            bucket: "gcs-bucket",
+            region: "asia-southeast1",
+            key: testKey,
+          }),
+        })
+      );
+    });
+
+    it("should log signed URL failures", async () => {
+      mockGcsGetSignedUrl.mockRejectedValue(new Error("GCS signed URL failed"));
+      const provider = createProvider();
+
+      await expect(provider.getSignedUrl(testKey, 3600)).rejects.toThrow(
+        "GCS signed URL failed"
+      );
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          scope: "storage",
+          event: "storage.gcs.signed_url.failed",
+          context: expect.objectContaining({
+            operation: "getSignedUrl",
+            provider: "gcs",
+            bucket: "gcs-bucket",
+            region: "asia-southeast1",
+            key: testKey,
+          }),
+        })
+      );
+    });
+
+    it("should log delete failures", async () => {
+      mockGcsDelete.mockRejectedValue(new Error("GCS delete failed"));
+      const provider = createProvider();
+
+      await expect(provider.delete(testKey)).rejects.toThrow("GCS delete failed");
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          scope: "storage",
+          event: "storage.gcs.delete.failed",
+          context: expect.objectContaining({
+            operation: "delete",
+            provider: "gcs",
+            bucket: "gcs-bucket",
+            region: "asia-southeast1",
+            key: testKey,
+          }),
+        })
+      );
+    });
+
+    it("should log list failures", async () => {
+      mockGcsGetFiles.mockRejectedValue(new Error("GCS list failed"));
+      const provider = createProvider();
+
+      const result = await provider.list("prefix/");
+
+      expect(result).toEqual({
+        success: false,
+        files: [],
+        hasMore: false,
+        error: "GCS list failed",
+      });
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          scope: "storage",
+          event: "storage.gcs.list.failed",
+          context: expect.objectContaining({
+            operation: "list",
+            provider: "gcs",
+            bucket: "gcs-bucket",
+            region: "asia-southeast1",
+            prefix: "prefix/",
+          }),
+        })
+      );
     });
   });
 

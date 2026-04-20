@@ -233,6 +233,7 @@ This template includes a lightweight structured logger in `src/libraries/logger.
 - `LOG_FORMAT` accepts `auto`, `json`, `pretty` and defaults to `auto`.
 - `LOG_FORMAT=auto` resolves to `json` in production and `pretty` in non-production environments.
 - Server-side logs under `src/libraries`, `src/repositories`, and `src/app` use this logger. Browser-side `console.*` usage in `src/components/**` is intentionally left for a separate cleanup task.
+- Error-level logs are sent to the configured `MonitoringAdapter` automatically. Keep provider-side filtering in that adapter or the monitoring backend.
 
 Derived projects can replace the default adapters without rewriting call sites:
 
@@ -255,6 +256,8 @@ The CSP is environment-aware by design.
 
 - Development keeps `unsafe-eval`, `http:`, `ws:`, and `wss:` available so Next.js HMR, local APIs, and LocalStack do not break.
 - Production removes those generic development allowances and only adds HSTS there.
+- Production still allows `script-src 'unsafe-inline'` for current Next.js runtime compatibility. Treat this CSP as a baseline header set, not strict XSS protection; move to nonce-based CSP before relying on CSP as a primary XSS control.
+- `Permissions-Policy` disables camera, microphone, and geolocation by default. Add `browsing-topics=()` only in derived projects that intentionally opt out of Chrome Topics API at the header level.
 
 If your production deployment needs external APIs, scripts, images, or WebSocket endpoints, update [`src/libraries/security-headers.ts`](./src/libraries/security-headers.ts) to allow them explicitly. `EXTRA_REMOTE_IMAGE_URLS` only extends `next/image` host matching. It does not update CSP automatically.
 
@@ -266,7 +269,7 @@ EXTRA_REMOTE_IMAGE_URLS=https://cdn.example.com,https://images.example.com/accou
 
 Each CSV entry must be an absolute `http` or `https` URL prefix. The template converts each entry into a `remotePatterns` rule using its protocol, hostname, optional port, and path prefix.
 
-Future hardening such as nonce-based CSP is intentionally left as separate follow-up work.
+Nonce-based CSP hardening is intentionally left as separate follow-up work.
 
 ## 🎯 Available Scripts
 

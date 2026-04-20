@@ -1,4 +1,5 @@
 import { createLogger, type LogContext } from "@/libraries/logger";
+import { parseBooleanEnv } from "@/libraries/env";
 
 // Storage Service Interface
 export interface StorageService {
@@ -100,6 +101,18 @@ function buildS3LogContext(
     provider: "s3",
     bucket: config.bucket,
     region: config.region,
+    ...context,
+  };
+}
+
+function buildGCSLogContext(
+  config: GCSProviderConfig,
+  context: LogContext
+): LogContext {
+  return {
+    provider: "gcs",
+    bucket: config.bucket,
+    ...(config.region ? { region: config.region } : {}),
     ...context,
   };
 }
@@ -459,6 +472,13 @@ export class GCSProvider implements StorageProvider {
         url: this.generateFileUrl(options.key),
       };
     } catch (error) {
+      storageLogger.error("storage.gcs.upload.failed", "GCS upload failed", {
+        context: buildGCSLogContext(this.config, {
+          operation: "upload",
+          key: options.key,
+        }),
+        error,
+      });
       return {
         success: false,
         key: options.key,
@@ -481,6 +501,17 @@ export class GCSProvider implements StorageProvider {
         lastModified: metadata.updated ? new Date(metadata.updated) : undefined,
       };
     } catch (error) {
+      storageLogger.error(
+        "storage.gcs.download.failed",
+        "GCS download failed",
+        {
+          context: buildGCSLogContext(this.config, {
+            operation: "download",
+            key,
+          }),
+          error,
+        }
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -498,6 +529,17 @@ export class GCSProvider implements StorageProvider {
 
       return signedUrl;
     } catch (error) {
+      storageLogger.error(
+        "storage.gcs.signed_url.failed",
+        "GCS signed URL generation failed",
+        {
+          context: buildGCSLogContext(this.config, {
+            operation: "getSignedUrl",
+            key,
+          }),
+          error,
+        }
+      );
       throw new Error(
         `Failed to generate signed URL: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -511,6 +553,13 @@ export class GCSProvider implements StorageProvider {
       const file = await this.getFileHandle(key);
       await file.delete();
     } catch (error) {
+      storageLogger.error("storage.gcs.delete.failed", "GCS delete failed", {
+        context: buildGCSLogContext(this.config, {
+          operation: "delete",
+          key,
+        }),
+        error,
+      });
       throw new Error(
         `Failed to delete file: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -541,6 +590,13 @@ export class GCSProvider implements StorageProvider {
         hasMore: files.length === maxKeys,
       };
     } catch (error) {
+      storageLogger.error("storage.gcs.list.failed", "GCS list failed", {
+        context: buildGCSLogContext(this.config, {
+          operation: "list",
+          ...(prefix ? { prefix } : {}),
+        }),
+        error,
+      });
       return {
         success: false,
         files: [],
@@ -694,27 +750,6 @@ export function createS3ProviderConfig(): S3ProviderConfig {
       bucket: process.env.SYSTEM_AWS_S3_BUCKET || "",
     };
   }
-}
-
-function parseBooleanEnv(
-  name: string,
-  defaultValue?: boolean
-): boolean | undefined {
-  const value = process.env[name];
-
-  if (value === undefined) {
-    return defaultValue;
-  }
-  if (value === "true") {
-    return true;
-  }
-  if (value === "false") {
-    return false;
-  }
-
-  throw new Error(
-    `Invalid boolean environment variable ${name}: expected "true" or "false"`
-  );
 }
 
 export function createS3CompatibleProviderConfig(): S3ProviderConfig {

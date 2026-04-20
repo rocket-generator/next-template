@@ -157,6 +157,8 @@ GCS_REGION=us-central1
 過去は endpoint 指定時に `forcePathStyle` が実質常に `true` になる不具合がありましたが、現在は明示的な `false` を維持します。  
 R2 の virtual-hosted-style endpoint などでは `false` が必要になることがあります。
 
+`localhost` / MinIO / LocalStack のように bucket subdomain が解決されない環境では `false` を使うと `https://bucket.endpoint/key` がブラウザから到達できない場合があります。DNS または public endpoint が virtual-hosted-style に対応していない場合は `true` を使ってください。
+
 ---
 
 ## 新しいプロバイダーの追加手順

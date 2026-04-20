@@ -17,7 +17,6 @@ type Props = {
 };
 
 export default function FormInputField(props: Props) {
-  console.log("props", props);
   const [datetimeValue, setDatetimeValue] = useState<number | undefined>(
     props.value as number | undefined
   );
@@ -57,7 +56,7 @@ export default function FormInputField(props: Props) {
         name={props.data_key}
         type="hidden"
         onChange={props.onChange}
-        value={datetimeValue}
+        value={datetimeValue ?? ""}
         required={props.required}
         disabled={props.disabled}
         placeholder={props.placeholder || ""}

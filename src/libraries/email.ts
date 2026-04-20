@@ -1,4 +1,5 @@
 import { createLogger, type LogContext } from "@/libraries/logger";
+import { parseBooleanEnv } from "@/libraries/env";
 
 // Email Service Interface
 export interface EmailService {
@@ -200,6 +201,16 @@ export class SMTPProvider implements EmailProvider {
         messageId: result.messageId,
       };
     } catch (error) {
+      emailLogger.error(
+        "email.provider.smtp.send.failed",
+        "SMTP email sending failed",
+        {
+          context: buildRecipientContext(options.to, {
+            provider: "smtp",
+          }),
+          error,
+        }
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -378,23 +389,6 @@ function parseSmtpPort(value: string | undefined): number {
   return port;
 }
 
-function parseBooleanEnv(name: string, defaultValue: boolean): boolean {
-  const value = process.env[name];
-  if (value === undefined) {
-    return defaultValue;
-  }
-  if (value === "true") {
-    return true;
-  }
-  if (value === "false") {
-    return false;
-  }
-
-  throw new Error(
-    `Invalid boolean environment variable ${name}: expected "true" or "false"`
-  );
-}
-
 export function createSMTPProviderConfig(): SMTPProviderConfig {
   return {
     host: process.env.SMTP_HOST || "",
@@ -418,9 +412,11 @@ function resolveFromEmail(): string {
     return process.env.SES_FROM_EMAIL;
   }
 
-  return process.env.NODE_ENV === "production"
-    ? "noreply@example.com"
-    : "noreply@localhost";
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("EMAIL_FROM is required in production");
+  }
+
+  return "noreply@localhost";
 }
 
 // Email Service Factory

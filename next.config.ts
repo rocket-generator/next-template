@@ -13,11 +13,6 @@ const nextConfig: NextConfig = {
     // Keep bundled DB CA files in the server output for path-based TLS config.
     "*": ["./certs/**/*"],
   },
-  transpilePackages: [
-    '@aws-sdk/client-s3',
-    '@aws-sdk/client-ses',
-    '@aws-sdk/s3-request-presigner',
-  ],
   async headers() {
     return [
       {

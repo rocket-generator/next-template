@@ -137,7 +137,7 @@ describe("logger", () => {
     });
   });
 
-  it("should serialize errors and capture them automatically for error logs", () => {
+  it("should omit error stack from logs below debug level", () => {
     const loggerModule = loadLoggerModule();
     installTestLoggerAdapters();
 
@@ -157,10 +157,52 @@ describe("logger", () => {
         error: expect.objectContaining({
           name: "Error",
           message: "workflow failed",
-          stack: expect.any(String),
         }),
       })
     );
+    expect(getLoggedEntries()[0]?.error).not.toHaveProperty("stack");
+    expect(getCapturedExceptions()).toHaveLength(1);
+  });
+
+  it("should include error stack in logs when LOG_LEVEL=debug", () => {
+    process.env.LOG_LEVEL = "debug";
+
+    const loggerModule = loadLoggerModule();
+    installTestLoggerAdapters();
+
+    const logger = loggerModule.createLogger("workflow_repository");
+    const error = new Error("workflow failed");
+
+    logger.error("workflow.run.failed", "workflow failed", {
+      context: {
+        workflowId: "wf-1",
+      },
+      error,
+    });
+
+    expect(getLoggedEntries()[0]?.error).toEqual(
+      expect.objectContaining({
+        name: "Error",
+        message: "workflow failed",
+        stack: expect.any(String),
+      })
+    );
+  });
+
+  it("should capture error logs automatically", () => {
+    const loggerModule = loadLoggerModule();
+    installTestLoggerAdapters();
+
+    const logger = loggerModule.createLogger("workflow_repository");
+    const error = new Error("workflow failed");
+
+    logger.error("workflow.run.failed", "workflow failed", {
+      context: {
+        workflowId: "wf-1",
+      },
+      error,
+    });
+
     expect(getCapturedExceptions()).toHaveLength(1);
     expect(getCapturedExceptions()[0]).toEqual(
       expect.objectContaining({

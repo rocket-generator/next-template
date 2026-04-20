@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { parseBooleanEnv } from "@/libraries/env";
 import { PrismaClient } from "../generated/prisma/client";
 
 type SslObject = { rejectUnauthorized: boolean; ca?: string };
@@ -56,8 +57,10 @@ function resolveSslOption(sslMode: SupportedSslMode | null): SslOption {
   }
 
   const ssl: SslObject = {
-    rejectUnauthorized:
-      process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false",
+    rejectUnauthorized: parseBooleanEnv(
+      "DATABASE_SSL_REJECT_UNAUTHORIZED",
+      true
+    ),
   };
 
   const ca = resolveSslCa();

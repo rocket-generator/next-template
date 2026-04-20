@@ -225,10 +225,12 @@ function sanitizeContext(context?: LogContext): LogContext | undefined {
 
 function serializeError(error: unknown): SerializedError {
   if (error instanceof Error) {
+    const includeStack = resolveLogLevel() === "debug";
+
     return {
       name: error.name,
       message: error.message,
-      ...(error.stack ? { stack: error.stack } : {}),
+      ...(includeStack && error.stack ? { stack: error.stack } : {}),
     };
   }
 

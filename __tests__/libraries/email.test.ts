@@ -1,5 +1,6 @@
 import {
   EmailServiceImpl,
+  SMTPProvider,
   createSESProviderConfig,
   type EmailProvider,
 } from "@/libraries/email";
@@ -218,6 +219,52 @@ describe("email library", () => {
       expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           from: "noreply@localhost",
+        })
+      );
+    });
+
+    it("should throw in production when sender address is not configured", () => {
+      (process.env as Record<string, string | undefined>).NODE_ENV =
+        "production";
+      process.env.EMAIL_PROVIDER = "smtp";
+      process.env.SMTP_HOST = "smtp.example.test";
+
+      const emailModule = loadEmailModule();
+
+      expect(() => emailModule.createEmailServiceInstance!()).toThrow(
+        "EMAIL_FROM is required in production"
+      );
+    });
+
+    it("should log SMTP provider send failures", async () => {
+      mockSendMail.mockRejectedValue(new Error("SMTP rejected message"));
+      const provider = new SMTPProvider({
+        host: "smtp.example.test",
+        port: 2525,
+        secure: false,
+      });
+
+      const result = await provider.sendEmail({
+        from: "noreply@example.test",
+        to: "user@example.test",
+        subject: "subject",
+        text: "body",
+      });
+
+      expect(result).toEqual({
+        success: false,
+        error: "SMTP rejected message",
+      });
+      expect(getLoggedEntries()).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          scope: "email",
+          event: "email.provider.smtp.send.failed",
+          context: expect.objectContaining({
+            provider: "smtp",
+            recipientDomain: "example.test",
+            toMasked: "u***@example.test",
+          }),
         })
       );
     });

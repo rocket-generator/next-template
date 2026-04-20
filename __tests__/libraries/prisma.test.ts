@@ -154,6 +154,17 @@ describe("prisma library", () => {
       });
     });
 
+    it("should reject invalid DATABASE_SSL_REJECT_UNAUTHORIZED values", () => {
+      process.env.DATABASE_SSL_REJECT_UNAUTHORIZED = "False";
+      const { createPrismaClient } = loadPrismaModule();
+
+      expect(() =>
+        createPrismaClient("postgres://example.com:5432/app?sslmode=require")
+      ).toThrow(
+        'Invalid boolean environment variable DATABASE_SSL_REJECT_UNAUTHORIZED: expected "true" or "false"'
+      );
+    });
+
     it("sslmode=disable のとき ssl:false を設定する", () => {
       const { createPrismaClient } = loadPrismaModule();
 
