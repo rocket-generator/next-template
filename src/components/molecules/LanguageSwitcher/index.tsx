@@ -59,7 +59,7 @@ const LanguageSwitcher = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side="top"
-        className="w-[--radix-popper-anchor-width]"
+        className="w-(--radix-popper-anchor-width)"
       >
         <DropdownMenuItem
           data-testid="language-option-ja"

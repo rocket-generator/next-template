@@ -191,7 +191,7 @@ export default function AdminSidebar({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-popper-anchor-width]"
+                className="w-(--radix-popper-anchor-width)"
                 data-testid="admin-user-menu-dropdown"
               >
                 <DropdownMenuItem

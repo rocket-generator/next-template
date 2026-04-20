@@ -172,7 +172,7 @@ export default function AppSidebar({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-popper-anchor-width]"
+                className="w-(--radix-popper-anchor-width)"
               >
                 <DropdownMenuItem onClick={handleSettings}>
                   <Settings className="w-4 h-4 mr-2" />
